@@ -59,6 +59,13 @@ export default function AdminDashboard() {
       color: "bg-emerald-500",
     },
     {
+      title: "Управление тренировками",
+      description: "Типы занятий, пакеты и расписание",
+      href: "/admin/trainings", 
+      icon: Calendar,
+      color: "bg-orange-500",
+    },
+    {
       title: "Управление клиентами",
       description: "Просмотр и редактирование профилей клиентов",
       href: "/admin/clients",

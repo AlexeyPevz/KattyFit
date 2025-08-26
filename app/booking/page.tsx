@@ -22,48 +22,44 @@ import {
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
+// В реальном приложении загружается из API
 const trainingTypes = [
   {
     id: "online-personal",
-    title: "Онлайн персональная",
+    title: "Персональная онлайн",
     price: 2500,
     duration: "60 минут",
     description: "Индивидуальное занятие через Zoom",
     icon: Monitor,
+    active: true,
     benefits: [
       "Полное внимание тренера",
       "Индивидуальная программа",
       "Удобное время",
       "Запись занятия"
     ]
+  }
+]
+
+// Пакеты тренировок
+const trainingPackages = [
+  {
+    id: "package-5",
+    title: "Пакет 5 занятий",
+    sessions: 5,
+    price: 11250,
+    discount: 10,
+    validDays: 60,
+    description: "Скидка 10% при покупке пакета"
   },
   {
-    id: "offline-personal",
-    title: "Офлайн персональная",
-    price: 3500,
-    duration: "60 минут", 
-    description: "Индивидуальное занятие в студии",
-    icon: User,
-    benefits: [
-      "Личный контакт с тренером",
-      "Коррекция техники",
-      "Использование оборудования",
-      "Максимальный результат"
-    ]
-  },
-  {
-    id: "online-group",
-    title: "Онлайн групповая",
-    price: 800,
-    duration: "60 минут",
-    description: "Групповое занятие через Zoom (до 10 человек)",
-    icon: Users,
-    benefits: [
-      "Энергия группы",
-      "Доступная цена",
-      "Новые знакомства",
-      "Мотивация от других"
-    ]
+    id: "package-10",
+    title: "Пакет 10 занятий", 
+    sessions: 10,
+    price: 21250,
+    discount: 15,
+    validDays: 90,
+    description: "Скидка 15% при покупке пакета"
   }
 ]
 
@@ -80,7 +76,9 @@ const availableSlots = {
 
 export default function BookingPage() {
   const router = useRouter()
+  const [bookingMode, setBookingMode] = useState<"single" | "package">("single")
   const [selectedType, setSelectedType] = useState("online-personal")
+  const [selectedPackage, setSelectedPackage] = useState<string | undefined>(undefined)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined)
 
