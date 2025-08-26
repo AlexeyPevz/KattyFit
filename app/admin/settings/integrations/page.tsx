@@ -1,0 +1,328 @@
+"use client"
+
+import { useState } from "react"
+import { AdminGuard } from "@/components/auth/admin-guard"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  ArrowLeft, 
+  CheckCircle2, 
+  AlertCircle, 
+  ExternalLink,
+  Copy,
+  Eye,
+  EyeOff,
+  Info
+} from "lucide-react"
+import Link from "next/link"
+
+interface Integration {
+  id: string
+  name: string
+  icon: string
+  color: string
+  connected: boolean
+  requiresOAuth: boolean
+  requiresBusinessAccount?: boolean
+  setupGuide?: string
+  clientIdRequired?: boolean
+  clientSecretRequired?: boolean
+  apiKeyRequired?: boolean
+}
+
+const INTEGRATIONS: Integration[] = [
+  {
+    id: "youtube",
+    name: "YouTube",
+    icon: "🎬",
+    color: "#FF0000",
+    connected: false,
+    requiresOAuth: true,
+    clientIdRequired: true,
+    clientSecretRequired: true,
+    setupGuide: "https://developers.google.com/youtube/v3/getting-started",
+  },
+  {
+    id: "tiktok",
+    name: "TikTok Business",
+    icon: "🎵",
+    color: "#000000",
+    connected: false,
+    requiresOAuth: true,
+    requiresBusinessAccount: true,
+    apiKeyRequired: true,
+    setupGuide: "https://developers.tiktok.com/",
+  },
+  {
+    id: "elevenlabs",
+    name: "ElevenLabs",
+    icon: "🎙️",
+    color: "#667EEA",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://elevenlabs.io/docs/api-reference/getting-started",
+  },
+  {
+    id: "openai",
+    name: "OpenAI",
+    icon: "🤖",
+    color: "#10A37F",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://platform.openai.com/docs/quickstart",
+  },
+]
+
+export default function IntegrationsPage() {
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
+  const [credentials, setCredentials] = useState<Record<string, any>>({})
+
+  const toggleShowSecret = (field: string) => {
+    setShowSecrets(prev => ({ ...prev, [field]: !prev[field] }))
+  }
+
+  const handleSaveCredentials = (integrationId: string) => {
+    // В реальном приложении здесь будет сохранение в защищенное хранилище
+    console.log(`Сохранение учетных данных для ${integrationId}`, credentials[integrationId])
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+  }
+
+  return (
+    <AdminGuard>
+      <div className="min-h-screen bg-background">
+        <div className="border-b">
+          <div className="container px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Link href="/admin">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Назад
+                </Button>
+              </Link>
+              <h1 className="text-2xl font-bold">Интеграции</h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="container px-4 py-8">
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Совет:</strong> Для настройки OAuth интеграций (YouTube, TikTok) рекомендуется провести совместную сессию с разработчиком. 
+              За 60-90 минут можно настроить все необходимые доступы прямо на вашем компьютере.
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid gap-6">
+            {INTEGRATIONS.map((integration) => (
+              <Card key={integration.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{integration.icon}</span>
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {integration.name}
+                          {integration.connected ? (
+                            <Badge variant="success" className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Подключено
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Не подключено
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <CardDescription>
+                          {integration.requiresOAuth && "OAuth авторизация"}
+                          {integration.requiresBusinessAccount && " • Требуется бизнес-аккаунт"}
+                          {!integration.requiresOAuth && "API ключ"}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    {integration.setupGuide && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={integration.setupGuide} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Инструкция
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {integration.clientIdRequired && (
+                      <div className="space-y-2">
+                        <Label htmlFor={`${integration.id}-client-id`}>Client ID</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id={`${integration.id}-client-id`}
+                            placeholder="Введите Client ID"
+                            value={credentials[integration.id]?.clientId || ""}
+                            onChange={(e) => setCredentials(prev => ({
+                              ...prev,
+                              [integration.id]: {
+                                ...prev[integration.id],
+                                clientId: e.target.value
+                              }
+                            }))}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => copyToClipboard(credentials[integration.id]?.clientId || "")}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {integration.clientSecretRequired && (
+                      <div className="space-y-2">
+                        <Label htmlFor={`${integration.id}-client-secret`}>Client Secret</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id={`${integration.id}-client-secret`}
+                            type={showSecrets[`${integration.id}-secret`] ? "text" : "password"}
+                            placeholder="Введите Client Secret"
+                            value={credentials[integration.id]?.clientSecret || ""}
+                            onChange={(e) => setCredentials(prev => ({
+                              ...prev,
+                              [integration.id]: {
+                                ...prev[integration.id],
+                                clientSecret: e.target.value
+                              }
+                            }))}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => toggleShowSecret(`${integration.id}-secret`)}
+                          >
+                            {showSecrets[`${integration.id}-secret`] ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {integration.apiKeyRequired && (
+                      <div className="space-y-2">
+                        <Label htmlFor={`${integration.id}-api-key`}>API Key</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id={`${integration.id}-api-key`}
+                            type={showSecrets[`${integration.id}-key`] ? "text" : "password"}
+                            placeholder="Введите API ключ"
+                            value={credentials[integration.id]?.apiKey || ""}
+                            onChange={(e) => setCredentials(prev => ({
+                              ...prev,
+                              [integration.id]: {
+                                ...prev[integration.id],
+                                apiKey: e.target.value
+                              }
+                            }))}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => toggleShowSecret(`${integration.id}-key`)}
+                          >
+                            {showSecrets[`${integration.id}-key`] ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {integration.requiresOAuth && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          Для получения OAuth учетных данных:
+                          <ol className="mt-2 ml-4 list-decimal space-y-1 text-sm">
+                            <li>Перейдите в консоль разработчика по ссылке выше</li>
+                            <li>Создайте новый проект или выберите существующий</li>
+                            <li>Включите необходимые API</li>
+                            <li>Создайте OAuth 2.0 учетные данные</li>
+                            <li>Добавьте разрешенные redirect URI</li>
+                          </ol>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => handleSaveCredentials(integration.id)}
+                        disabled={
+                          (integration.clientIdRequired && !credentials[integration.id]?.clientId) ||
+                          (integration.clientSecretRequired && !credentials[integration.id]?.clientSecret) ||
+                          (integration.apiKeyRequired && !credentials[integration.id]?.apiKey)
+                        }
+                      >
+                        Сохранить
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Callback URLs</CardTitle>
+              <CardDescription>
+                Используйте эти URL при настройке OAuth приложений
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-muted rounded">
+                  <code className="text-sm">https://yourdomain.com/api/auth/callback/youtube</code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard("https://yourdomain.com/api/auth/callback/youtube")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-muted rounded">
+                  <code className="text-sm">https://yourdomain.com/api/auth/callback/tiktok</code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard("https://yourdomain.com/api/auth/callback/tiktok")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </AdminGuard>
+  )
+}

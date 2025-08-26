@@ -45,6 +45,13 @@ export default function AdminDashboard() {
 
   const quickActions = [
     {
+      title: "Управление контентом",
+      description: "Загрузка видео, генерация обложек и публикация",
+      href: "/admin/content",
+      icon: Activity,
+      color: "bg-violet-500",
+    },
+    {
       title: "Управление клиентами",
       description: "Просмотр и редактирование профилей клиентов",
       href: "/admin/clients",
