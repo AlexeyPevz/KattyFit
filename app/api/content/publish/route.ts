@@ -37,7 +37,7 @@ const PLATFORM_CONFIG = {
     supportsVideo: true,
     maxVideoSize: 128 * 1024 * 1024 * 1024, // 128GB
     supportedFormats: ["mp4", "avi", "mov", "wmv", "flv", "3gpp", "webm"],
-  },
+  } as any,
   instagram: {
     name: "Instagram",
     requiresAuth: true,
@@ -54,7 +54,7 @@ const PLATFORM_CONFIG = {
     maxVideoSize: 287 * 1024 * 1024, // 287MB
     maxDuration: 180, // 3 минуты
     supportedFormats: ["mp4", "mov"],
-  },
+  } as any,
 }
 
 export async function POST(request: NextRequest) {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Проверяем наличие необходимых учетных данных
-      if (config.requiresOAuth) {
+      if ((config as any).requiresOAuth) {
         // TODO: Проверить наличие OAuth токенов
         const hasOAuth = false // Заглушка
         if (!hasOAuth) {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (config.requiresBusinessAccount) {
+      if ((config as any).requiresBusinessAccount) {
         // TODO: Проверить наличие бизнес-аккаунта
         const hasBusinessAccount = false // Заглушка
         if (!hasBusinessAccount) {

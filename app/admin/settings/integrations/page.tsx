@@ -134,7 +134,7 @@ export default function IntegrationsPage() {
                         <CardTitle className="flex items-center gap-2">
                           {integration.name}
                           {integration.connected ? (
-                            <Badge variant="success" className="gap-1">
+                            <Badge className="gap-1 bg-green-500 text-white">
                               <CheckCircle2 className="h-3 w-3" />
                               Подключено
                             </Badge>
