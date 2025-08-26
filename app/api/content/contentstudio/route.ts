@@ -3,13 +3,18 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 
 // Получение API ключа ContentStudio
 async function getContentStudioKey(): Promise<string | null> {
+  if (process.env.CONTENTSTUDIO_API_KEY) {
+    return process.env.CONTENTSTUDIO_API_KEY
+  }
+
+  // fallback legacy
   const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", "contentstudio")
     .eq("is_active", true)
     .single()
-  
+
   return data?.key_value || null
 }
 
