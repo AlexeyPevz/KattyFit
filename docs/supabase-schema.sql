@@ -65,13 +65,42 @@ CREATE TABLE IF NOT EXISTS thumbnails (
 -- Таблица для хранения API ключей и конфигураций
 CREATE TABLE IF NOT EXISTS api_keys (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    service TEXT UNIQUE NOT NULL,
+    service TEXT NOT NULL,
     key_name TEXT NOT NULL,
     key_value TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(service, key_name)
+);
+
+-- Таблица для сообщений чатов
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    message_type TEXT CHECK (message_type IN ('incoming', 'outgoing')) NOT NULL,
+    text TEXT NOT NULL,
+    raw_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица для базы знаний RAG
+CREATE TABLE IF NOT EXISTS knowledge_base (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    type TEXT CHECK (type IN ('faq', 'dialog_example', 'course_info', 'pricing')) NOT NULL,
+    question TEXT,
+    answer TEXT,
+    context JSONB,
+    embedding vector(1536), -- для векторного поиска (если используем pgvector)
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Индексы для чатов
+CREATE INDEX idx_chat_messages_user_platform ON chat_messages(user_id, platform);
+CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at DESC);
 
 -- Функция для обновления updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

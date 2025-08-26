@@ -52,6 +52,13 @@ export default function AdminDashboard() {
       color: "bg-violet-500",
     },
     {
+      title: "Омниканальные чаты",
+      description: "Единый центр управления всеми диалогами",
+      href: "/admin/chat",
+      icon: BarChart3,
+      color: "bg-emerald-500",
+    },
+    {
       title: "Управление клиентами",
       description: "Просмотр и редактирование профилей клиентов",
       href: "/admin/clients",
@@ -85,6 +92,13 @@ export default function AdminDashboard() {
       href: "/admin/backup",
       icon: Database,
       color: "bg-orange-500",
+    },
+    {
+      title: "База знаний",
+      description: "Управление информацией для AI-ассистента",
+      href: "/admin/knowledge",
+      icon: BookOpen,
+      color: "bg-indigo-500",
     },
     {
       title: "Аналитика",

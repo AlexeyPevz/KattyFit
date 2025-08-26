@@ -138,25 +138,59 @@ export function ContentPublisher() {
 
     setPublishing(true)
     try {
-      const response = await fetch("/api/content/publish", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contentId: selectedContent,
-          platforms: selectedPlatforms,
-          languages: selectedLanguages,
-        }),
-      })
+      // Проверяем, есть ли международные платформы
+      const internationalPlatforms = selectedPlatforms.filter(p => 
+        ["instagram", "tiktok", "youtube"].includes(p)
+      )
+      const localPlatforms = selectedPlatforms.filter(p => 
+        ["vk", "telegram", "rutube"].includes(p)
+      )
 
-      const data = await response.json()
-      if (data.success) {
-        // Обновляем статус
-        await fetchPublishStatus(selectedContent)
-        // Очищаем выбор
-        setSelectedPlatforms([])
+      // Если есть международные платформы, используем ContentStudio
+      if (internationalPlatforms.length > 0) {
+        const contentStudioResponse = await fetch("/api/content/contentstudio", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "publish",
+            contentId: selectedContent,
+            platforms: internationalPlatforms,
+            languages: selectedLanguages,
+          }),
+        })
+
+        const csData = await contentStudioResponse.json()
+        if (!csData.success) {
+          console.error("ContentStudio error:", csData.error)
+        }
       }
+
+      // Локальные платформы обрабатываем напрямую
+      if (localPlatforms.length > 0) {
+        const response = await fetch("/api/content/publish", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contentId: selectedContent,
+            platforms: localPlatforms,
+            languages: selectedLanguages,
+          }),
+        })
+
+        const data = await response.json()
+        if (!data.success) {
+          console.error("Local publish error:", data.error)
+        }
+      }
+
+      // Обновляем статус
+      await fetchPublishStatus(selectedContent)
+      // Очищаем выбор
+      setSelectedPlatforms([])
     } catch (error) {
       console.error("Ошибка публикации:", error)
     } finally {

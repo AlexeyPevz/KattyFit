@@ -38,6 +38,16 @@ interface Integration {
 
 const DEFAULT_INTEGRATIONS: Integration[] = [
   {
+    id: "contentstudio",
+    name: "ContentStudio",
+    icon: "🚀",
+    color: "#5C6BC0",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://app.contentstudio.io/docs/api",
+  },
+  {
     id: "youtube",
     name: "YouTube",
     icon: "🎬",
