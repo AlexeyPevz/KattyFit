@@ -77,6 +77,32 @@ async function sendMessage(platform: string, userId: string, text: string, extra
 
 // Получение API ключей для платформы
 async function getApiKeysForPlatform(platform: string) {
+  // 1) Читаем из переменных окружения (v0 / Vercel)
+  const envKeys: Record<string, Record<string, string>> = {
+    telegram: {
+      token: process.env.TELEGRAM_BOT_TOKEN || "",
+      secret_token: process.env.TELEGRAM_SECRET_TOKEN || "",
+    },
+    vk: {
+      token: process.env.VK_API_TOKEN || "",
+      confirmation: process.env.VK_CONFIRMATION_CODE || "",
+    },
+    whatsapp: {
+      phone_number_id: process.env.WA_PHONE_NUMBER_ID || "",
+      token: process.env.WA_TOKEN || "",
+    },
+    instagram: {
+      token: process.env.INSTAGRAM_TOKEN || "",
+      app_secret: process.env.INSTAGRAM_APP_SECRET || "",
+    },
+  }
+
+  const envSet = envKeys[platform as keyof typeof envKeys]
+  if (envSet && Object.values(envSet).some(v => v)) {
+    return envSet
+  }
+
+  // 2) Legacy fallback: читаем из таблицы api_keys
   const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_name, key_value")

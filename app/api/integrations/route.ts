@@ -11,12 +11,15 @@ export async function GET(request: NextRequest) {
 
     if (intError) throw intError
 
-    // Получаем статус API ключей
-    const { data: apiKeys, error: keysError } = await supabaseAdmin
-      .from("api_keys")
-      .select("service, is_active")
-
-    if (keysError) throw keysError
+    // Проверяем наличие ключей в env (v0)
+    const envStatus = {
+      elevenlabs: !!process.env.ELEVENLABS_API_KEY,
+      openai: !!process.env.OPENAI_API_KEY,
+      vk: !!process.env.VK_API_TOKEN,
+      telegram: !!process.env.TELEGRAM_BOT_TOKEN,
+      tiktok: !!process.env.TIKTOK_API_KEY,
+      contentstudio: !!process.env.CONTENTSTUDIO_API_KEY,
+    }
 
     // Объединяем данные
     const services = [
@@ -37,7 +40,7 @@ export async function GET(request: NextRequest) {
         requiresOAuth: true,
         requiresBusinessAccount: true,
         connected: integrations?.find(i => i.service === "tiktok")?.is_active || false,
-        hasApiKey: apiKeys?.find(k => k.service === "tiktok")?.is_active || false,
+        hasApiKey: envStatus.tiktok,
       },
       {
         id: "elevenlabs",
@@ -45,8 +48,8 @@ export async function GET(request: NextRequest) {
         name: "ElevenLabs",
         icon: "🎙️",
         requiresOAuth: false,
-        connected: apiKeys?.find(k => k.service === "elevenlabs")?.is_active || false,
-        hasApiKey: apiKeys?.find(k => k.service === "elevenlabs")?.is_active || false,
+        connected: envStatus.elevenlabs,
+        hasApiKey: envStatus.elevenlabs,
       },
       {
         id: "openai",
@@ -54,8 +57,8 @@ export async function GET(request: NextRequest) {
         name: "OpenAI",
         icon: "🤖",
         requiresOAuth: false,
-        connected: apiKeys?.find(k => k.service === "openai")?.is_active || false,
-        hasApiKey: apiKeys?.find(k => k.service === "openai")?.is_active || false,
+        connected: envStatus.openai,
+        hasApiKey: envStatus.openai,
       },
       {
         id: "vk",
@@ -63,8 +66,8 @@ export async function GET(request: NextRequest) {
         name: "VKontakte",
         icon: "📱",
         requiresOAuth: false,
-        connected: apiKeys?.find(k => k.service === "vk")?.is_active || false,
-        hasApiKey: apiKeys?.find(k => k.service === "vk")?.is_active || false,
+        connected: envStatus.vk,
+        hasApiKey: envStatus.vk,
       },
       {
         id: "telegram",
@@ -72,8 +75,8 @@ export async function GET(request: NextRequest) {
         name: "Telegram Bot",
         icon: "✈️",
         requiresOAuth: false,
-        connected: apiKeys?.find(k => k.service === "telegram")?.is_active || false,
-        hasApiKey: apiKeys?.find(k => k.service === "telegram")?.is_active || false,
+        connected: envStatus.telegram,
+        hasApiKey: envStatus.telegram,
       },
     ]
 
