@@ -102,6 +102,69 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
 CREATE INDEX idx_chat_messages_user_platform ON chat_messages(user_id, platform);
 CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at DESC);
 
+-- Таблица пользователей (расширенная)
+CREATE TABLE IF NOT EXISTS users (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT,
+    phone TEXT,
+    locale TEXT DEFAULT 'ru',
+    source TEXT,
+    tags TEXT[],
+    last_purchase_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица покупок
+CREATE TABLE IF NOT EXISTS purchases (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    transaction_id TEXT UNIQUE NOT NULL,
+    user_email TEXT NOT NULL REFERENCES users(email),
+    item_type TEXT CHECK (item_type IN ('course', 'lesson', 'booking', 'subscription')) NOT NULL,
+    item_id TEXT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    currency TEXT DEFAULT 'RUB',
+    status TEXT CHECK (status IN ('pending', 'completed', 'failed', 'refunded')) DEFAULT 'pending',
+    payment_method TEXT,
+    metadata JSONB,
+    refunded_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица доступа к курсам
+CREATE TABLE IF NOT EXISTS course_access (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_email TEXT NOT NULL REFERENCES users(email),
+    course_id TEXT NOT NULL,
+    purchase_id UUID REFERENCES purchases(id),
+    expires_at TIMESTAMPTZ,
+    revoked_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_email, course_id)
+);
+
+-- Таблица прогресса прохождения
+CREATE TABLE IF NOT EXISTS course_progress (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_email TEXT NOT NULL REFERENCES users(email),
+    course_id TEXT NOT NULL,
+    lesson_id TEXT NOT NULL,
+    watched_seconds INTEGER DEFAULT 0,
+    total_seconds INTEGER,
+    completed BOOLEAN DEFAULT false,
+    last_position INTEGER DEFAULT 0,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_email, course_id, lesson_id)
+);
+
+-- Индексы для покупок и доступа
+CREATE INDEX idx_purchases_user_email ON purchases(user_email);
+CREATE INDEX idx_purchases_status ON purchases(status);
+CREATE INDEX idx_course_access_user_email ON course_access(user_email);
+CREATE INDEX idx_course_progress_user_course ON course_progress(user_email, course_id);
+
 -- Функция для обновления updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

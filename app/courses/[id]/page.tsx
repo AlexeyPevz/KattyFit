@@ -364,8 +364,14 @@ export default function CoursePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full" size="lg">
-                    Купить курс
+                  <Button 
+                    asChild 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    <Link href={`/checkout/course/${course.id}`}>
+                      Купить курс
+                    </Link>
                   </Button>
                   <Button variant="outline" className="w-full" size="lg">
                     Подарить курс

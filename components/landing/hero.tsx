@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Play, Star, Users, Calendar } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export function Hero() {
   return (
@@ -52,13 +53,17 @@ export function Hero() {
 
             {/* CTA buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="gap-2">
-                <Play className="h-4 w-4" />
-                Начать заниматься
+              <Button size="lg" className="gap-2" asChild>
+                <Link href="#courses">
+                  <Play className="h-4 w-4" />
+                  Начать заниматься
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                Записаться на тренировку
+              <Button size="lg" variant="outline" className="gap-2" asChild>
+                <Link href="/booking">
+                  <Calendar className="h-4 w-4" />
+                  Записаться на тренировку
+                </Link>
               </Button>
             </div>
 
