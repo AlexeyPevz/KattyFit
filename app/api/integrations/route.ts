@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 export async function GET(request: NextRequest) {
   try {
     // Получаем все интеграции
-    const { data: integrations, error: intError } = await supabase
+    const { data: integrations, error: intError } = await supabaseAdmin
       .from("integrations")
       .select("*")
       .order("service")
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (intError) throw intError
 
     // Получаем статус API ключей
-    const { data: apiKeys, error: keysError } = await supabase
+    const { data: apiKeys, error: keysError } = await supabaseAdmin
       .from("api_keys")
       .select("service, is_active")
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     if (type === "oauth") {
       // Сохраняем OAuth конфигурацию
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from("integrations")
         .upsert({
           service,
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       }
 
       for (const update of updates) {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from("api_keys")
           .upsert(update, {
             onConflict: "service,key_name"

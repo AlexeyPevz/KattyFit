@@ -217,7 +217,7 @@ export function ContentPublisher() {
         return "Опубликовано"
       case "processing":
         return "Обработка"
-      case "scheduled":
+      case "pending":
         return "Запланировано"
       default:
         return "Ожидание"
@@ -368,7 +368,7 @@ export function ContentPublisher() {
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {new Date(pub.publishedAt || pub.scheduledAt).toLocaleString("ru")}
+                            {new Date(pub.published_at || pub.scheduled_at).toLocaleString("ru")}
                           </TableCell>
                           <TableCell>
                             {pub.url && (

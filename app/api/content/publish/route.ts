@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 interface PublishRequest {
   contentId: string
@@ -10,7 +10,7 @@ interface PublishRequest {
 
 // Получение API ключей из БД
 async function getApiKey(service: string): Promise<string | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", service)
@@ -54,7 +54,7 @@ async function publishToTelegram(content: any, language: string) {
 
 // Публикация в YouTube (требует OAuth)
 async function publishToYouTube(content: any, language: string) {
-  const { data: integration } = await supabase
+  const { data: integration } = await supabaseAdmin
     .from("integrations")
     .select("config")
     .eq("service", "youtube")
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Получаем контент из БД
-    const { data: content, error: contentError } = await supabase
+    const { data: content, error: contentError } = await supabaseAdmin
       .from("content")
       .select("*")
       .eq("id", contentId)
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       for (const language of languages) {
         try {
           // Создаем запись о публикации
-          const { data: publication, error: pubError } = await supabase
+          const { data: publication, error: pubError } = await supabaseAdmin
             .from("publications")
             .insert({
               content_id: contentId,
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
           // Запускаем публикацию асинхронно
           config.publisher(content, language)
             .then(async (result) => {
-              await supabase
+              await supabaseAdmin
                 .from("publications")
                 .update({
                   status: "published",
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
                 .eq("id", publication.id)
             })
             .catch(async (error) => {
-              await supabase
+              await supabaseAdmin
                 .from("publications")
                 .update({
                   status: "failed",
@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
   const contentId = searchParams.get("contentId")
 
   try {
-    let query = supabase
+    let query = supabaseAdmin
       .from("publications")
       .select("*")
       .order("created_at", { ascending: false })

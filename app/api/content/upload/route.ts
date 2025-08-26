@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { existsSync } from "fs"
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     await writeFile(filepath, buffer)
 
     // Создаем запись в БД
-    const { data: content, error } = await supabase
+    const { data: content, error } = await supabaseAdmin
       .from("content")
       .insert({
         title,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Имитируем обработку видео
     setTimeout(async () => {
-      await supabase
+      await supabaseAdmin
         .from("content")
         .update({ status: "draft" })
         .eq("id", content.id)
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const { data: content, error } = await supabase
+    const { data: content, error } = await supabaseAdmin
       .from("content")
       .select("*")
       .order("created_at", { ascending: false })

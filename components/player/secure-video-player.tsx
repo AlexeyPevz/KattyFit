@@ -67,7 +67,7 @@ export function SecureVideoPlayer({
   const [quality, setQuality] = useState<number>(-1)
   const [availableQualities, setAvailableQualities] = useState<any[]>([])
 
-  let controlsTimeout: NodeJS.Timeout
+  let controlsTimeout: any
 
   useEffect(() => {
     if (!videoRef.current) return

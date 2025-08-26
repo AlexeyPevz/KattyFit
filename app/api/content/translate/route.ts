@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 // Получение API ключа ElevenLabs
 async function getElevenLabsKey(): Promise<string | null> {
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", "elevenlabs")
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Получаем информацию о контенте
-    const { data: content, error: contentError } = await supabase
+    const { data: content, error: contentError } = await supabaseAdmin
       .from("content")
       .select("*")
       .eq("id", contentId)
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const dubbingResult = await startDubbing(videoUrl, targetLanguages, apiKey)
 
     // Сохраняем задачу дубляжа в БД
-    const { error: taskError } = await supabase
+    const { error: taskError } = await supabaseAdmin
       .from("content")
       .update({
         target_languages: targetLanguages,
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
 
     // Если передан contentId, получаем dubbingId из БД
     if (contentId && !dubbing_id) {
-      const { data: content } = await supabase
+      const { data: content } = await supabaseAdmin
         .from("content")
         .select("dubbing_id")
         .eq("id", contentId)
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
 
     // Обновляем статус в БД если есть contentId
     if (contentId && status.status === "completed") {
-      await supabase
+      await supabaseAdmin
         .from("content")
         .update({
           dubbing_status: "completed",
