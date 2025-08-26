@@ -3,13 +3,18 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 
 // Получение API ключа ElevenLabs
 async function getElevenLabsKey(): Promise<string | null> {
+  if (process.env.ELEVENLABS_API_KEY) {
+    return process.env.ELEVENLABS_API_KEY
+  }
+
+  // legacy fallback
   const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", "elevenlabs")
     .eq("is_active", true)
     .single()
-  
+
   return data?.key_value || null
 }
 

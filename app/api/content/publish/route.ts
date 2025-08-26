@@ -11,13 +11,26 @@ interface PublishRequest {
 
 // Получение API ключей из БД
 async function getApiKey(service: string): Promise<string | null> {
-  const { data, error } = await supabaseAdmin
+  const envMap: Record<string, string> = {
+    vk: "VK_API_TOKEN",
+    telegram: "TELEGRAM_BOT_TOKEN",
+    telegram_chat_id: "TELEGRAM_CHAT_ID",
+    contentstudio: "CONTENTSTUDIO_API_KEY",
+  }
+
+  const envName = envMap[service]
+  if (envName && process.env[envName]) {
+    return process.env[envName] as string
+  }
+
+  // fallback legacy
+  const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", service)
     .eq("is_active", true)
     .single()
-  
+
   return data?.key_value || null
 }
 
