@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -96,6 +97,7 @@ export function ContentPublisher() {
   const [publishing, setPublishing] = useState(false)
   const [publishStatus, setPublishStatus] = useState<any[]>([])
   const [contentItems, setContentItems] = useState<any[]>([])
+  const [scheduleMap, setScheduleMap] = useState<Record<string, string>>({})
 
   // Загрузка контента и статуса публикаций
   useEffect(() => {
@@ -151,6 +153,17 @@ export function ContentPublisher() {
 
     setPublishing(true)
     try {
+      // Собираем расписание по платформам
+      const scheduleMapIso: Record<string, string> = {}
+      selectedPlatforms.forEach((p) => {
+        const val = scheduleMap[p]
+        if (val) {
+          try {
+            const iso = new Date(val).toISOString()
+            scheduleMapIso[p] = iso
+          } catch {}
+        }
+      })
       // Проверяем, есть ли международные платформы
       const internationalPlatforms = selectedPlatforms.filter(p => 
         ["instagram", "tiktok", "youtube"].includes(p)
@@ -171,6 +184,7 @@ export function ContentPublisher() {
             contentId: selectedContent,
             platforms: internationalPlatforms,
             languages: selectedLanguages,
+            scheduleMap: scheduleMapIso,
           }),
         })
 
@@ -191,6 +205,7 @@ export function ContentPublisher() {
             contentId: selectedContent,
             platforms: localPlatforms,
             languages: selectedLanguages,
+            scheduleMap: scheduleMapIso,
           }),
         })
 
@@ -322,6 +337,18 @@ export function ContentPublisher() {
                             Бизнес-аккаунт
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {selectedPlatforms.includes(platform.id) && (
+                      <div className="mt-3 space-y-1">
+                        <Label className="text-xs">Время публикации</Label>
+                        <Input
+                          type="datetime-local"
+                          value={scheduleMap[platform.id] || ""}
+                          onChange={(e) => setScheduleMap((prev) => ({ ...prev, [platform.id]: e.target.value }))}
+                        />
+                        <p className="text-[10px] text-muted-foreground">Пусто = опубликовать сразу</p>
                       </div>
                     )}
                   </div>

@@ -6,6 +6,7 @@ interface PublishRequest {
   platforms: string[]
   languages: string[]
   scheduledAt?: string
+  scheduleMap?: Record<string, string>
 }
 
 // Получение API ключей из БД
@@ -129,7 +130,7 @@ const PLATFORM_CONFIG = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { contentId, platforms, languages, scheduledAt }: PublishRequest = await request.json()
+    const { contentId, platforms, languages, scheduledAt, scheduleMap }: PublishRequest = await request.json()
 
     if (!contentId || !platforms || platforms.length === 0) {
       return NextResponse.json(
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
               platform,
               language,
               status: "pending",
-              scheduled_at: scheduledAt || new Date().toISOString(),
+              scheduled_at: (scheduleMap && scheduleMap[platform]) || scheduledAt || new Date().toISOString(),
             })
             .select()
             .single()
@@ -186,27 +187,30 @@ export async function POST(request: NextRequest) {
 
           publishTasks.push(publication)
 
-          // Запускаем публикацию асинхронно
-          config.publisher(content, language)
-            .then(async (result) => {
-              await supabaseAdmin
-                .from("publications")
-                .update({
-                  status: "published",
-                  url: result.url,
-                  published_at: new Date().toISOString(),
-                })
-                .eq("id", publication.id)
-            })
-            .catch(async (error) => {
-              await supabaseAdmin
-                .from("publications")
-                .update({
-                  status: "failed",
-                  error: error.message,
-                })
-                .eq("id", publication.id)
-            })
+          // Если времени нет — публикуем сразу; иначе оставляем задачу планировщику
+          const shouldPublishNow = !(scheduleMap && scheduleMap[platform]) && !scheduledAt
+          if (shouldPublishNow) {
+            config.publisher(content, language)
+              .then(async (result) => {
+                await supabaseAdmin
+                  .from("publications")
+                  .update({
+                    status: "published",
+                    url: result.url,
+                    published_at: new Date().toISOString(),
+                  })
+                  .eq("id", publication.id)
+              })
+              .catch(async (error) => {
+                await supabaseAdmin
+                  .from("publications")
+                  .update({
+                    status: "failed",
+                    error: error.message,
+                  })
+                  .eq("id", publication.id)
+              })
+          }
         } catch (error: any) {
           errors.push(`${platform}: ${error.message}`)
         }
