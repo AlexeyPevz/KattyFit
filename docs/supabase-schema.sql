@@ -249,3 +249,25 @@ CREATE POLICY "Enable all for authenticated users" ON thumbnails
 
 CREATE POLICY "Enable all for authenticated users" ON api_keys
     FOR ALL USING (auth.role() = 'authenticated');
+
+-- Промокоды
+CREATE TABLE IF NOT EXISTS promocodes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    discount_percent INTEGER CHECK (discount_percent >= 0 AND discount_percent <= 100) NOT NULL,
+    min_amount DECIMAL(10,2),
+    usage_limit INTEGER,
+    used_count INTEGER DEFAULT 0,
+    start_at TIMESTAMPTZ DEFAULT NOW(),
+    end_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 days',
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}'::JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE promocodes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable read for authenticated on promocodes" ON promocodes
+  FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Enable all for authenticated on promocodes" ON promocodes
+  FOR ALL USING (auth.role() = 'authenticated');

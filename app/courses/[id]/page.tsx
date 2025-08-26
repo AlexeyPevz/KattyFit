@@ -25,6 +25,7 @@ import {
   Sparkles
 } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 // Детальная информация о курсе (в реальном приложении загружается из БД)
 const courseDetails = {
@@ -148,6 +149,7 @@ const courseDetails = {
 export default function CoursePage() {
   const params = useParams()
   const [activeTab, setActiveTab] = useState("program")
+  const [showPreview, setShowPreview] = useState(false)
   
   // В реальном приложении здесь будет загрузка данных курса по ID
   const course = courseDetails
@@ -178,7 +180,7 @@ export default function CoursePage() {
               {/* Video Preview */}
               <div className="aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-violet-200 to-pink-200 dark:from-violet-800 dark:to-pink-800 relative group">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Button size="lg" variant="secondary" className="gap-2 group-hover:scale-110 transition-transform">
+                  <Button size="lg" variant="secondary" className="gap-2 group-hover:scale-110 transition-transform" onClick={() => setShowPreview(true)}>
                     <Play className="h-5 w-5" />
                     Смотреть превью
                   </Button>
@@ -212,6 +214,12 @@ export default function CoursePage() {
                     <RefreshCw className="h-4 w-4 text-muted-foreground" />
                     <span>Обновлено {course.lastUpdated}</span>
                   </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button asChild size="lg">
+                    <Link href={`/checkout/course/${course.id}`}>Купить курс</Link>
+                  </Button>
+                  <Button variant="outline" size="lg">Бесплатный урок</Button>
                 </div>
               </div>
 
@@ -450,6 +458,25 @@ export default function CoursePage() {
       </section>
 
       <Footer />
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-3xl">
+          <DialogTitle>Превью курса</DialogTitle>
+          <div className="aspect-video rounded-lg overflow-hidden">
+            <iframe
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button asChild>
+              <Link href={`/checkout/course/${course.id}`}>Купить курс</Link>
+            </Button>
+            <Button variant="outline" onClick={() => setShowPreview(false)}>Закрыть</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 import { generateRAGResponse } from "@/lib/rag-engine"
 
 // Интерфейс для унифицированного сообщения
@@ -77,7 +77,7 @@ async function sendMessage(platform: string, userId: string, text: string, extra
 
 // Получение API ключей для платформы
 async function getApiKeysForPlatform(platform: string) {
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_name, key_value")
     .eq("service", platform)
@@ -155,7 +155,7 @@ async function sendWhatsAppMessage(keys: any, to: string, text: string, extras?:
 // Обертка для вызова RAG движка
 async function generateChatResponse(message: UnifiedMessage) {
   // Получаем историю диалога
-  const { data: history } = await supabase
+  const { data: history } = await supabaseAdmin
     .from("chat_messages")
     .select("*")
     .eq("user_id", message.userId)
@@ -195,7 +195,7 @@ export async function POST(
     const message = platformParsers[platform as keyof typeof platformParsers](body)
 
     // Сохраняем входящее сообщение
-    await supabase.from("chat_messages").insert({
+    await supabaseAdmin.from("chat_messages").insert({
       user_id: message.userId,
       platform: message.platform,
       message_type: "incoming",
@@ -212,7 +212,7 @@ export async function POST(
     })
 
     // Сохраняем исходящее сообщение
-    await supabase.from("chat_messages").insert({
+    await supabaseAdmin.from("chat_messages").insert({
       user_id: message.userId,
       platform: message.platform,
       message_type: "outgoing",
@@ -247,8 +247,16 @@ export async function GET(
       // VK Callback API верификация
       const confirmation = searchParams.get("confirmation")
       if (confirmation) {
-        // Здесь должен быть код подтверждения из настроек VK
-        return new Response("your_confirmation_code", {
+        // Берём код подтверждения из api_keys(service=vk, key_name=confirmation)
+        const { data } = await supabaseAdmin
+          .from("api_keys")
+          .select("key_value")
+          .eq("service", "vk")
+          .eq("key_name", "confirmation")
+          .single()
+
+        const code = data?.key_value || ""
+        return new Response(code, {
           headers: { "Content-Type": "text/plain" },
         })
       }

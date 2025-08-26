@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 import crypto from "crypto"
 
 // Функция для проверки подписи CloudPayments
@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log("Payment success webhook:", body)
 
-    // В продакшене нужно проверять подпись
-    // const signature = request.headers.get("Content-HMAC")
-    // if (!checkCloudPaymentsSignature(body, signature)) {
-    //   return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
-    // }
+    // Проверяем подпись, если секрет установлен
+    const signature = request.headers.get("Content-HMAC") || request.headers.get("Content-Hmac")
+    if (process.env.CLOUDPAYMENTS_SECRET && (!signature || !checkCloudPaymentsSignature(body, signature))) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    }
 
     const {
       transactionId,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Создаем запись о покупке
-    const { data: purchase, error: purchaseError } = await supabase
+    const { data: purchase, error: purchaseError } = await supabaseAdmin
       .from("purchases")
       .insert({
         transaction_id: transactionId,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем или обновляем пользователя
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await supabaseAdmin
       .from("users")
       .upsert({
         email: email,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Предоставляем доступ к курсу
     if (data.type === "course" && data.courseId) {
-      const { error: accessError } = await supabase
+      const { error: accessError } = await supabaseAdmin
         .from("course_access")
         .insert({
           user_email: email,
@@ -97,21 +97,44 @@ export async function POST(request: NextRequest) {
     // Отправляем email с доступом (в реальном приложении)
     // await sendAccessEmail(email, data)
 
-    // Добавляем в CRM как успешную продажу
-    if (user) {
-      await supabase
-        .from("leads")
-        .upsert({
-          user_id: user.id,
-          email: email,
-          status: "customer",
-          source: "website",
-          last_purchase_id: purchase.id,
-          total_purchases: supabase.sql`total_purchases + 1`,
-          total_spent: supabase.sql`total_spent + ${amount}`,
-        }, {
-          onConflict: "email"
-        })
+    // Добавляем/обновляем лида как клиента
+    try {
+      if (user) {
+        const { data: existingLead } = await supabaseAdmin
+          .from("leads")
+          .select("id, tags, metadata")
+          .eq("email", email)
+          .limit(1)
+          .single()
+
+        if (existingLead?.id) {
+          await supabaseAdmin
+            .from("leads")
+            .update({
+              stage: "customer",
+              source: "website",
+              tags: Array.from(new Set([...(existingLead.tags || []), "customer"])),
+              metadata: { ...(existingLead.metadata || {}), last_purchase_id: purchase.id, last_amount: amount },
+            })
+            .eq("id", existingLead.id)
+        } else {
+          await supabaseAdmin
+            .from("leads")
+            .insert({
+              name: email,
+              email,
+              phone: null,
+              source: "website",
+              stage: "customer",
+              value: amount,
+              tags: ["customer"],
+              notes: description || "",
+              metadata: { last_purchase_id: purchase.id },
+            })
+        }
+      }
+    } catch (e) {
+      console.error("Lead upsert failed:", e)
     }
 
     return NextResponse.json({
@@ -165,7 +188,7 @@ export async function PUT(request: NextRequest) {
 
 async function handleRefund(data: any) {
   // Обновляем статус покупки
-  await supabase
+  await supabaseAdmin
     .from("purchases")
     .update({ 
       status: "refunded",
@@ -174,7 +197,7 @@ async function handleRefund(data: any) {
     .eq("transaction_id", data.TransactionId)
 
   // Отзываем доступ к курсу
-  await supabase
+  await supabaseAdmin
     .from("course_access")
     .update({ 
       revoked_at: new Date().toISOString()

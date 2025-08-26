@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 import { writeFile, mkdir } from "fs/promises"
 import path from "path"
 import { existsSync } from "fs"
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const url = `/thumbnails/${filename}`
 
     // Сохраняем в БД (upsert - обновляем если существует)
-    const { data: thumbnail, error } = await supabase
+    const { data: thumbnail, error } = await supabaseAdmin
       .from("thumbnails")
       .upsert({
         content_id: contentId,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Обновляем основную обложку контента (для языка по умолчанию)
     if (language === "ru") {
-      await supabase
+      await supabaseAdmin
         .from("content")
         .update({ thumbnail: url })
         .eq("id", contentId)
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { data: thumbnails, error } = await supabase
+    const { data: thumbnails, error } = await supabaseAdmin
       .from("thumbnails")
       .select("*")
       .eq("content_id", contentId)

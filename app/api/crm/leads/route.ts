@@ -228,3 +228,22 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { id, stage } = await request.json()
+    if (!id || !stage) {
+      return NextResponse.json({ error: "Missing id or stage" }, { status: 400 })
+    }
+    const { data, error } = await supabase
+      .from("leads")
+      .update({ stage, last_contact: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) throw error
+    return NextResponse.json({ success: true, lead: data })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Update failed" }, { status: 500 })
+  }
+}

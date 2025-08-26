@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 // Получение API ключа ContentStudio
 async function getContentStudioKey(): Promise<string | null> {
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", "contentstudio")
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         // Сохраняем обложки в БД
         if (params.contentId && result.thumbnails) {
           for (const [lang, url] of Object.entries(result.thumbnails)) {
-            await supabase
+            await supabaseAdmin
               .from("thumbnails")
               .upsert({
                 content_id: params.contentId,
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
       case "publish":
         // Получаем информацию о контенте
-        const { data: content } = await supabase
+        const { data: content } = await supabaseAdmin
           .from("content")
           .select("*")
           .eq("id", params.contentId)
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
         // Сохраняем результаты публикации
         for (const publication of result.publications || []) {
-          await supabase
+          await supabaseAdmin
             .from("publications")
             .insert({
               content_id: params.contentId,

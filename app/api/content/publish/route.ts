@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 interface PublishRequest {
   contentId: string
   platforms: string[]
   languages: string[]
   scheduledAt?: string
+  scheduleMap?: Record<string, string>
 }
 
 // Получение API ключей из БД
 async function getApiKey(service: string): Promise<string | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("api_keys")
     .select("key_value")
     .eq("service", service)
@@ -26,13 +27,21 @@ async function publishToVK(content: any, language: string) {
   if (!vkToken) {
     throw new Error("VK API token не настроен")
   }
-
-  // TODO: Реализовать публикацию через VK API
-  // Пока возвращаем заглушку
-  return {
-    success: true,
-    url: `https://vk.com/video-123456789_${Date.now()}`,
+  // Базовая публикация текста со ссылкой/обложкой (messages.send как пост-заглушка)
+  const message = `${content.title}${content.url ? `\n${content.url}` : ''}`
+  const params = new URLSearchParams({
+    access_token: vkToken,
+    v: '5.131',
+    message,
+    random_id: Date.now().toString(),
+    // Для реальной стены нужен wall.post с owner_id/group_id
+  })
+  const res = await fetch(`https://api.vk.com/method/messages.send?${params.toString()}`)
+  const data = await res.json()
+  if (data.error) {
+    throw new Error(`VK error: ${data.error.error_msg}`)
   }
+  return { success: true, url: 'https://vk.com/im' }
 }
 
 // Публикация в Telegram
@@ -44,17 +53,23 @@ async function publishToTelegram(content: any, language: string) {
     throw new Error("Telegram не настроен")
   }
 
-  // TODO: Реализовать публикацию через Telegram Bot API
-  // Пока возвращаем заглушку
-  return {
-    success: true,
-    url: `https://t.me/channel/${Date.now()}`,
+  const text = `${content.title}${content.url ? `\n${content.url}` : ''}`
+  const res = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: telegramChatId, text })
+  })
+  const data = await res.json()
+  if (!res.ok || !data.ok) {
+    throw new Error(data.description || 'Telegram sendMessage failed')
   }
+  const msgId = data.result?.message_id
+  return { success: true, url: `https://t.me/c/${telegramChatId}/${msgId || ''}` }
 }
 
 // Публикация в YouTube (требует OAuth)
 async function publishToYouTube(content: any, language: string) {
-  const { data: integration } = await supabase
+  const { data: integration } = await supabaseAdmin
     .from("integrations")
     .select("config")
     .eq("service", "youtube")
@@ -115,7 +130,7 @@ const PLATFORM_CONFIG = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { contentId, platforms, languages, scheduledAt }: PublishRequest = await request.json()
+    const { contentId, platforms, languages, scheduledAt, scheduleMap }: PublishRequest = await request.json()
 
     if (!contentId || !platforms || platforms.length === 0) {
       return NextResponse.json(
@@ -125,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Получаем контент из БД
-    const { data: content, error: contentError } = await supabase
+    const { data: content, error: contentError } = await supabaseAdmin
       .from("content")
       .select("*")
       .eq("id", contentId)
@@ -153,14 +168,14 @@ export async function POST(request: NextRequest) {
       for (const language of languages) {
         try {
           // Создаем запись о публикации
-          const { data: publication, error: pubError } = await supabase
+          const { data: publication, error: pubError } = await supabaseAdmin
             .from("publications")
             .insert({
               content_id: contentId,
               platform,
               language,
               status: "pending",
-              scheduled_at: scheduledAt || new Date().toISOString(),
+              scheduled_at: (scheduleMap && scheduleMap[platform]) || scheduledAt || new Date().toISOString(),
             })
             .select()
             .single()
@@ -172,27 +187,30 @@ export async function POST(request: NextRequest) {
 
           publishTasks.push(publication)
 
-          // Запускаем публикацию асинхронно
-          config.publisher(content, language)
-            .then(async (result) => {
-              await supabase
-                .from("publications")
-                .update({
-                  status: "published",
-                  url: result.url,
-                  published_at: new Date().toISOString(),
-                })
-                .eq("id", publication.id)
-            })
-            .catch(async (error) => {
-              await supabase
-                .from("publications")
-                .update({
-                  status: "failed",
-                  error: error.message,
-                })
-                .eq("id", publication.id)
-            })
+          // Если времени нет — публикуем сразу; иначе оставляем задачу планировщику
+          const shouldPublishNow = !(scheduleMap && scheduleMap[platform]) && !scheduledAt
+          if (shouldPublishNow) {
+            config.publisher(content, language)
+              .then(async (result) => {
+                await supabaseAdmin
+                  .from("publications")
+                  .update({
+                    status: "published",
+                    url: result.url,
+                    published_at: new Date().toISOString(),
+                  })
+                  .eq("id", publication.id)
+              })
+              .catch(async (error) => {
+                await supabaseAdmin
+                  .from("publications")
+                  .update({
+                    status: "failed",
+                    error: error.message,
+                  })
+                  .eq("id", publication.id)
+              })
+          }
         } catch (error: any) {
           errors.push(`${platform}: ${error.message}`)
         }
@@ -222,7 +240,7 @@ export async function GET(request: NextRequest) {
   const contentId = searchParams.get("contentId")
 
   try {
-    let query = supabase
+    let query = supabaseAdmin
       .from("publications")
       .select("*")
       .order("created_at", { ascending: false })

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 // Функция для извлечения ID видео из ссылки RuTube
 function extractRutubeVideoId(url: string): string | null {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     const metadata = await fetchRutubeMetadata(videoId)
 
     // Создаем запись в БД
-    const { data: content, error } = await supabase
+    const { data: content, error } = await supabaseAdmin
       .from("content")
       .insert({
         title: title || metadata.title,
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     // Имитируем обработку
     setTimeout(async () => {
-      await supabase
+      await supabaseAdmin
         .from("content")
         .update({ status: "draft" })
         .eq("id", content.id)

@@ -66,6 +66,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Progress } from "@/components/ui/progress"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 
 // Этапы воронки продаж
 const salesFunnelStages = [
@@ -211,6 +212,12 @@ export default function CRMPage() {
         ? { ...lead, stage: newStage, lastContact: new Date().toISOString().split('T')[0] }
         : lead
     ))
+    // Fire-and-forget PATCH to backend
+    fetch('/api/crm/leads', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: leadId, stage: newStage })
+    }).catch(() => {})
   }
 
   // Форматирование даты
@@ -426,6 +433,79 @@ export default function CRMPage() {
                       })}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Kanban */}
+            <TabsContent value="leads">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Kanban: Лиды по этапам</CardTitle>
+                      <CardDescription>Перетаскивайте карточки между этапами</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <DragDropContext
+                    onDragEnd={(result: DropResult) => {
+                      const { draggableId, destination, source } = result
+                      if (!destination) return
+                      const newStage = destination.droppableId
+                      const leadId = draggableId
+                      const srcStage = source.droppableId
+                      if (newStage === srcStage) return
+                      moveLeadToStage(leadId, newStage)
+                    }}
+                  >
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {salesFunnelStages.map((stage) => (
+                        <Droppable droppableId={stage.id} key={stage.id}>
+                          {(provided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                              <Card className="overflow-hidden">
+                                <div className={`h-2 ${stage.color}`} />
+                                <CardHeader className="pb-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <stage.icon className="h-4 w-4" />
+                                      <CardTitle className="text-base">{stage.name}</CardTitle>
+                                    </div>
+                                    <Badge variant="secondary">
+                                      {leads.filter(l => l.stage === stage.id).length}
+                                    </Badge>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-2 min-h-[60px]">
+                                    {leads.filter(l => l.stage === stage.id).map((lead, index) => (
+                                      <Draggable draggableId={lead.id} index={index} key={lead.id}>
+                                        {(p) => (
+                                          <div
+                                            ref={p.innerRef}
+                                            {...p.draggableProps}
+                                            {...p.dragHandleProps}
+                                            className="flex items-center justify-between text-sm cursor-grab active:cursor-grabbing hover:bg-muted p-2 rounded border"
+                                            onClick={() => { setSelectedLead(lead); setShowLeadDialog(true) }}
+                                          >
+                                            <span className="font-medium line-clamp-1">{lead.name}</span>
+                                            <span className="text-muted-foreground">{lead.value.toLocaleString()} ₽</span>
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          )}
+                        </Droppable>
+                      ))}
+                    </div>
+                  </DragDropContext>
                 </CardContent>
               </Card>
             </TabsContent>
