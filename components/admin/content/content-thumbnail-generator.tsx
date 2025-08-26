@@ -165,6 +165,37 @@ export function ContentThumbnailGenerator({ contentId, onClose }: ContentThumbna
     }
   }
 
+  const handleSave = async () => {
+    if (!thumbnailUrl) return
+
+    try {
+      const response = await fetch("/api/content/thumbnail", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contentId,
+          language: selectedLanguage,
+          imageData: thumbnailUrl,
+          type: "generated",
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Ошибка сохранения")
+      }
+
+      const data = await response.json()
+      console.log("Обложка сохранена:", data)
+      
+      // Закрываем диалог после успешного сохранения
+      onClose()
+    } catch (error) {
+      console.error("Ошибка сохранения обложки:", error)
+    }
+  }
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -321,13 +352,16 @@ export function ContentThumbnailGenerator({ contentId, onClose }: ContentThumbna
                 </Card>
 
                 <div className="flex gap-2">
-                  <Button onClick={drawThumbnail} variant="outline" className="flex-1">
+                  <Button onClick={drawThumbnail} variant="outline">
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Обновить
                   </Button>
-                  <Button onClick={handleDownload} className="flex-1">
+                  <Button onClick={handleDownload} variant="outline">
                     <Download className="mr-2 h-4 w-4" />
                     Скачать
+                  </Button>
+                  <Button onClick={handleSave} className="flex-1">
+                    Сохранить
                   </Button>
                 </div>
               </div>

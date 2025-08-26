@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -31,46 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ContentThumbnailGenerator } from "./content-thumbnail-generator"
-
-// Моковые данные для демонстрации
-const mockContent = [
-  {
-    id: "1",
-    title: "Растяжка для начинающих - Урок 1",
-    type: "lesson",
-    duration: "45:30",
-    status: "published",
-    languages: ["ru", "en", "es"],
-    platforms: ["youtube", "rutube"],
-    views: 1234,
-    thumbnail: "/images/trainer-studio.jpg",
-    createdAt: "2024-01-20",
-  },
-  {
-    id: "2",
-    title: "Утренняя разминка за 5 минут",
-    type: "short",
-    duration: "2:45",
-    status: "processing",
-    languages: ["ru"],
-    platforms: ["instagram", "tiktok"],
-    views: 5678,
-    thumbnail: "/images/trainer-outdoor.jpg",
-    createdAt: "2024-01-19",
-  },
-  {
-    id: "3",
-    title: "Аэройога: базовые позиции",
-    type: "lesson",
-    duration: "32:15",
-    status: "draft",
-    languages: ["ru"],
-    platforms: [],
-    views: 0,
-    thumbnail: null,
-    createdAt: "2024-01-18",
-  },
-]
+import { ContentTranslationManager } from "./content-translation-manager"
 
 const statusConfig = {
   draft: { label: "Черновик", color: "secondary", icon: AlertCircle },
@@ -92,14 +53,50 @@ export function ContentList() {
   const [filterType, setFilterType] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [selectedContent, setSelectedContent] = useState<string | null>(null)
+  const [selectedContentTitle, setSelectedContentTitle] = useState<string>("")
   const [showThumbnailGenerator, setShowThumbnailGenerator] = useState(false)
+  const [showTranslationManager, setShowTranslationManager] = useState(false)
+  const [content, setContent] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredContent = mockContent.filter((content) => {
-    const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = filterType === "all" || content.type === filterType
-    const matchesStatus = filterStatus === "all" || content.status === filterStatus
+  // Загрузка контента из API
+  useEffect(() => {
+    fetchContent()
+  }, [])
+
+  const fetchContent = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/content/upload")
+      const data = await response.json()
+      if (data.success) {
+        setContent(data.content)
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки контента:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredContent = content.filter((item) => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesType = filterType === "all" || item.type === filterType
+    const matchesStatus = filterStatus === "all" || item.status === filterStatus
     return matchesSearch && matchesType && matchesStatus
   })
+
+  // Форматирование длительности
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return "0:00"
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    }
+    return `${minutes}:${secs.toString().padStart(2, "0")}`
+  }
 
   return (
     <div className="space-y-4">
@@ -138,6 +135,12 @@ export function ContentList() {
       </div>
 
       {/* Список контента */}
+      {loading ? (
+        <div className="text-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">Загрузка контента...</p>
+        </div>
+      ) : (
       <div className="grid gap-4">
         {filteredContent.map((content) => {
           const StatusIcon = statusConfig[content.status as keyof typeof statusConfig].icon
@@ -163,7 +166,7 @@ export function ContentList() {
                       variant="secondary" 
                       className="absolute bottom-2 right-2 bg-black/70 text-white"
                     >
-                      {content.duration}
+                      {formatDuration(content.duration)}
                     </Badge>
                   </div>
 
@@ -175,7 +178,7 @@ export function ContentList() {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {content.createdAt}
+                            {new Date(content.created_at).toLocaleDateString("ru")}
                           </span>
                           <span className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
@@ -200,7 +203,11 @@ export function ContentList() {
                             <ImageIcon className="mr-2 h-4 w-4" />
                             Генерировать обложку
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedContent(content.id)
+                            setSelectedContentTitle(content.title)
+                            setShowTranslationManager(true)
+                          }}>
                             <Languages className="mr-2 h-4 w-4" />
                             Управление локализацией
                           </DropdownMenuItem>
@@ -273,8 +280,9 @@ export function ContentList() {
           )
         })}
       </div>
+      )}
 
-      {filteredContent.length === 0 && (
+      {!loading && filteredContent.length === 0 && (
         <div className="text-center py-12">
           <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">Контент не найден</p>
@@ -288,6 +296,21 @@ export function ContentList() {
           onClose={() => {
             setShowThumbnailGenerator(false)
             setSelectedContent(null)
+            fetchContent() // Обновляем список после сохранения обложки
+          }}
+        />
+      )}
+
+      {/* Модальное окно управления переводами */}
+      {showTranslationManager && selectedContent && (
+        <ContentTranslationManager
+          contentId={selectedContent}
+          contentTitle={selectedContentTitle}
+          onClose={() => {
+            setShowTranslationManager(false)
+            setSelectedContent(null)
+            setSelectedContentTitle("")
+            fetchContent() // Обновляем список после дубляжа
           }}
         />
       )}

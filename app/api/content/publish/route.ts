@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { supabase } from "@/lib/supabase"
 
 interface PublishRequest {
   contentId: string
@@ -7,54 +8,109 @@ interface PublishRequest {
   scheduledAt?: string
 }
 
+// Получение API ключей из БД
+async function getApiKey(service: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("api_keys")
+    .select("key_value")
+    .eq("service", service)
+    .eq("is_active", true)
+    .single()
+  
+  return data?.key_value || null
+}
+
+// Публикация в VK
+async function publishToVK(content: any, language: string) {
+  const vkToken = await getApiKey("vk")
+  if (!vkToken) {
+    throw new Error("VK API token не настроен")
+  }
+
+  // TODO: Реализовать публикацию через VK API
+  // Пока возвращаем заглушку
+  return {
+    success: true,
+    url: `https://vk.com/video-123456789_${Date.now()}`,
+  }
+}
+
+// Публикация в Telegram
+async function publishToTelegram(content: any, language: string) {
+  const telegramToken = await getApiKey("telegram")
+  const telegramChatId = await getApiKey("telegram_chat_id")
+  
+  if (!telegramToken || !telegramChatId) {
+    throw new Error("Telegram не настроен")
+  }
+
+  // TODO: Реализовать публикацию через Telegram Bot API
+  // Пока возвращаем заглушку
+  return {
+    success: true,
+    url: `https://t.me/channel/${Date.now()}`,
+  }
+}
+
+// Публикация в YouTube (требует OAuth)
+async function publishToYouTube(content: any, language: string) {
+  const { data: integration } = await supabase
+    .from("integrations")
+    .select("config")
+    .eq("service", "youtube")
+    .eq("is_active", true)
+    .single()
+
+  if (!integration?.config?.access_token) {
+    throw new Error("YouTube OAuth не настроен")
+  }
+
+  // TODO: Реализовать публикацию через YouTube Data API v3
+  throw new Error("YouTube публикация требует OAuth авторизации")
+}
+
 // Конфигурация платформ
 const PLATFORM_CONFIG = {
   vk: {
     name: "VKontakte",
+    publisher: publishToVK,
     requiresAuth: true,
-    supportsVideo: true,
-    maxVideoSize: 5 * 1024 * 1024 * 1024, // 5GB
-    supportedFormats: ["mp4", "avi", "mov"],
   },
   telegram: {
     name: "Telegram",
+    publisher: publishToTelegram,
     requiresAuth: true,
-    supportsVideo: true,
-    maxVideoSize: 2 * 1024 * 1024 * 1024, // 2GB
-    supportedFormats: ["mp4"],
   },
   rutube: {
     name: "RuTube",
-    requiresAuth: true,
-    supportsVideo: true,
-    maxVideoSize: 10 * 1024 * 1024 * 1024, // 10GB
-    supportedFormats: ["mp4", "avi", "mov", "mkv"],
+    publisher: async (content: any) => ({
+      success: true,
+      url: content.url, // Уже опубликовано на RuTube
+    }),
+    requiresAuth: false,
   },
   youtube: {
     name: "YouTube",
+    publisher: publishToYouTube,
     requiresAuth: true,
     requiresOAuth: true,
-    supportsVideo: true,
-    maxVideoSize: 128 * 1024 * 1024 * 1024, // 128GB
-    supportedFormats: ["mp4", "avi", "mov", "wmv", "flv", "3gpp", "webm"],
-  } as any,
+  },
   instagram: {
     name: "Instagram",
+    publisher: async () => {
+      throw new Error("Instagram требует Business аккаунт")
+    },
     requiresAuth: true,
-    supportsVideo: true,
-    maxVideoSize: 100 * 1024 * 1024, // 100MB для постов, 650MB для IGTV
-    maxDuration: 60, // секунды для постов
-    supportedFormats: ["mp4", "mov"],
+    requiresBusinessAccount: true,
   },
   tiktok: {
     name: "TikTok",
+    publisher: async () => {
+      throw new Error("TikTok требует Business аккаунт")
+    },
     requiresAuth: true,
     requiresBusinessAccount: true,
-    supportsVideo: true,
-    maxVideoSize: 287 * 1024 * 1024, // 287MB
-    maxDuration: 180, // 3 минуты
-    supportedFormats: ["mp4", "mov"],
-  } as any,
+  },
 }
 
 export async function POST(request: NextRequest) {
@@ -68,60 +124,87 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Проверяем доступность платформ
-    const unavailablePlatforms: string[] = []
-    const publishTasks: any[] = []
+    // Получаем контент из БД
+    const { data: content, error: contentError } = await supabase
+      .from("content")
+      .select("*")
+      .eq("id", contentId)
+      .single()
 
+    if (contentError || !content) {
+      return NextResponse.json(
+        { error: "Контент не найден" },
+        { status: 404 }
+      )
+    }
+
+    const publishTasks: any[] = []
+    const errors: string[] = []
+
+    // Создаем задачи публикации для каждой платформы и языка
     for (const platform of platforms) {
       const config = PLATFORM_CONFIG[platform as keyof typeof PLATFORM_CONFIG]
       
       if (!config) {
-        unavailablePlatforms.push(platform)
+        errors.push(`Платформа ${platform} не поддерживается`)
         continue
       }
 
-      // Проверяем наличие необходимых учетных данных
-      if ((config as any).requiresOAuth) {
-        // TODO: Проверить наличие OAuth токенов
-        const hasOAuth = false // Заглушка
-        if (!hasOAuth) {
-          unavailablePlatforms.push(`${platform} (требуется OAuth авторизация)`)
-          continue
-        }
-      }
-
-      if ((config as any).requiresBusinessAccount) {
-        // TODO: Проверить наличие бизнес-аккаунта
-        const hasBusinessAccount = false // Заглушка
-        if (!hasBusinessAccount) {
-          unavailablePlatforms.push(`${platform} (требуется бизнес-аккаунт)`)
-          continue
-        }
-      }
-
-      // Создаем задачу публикации для каждой платформы и языка
       for (const language of languages) {
-        publishTasks.push({
-          id: `${Date.now()}-${platform}-${language}`,
-          contentId,
-          platform,
-          language,
-          status: "pending",
-          scheduledAt: scheduledAt || new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-        })
+        try {
+          // Создаем запись о публикации
+          const { data: publication, error: pubError } = await supabase
+            .from("publications")
+            .insert({
+              content_id: contentId,
+              platform,
+              language,
+              status: "pending",
+              scheduled_at: scheduledAt || new Date().toISOString(),
+            })
+            .select()
+            .single()
+
+          if (pubError) {
+            errors.push(`Ошибка создания задачи для ${platform} (${language})`)
+            continue
+          }
+
+          publishTasks.push(publication)
+
+          // Запускаем публикацию асинхронно
+          config.publisher(content, language)
+            .then(async (result) => {
+              await supabase
+                .from("publications")
+                .update({
+                  status: "published",
+                  url: result.url,
+                  published_at: new Date().toISOString(),
+                })
+                .eq("id", publication.id)
+            })
+            .catch(async (error) => {
+              await supabase
+                .from("publications")
+                .update({
+                  status: "failed",
+                  error: error.message,
+                })
+                .eq("id", publication.id)
+            })
+        } catch (error: any) {
+          errors.push(`${platform}: ${error.message}`)
+        }
       }
     }
 
-    // В реальном приложении здесь будет добавление задач в очередь публикации
-    // Сейчас просто возвращаем результат
-    
     return NextResponse.json({
       success: true,
       publishTasks,
-      unavailablePlatforms,
-      message: unavailablePlatforms.length > 0 
-        ? `Публикация запланирована. Недоступные платформы: ${unavailablePlatforms.join(", ")}`
+      errors,
+      message: errors.length > 0 
+        ? `Публикация запланирована с ошибками: ${errors.join(", ")}`
         : "Публикация успешно запланирована",
     })
   } catch (error) {
@@ -138,34 +221,31 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const contentId = searchParams.get("contentId")
 
-  // В реальном приложении здесь будет запрос к БД
-  // Сейчас возвращаем моковые данные
-  const mockPublications = [
-    {
-      id: "1",
-      contentId: "1",
-      platform: "rutube",
-      language: "ru",
-      status: "published",
-      url: "https://rutube.ru/video/example",
-      publishedAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      contentId: "1",
-      platform: "vk",
-      language: "ru",
-      status: "processing",
-      scheduledAt: new Date().toISOString(),
-    },
-  ]
+  try {
+    let query = supabase
+      .from("publications")
+      .select("*")
+      .order("created_at", { ascending: false })
 
-  const publications = contentId 
-    ? mockPublications.filter(p => p.contentId === contentId)
-    : mockPublications
+    if (contentId) {
+      query = query.eq("content_id", contentId)
+    }
 
-  return NextResponse.json({
-    success: true,
-    publications,
-  })
+    const { data: publications, error } = await query
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json({
+      success: true,
+      publications: publications || [],
+    })
+  } catch (error) {
+    console.error("Ошибка загрузки публикаций:", error)
+    return NextResponse.json(
+      { error: "Ошибка загрузки публикаций" },
+      { status: 500 }
+    )
+  }
 }

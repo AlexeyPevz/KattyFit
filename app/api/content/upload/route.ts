@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { writeFile } from "fs/promises"
+import { supabase } from "@/lib/supabase"
+import { writeFile, mkdir } from "fs/promises"
 import path from "path"
-
-// Временное хранилище для контента (в реальном приложении используйте БД)
-const contentStore: any[] = []
+import { existsSync } from "fs"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,46 +21,56 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // В реальном приложении загружайте файлы в облачное хранилище
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
     // Создаем уникальное имя файла
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
     const filename = `${uniqueSuffix}-${file.name}`
-    const filepath = path.join(process.cwd(), "public", "uploads", filename)
+    
+    // Для демо - сохраняем локально. В продакшене используйте Supabase Storage
+    const uploadsDir = path.join(process.cwd(), "public", "uploads")
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true })
+    }
+    
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const filepath = path.join(uploadsDir, filename)
+    await writeFile(filepath, buffer)
 
-    // Сохраняем файл (в реальном приложении используйте S3 или подобное)
-    // await writeFile(filepath, buffer)
+    // Создаем запись в БД
+    const { data: content, error } = await supabase
+      .from("content")
+      .insert({
+        title,
+        description,
+        type,
+        filename,
+        original_name: file.name,
+        size: file.size,
+        mime_type: file.type,
+        status: "processing",
+        languages: ["ru"],
+        target_languages: enableTranslation ? targetLanguages : [],
+        platforms: [],
+        views: 0,
+        thumbnail: null,
+      })
+      .select()
+      .single()
 
-    // Создаем запись о контенте
-    const content = {
-      id: Date.now().toString(),
-      title,
-      description,
-      type,
-      filename,
-      originalName: file.name,
-      size: file.size,
-      mimeType: file.type,
-      status: "processing",
-      languages: ["ru"],
-      targetLanguages: enableTranslation ? targetLanguages : [],
-      platforms: [],
-      views: 0,
-      thumbnail: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    if (error) {
+      console.error("Ошибка создания записи:", error)
+      return NextResponse.json(
+        { error: "Ошибка сохранения в базу данных" },
+        { status: 500 }
+      )
     }
 
-    contentStore.push(content)
-
-    // Запускаем обработку (в реальном приложении это будет в фоновой задаче)
-    setTimeout(() => {
-      const contentIndex = contentStore.findIndex(c => c.id === content.id)
-      if (contentIndex !== -1) {
-        contentStore[contentIndex].status = "draft"
-      }
+    // Имитируем обработку видео
+    setTimeout(async () => {
+      await supabase
+        .from("content")
+        .update({ status: "draft" })
+        .eq("id", content.id)
     }, 3000)
 
     return NextResponse.json({
@@ -78,8 +87,29 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    content: contentStore,
-  })
+  try {
+    const { data: content, error } = await supabase
+      .from("content")
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Ошибка загрузки контента:", error)
+      return NextResponse.json(
+        { error: "Ошибка загрузки контента" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      content: content || [],
+    })
+  } catch (error) {
+    console.error("Ошибка:", error)
+    return NextResponse.json(
+      { error: "Внутренняя ошибка сервера" },
+      { status: 500 }
+    )
+  }
 }

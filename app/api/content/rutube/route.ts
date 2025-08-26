@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-
-// Временное хранилище (используйте БД в реальном приложении)
-const contentStore: any[] = []
+import { supabase } from "@/lib/supabase"
 
 // Функция для извлечения ID видео из ссылки RuTube
 function extractRutubeVideoId(url: string): string | null {
@@ -15,6 +13,36 @@ function extractRutubeVideoId(url: string): string | null {
     return null
   } catch {
     return null
+  }
+}
+
+// Функция для получения метаданных RuTube через их API
+async function fetchRutubeMetadata(videoId: string) {
+  try {
+    // RuTube API endpoint для получения информации о видео
+    const response = await fetch(`https://rutube.ru/api/video/${videoId}/`)
+    if (!response.ok) {
+      throw new Error("Не удалось получить данные видео")
+    }
+    
+    const data = await response.json()
+    return {
+      title: data.title || "Видео с RuTube",
+      description: data.description || "",
+      duration: data.duration || 0,
+      thumbnail: data.thumbnail_url || data.picture_url || null,
+      embedUrl: `https://rutube.ru/play/embed/${videoId}`,
+    }
+  } catch (error) {
+    console.error("Ошибка получения метаданных RuTube:", error)
+    // Возвращаем дефолтные значения
+    return {
+      title: "Видео с RuTube",
+      description: "",
+      duration: 0,
+      thumbnail: null,
+      embedUrl: `https://rutube.ru/play/embed/${videoId}`,
+    }
   }
 }
 
@@ -37,51 +65,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // В реальном приложении здесь будет вызов API RuTube для получения метаданных
-    // Сейчас используем моковые данные
-    const mockMetadata = {
-      title: title || "Видео с RuTube",
-      description: description || "",
-      duration: Math.floor(Math.random() * 3600) + 60, // Случайная длительность от 1 до 61 минуты
-      thumbnail: `/images/trainer-studio.jpg`, // В реальности будет URL превью с RuTube
-      embedUrl: `https://rutube.ru/play/embed/${videoId}`,
-    }
+    // Получаем метаданные с RuTube
+    const metadata = await fetchRutubeMetadata(videoId)
 
-    // Создаем запись о контенте
-    const content = {
-      id: Date.now().toString(),
-      title: mockMetadata.title,
-      description: mockMetadata.description,
-      type: type || (mockMetadata.duration > 180 ? "lesson" : "short"),
-      platform: "rutube",
-      videoId,
-      url,
-      embedUrl: mockMetadata.embedUrl,
-      duration: mockMetadata.duration,
-      status: "processing",
-      languages: ["ru"],
-      targetLanguages: enableTranslation ? targetLanguages : [],
-      platforms: ["rutube"],
-      views: 0,
-      thumbnail: mockMetadata.thumbnail,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
+    // Создаем запись в БД
+    const { data: content, error } = await supabase
+      .from("content")
+      .insert({
+        title: title || metadata.title,
+        description: description || metadata.description,
+        type: type || (metadata.duration > 180 ? "lesson" : "short"),
+        platform: "rutube",
+        video_id: videoId,
+        url,
+        embed_url: metadata.embedUrl,
+        duration: metadata.duration,
+        status: "processing",
+        languages: ["ru"],
+        target_languages: enableTranslation ? targetLanguages : [],
+        platforms: ["rutube"],
+        views: 0,
+        thumbnail: metadata.thumbnail,
+      })
+      .select()
+      .single()
 
-    contentStore.push(content)
+    if (error) {
+      console.error("Ошибка создания записи:", error)
+      return NextResponse.json(
+        { error: "Ошибка сохранения в базу данных" },
+        { status: 500 }
+      )
+    }
 
     // Имитируем обработку
-    setTimeout(() => {
-      const contentIndex = contentStore.findIndex(c => c.id === content.id)
-      if (contentIndex !== -1) {
-        contentStore[contentIndex].status = "draft"
-      }
+    setTimeout(async () => {
+      await supabase
+        .from("content")
+        .update({ status: "draft" })
+        .eq("id", content.id)
     }, 2000)
 
     return NextResponse.json({
       success: true,
       content: content,
-      metadata: mockMetadata,
+      metadata: metadata,
     })
   } catch (error) {
     console.error("Ошибка обработки RuTube URL:", error)

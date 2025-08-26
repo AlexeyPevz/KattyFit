@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AdminGuard } from "@/components/auth/admin-guard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,8 @@ import {
   Copy,
   Eye,
   EyeOff,
-  Info
+  Info,
+  Loader2
 } from "lucide-react"
 import Link from "next/link"
 
@@ -35,7 +36,7 @@ interface Integration {
   apiKeyRequired?: boolean
 }
 
-const INTEGRATIONS: Integration[] = [
+const DEFAULT_INTEGRATIONS: Integration[] = [
   {
     id: "youtube",
     name: "YouTube",
@@ -78,19 +79,89 @@ const INTEGRATIONS: Integration[] = [
     apiKeyRequired: true,
     setupGuide: "https://platform.openai.com/docs/quickstart",
   },
+  {
+    id: "vk",
+    name: "VKontakte",
+    icon: "📱",
+    color: "#0077FF",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://dev.vk.com/api/getting-started",
+  },
+  {
+    id: "telegram",
+    name: "Telegram Bot",
+    icon: "✈️",
+    color: "#0088CC",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://core.telegram.org/bots",
+  },
 ]
 
 export default function IntegrationsPage() {
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
   const [credentials, setCredentials] = useState<Record<string, any>>({})
+  const [integrations, setIntegrations] = useState<Integration[]>(DEFAULT_INTEGRATIONS)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchIntegrations()
+  }, [])
+
+  const fetchIntegrations = async () => {
+    try {
+      const response = await fetch("/api/integrations")
+      const data = await response.json()
+      
+      if (data.success) {
+        // Обновляем статус подключения
+        const updated = DEFAULT_INTEGRATIONS.map(integration => ({
+          ...integration,
+          connected: data.services.find((s: any) => s.service === integration.id)?.connected || false
+        }))
+        setIntegrations(updated)
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки интеграций:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const toggleShowSecret = (field: string) => {
     setShowSecrets(prev => ({ ...prev, [field]: !prev[field] }))
   }
 
-  const handleSaveCredentials = (integrationId: string) => {
-    // В реальном приложении здесь будет сохранение в защищенное хранилище
-    console.log(`Сохранение учетных данных для ${integrationId}`, credentials[integrationId])
+  const handleSaveCredentials = async (integrationId: string) => {
+    setSaving(integrationId)
+    try {
+      const integration = integrations.find(i => i.id === integrationId)
+      const response = await fetch("/api/integrations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          service: integrationId,
+          type: integration?.requiresOAuth ? "oauth" : "api",
+          credentials: credentials[integrationId] || {},
+        }),
+      })
+
+      if (response.ok) {
+        await fetchIntegrations() // Обновляем статус
+        // Очищаем сохраненные данные
+        setCredentials(prev => ({ ...prev, [integrationId]: {} }))
+      }
+    } catch (error) {
+      console.error("Ошибка сохранения:", error)
+    } finally {
+      setSaving(null)
+    }
   }
 
   const copyToClipboard = (text: string) => {
@@ -123,8 +194,13 @@ export default function IntegrationsPage() {
             </AlertDescription>
           </Alert>
 
+          {loading ? (
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            </div>
+          ) : (
           <div className="grid gap-6">
-            {INTEGRATIONS.map((integration) => (
+            {integrations.map((integration) => (
               <Card key={integration.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -275,12 +351,20 @@ export default function IntegrationsPage() {
                       <Button 
                         onClick={() => handleSaveCredentials(integration.id)}
                         disabled={
+                          saving === integration.id ||
                           (integration.clientIdRequired && !credentials[integration.id]?.clientId) ||
                           (integration.clientSecretRequired && !credentials[integration.id]?.clientSecret) ||
                           (integration.apiKeyRequired && !credentials[integration.id]?.apiKey)
                         }
                       >
-                        Сохранить
+                        {saving === integration.id ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Сохранение...
+                          </>
+                        ) : (
+                          "Сохранить"
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -288,6 +372,7 @@ export default function IntegrationsPage() {
               </Card>
             ))}
           </div>
+          )}
 
           <Card className="mt-6">
             <CardHeader>
