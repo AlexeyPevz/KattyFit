@@ -1,0 +1,70 @@
+{
+  "name": "Content Management System",
+  "description": "Система управления контентом с загрузкой видео, генерацией обложек и публикацией на платформы",
+  "version": "1.0.0",
+  "features": [
+    "Загрузка видео файлов и ссылок RuTube",
+    "Генерация обложек с Canvas fallback",
+    "Мультиязычная поддержка",
+    "Публикация на платформы",
+    "OAuth интеграции"
+  ],
+  "routes": [
+    {
+      "path": "/admin/content",
+      "component": "app/admin/content/page.tsx",
+      "description": "Главная страница управления контентом"
+    },
+    {
+      "path": "/admin/settings/integrations",
+      "component": "app/admin/settings/integrations/page.tsx",
+      "description": "Настройка интеграций и API ключей"
+    }
+  ],
+  "components": [
+    {
+      "name": "ContentUploader",
+      "path": "components/admin/content/content-uploader.tsx",
+      "description": "Компонент загрузки видео"
+    },
+    {
+      "name": "ContentList",
+      "path": "components/admin/content/content-list.tsx",
+      "description": "Список загруженного контента"
+    },
+    {
+      "name": "ContentThumbnailGenerator",
+      "path": "components/admin/content/content-thumbnail-generator.tsx",
+      "description": "Генератор обложек"
+    },
+    {
+      "name": "ContentPublisher",
+      "path": "components/admin/content/content-publisher.tsx",
+      "description": "Публикация на платформы"
+    }
+  ],
+  "api_routes": [
+    {
+      "path": "/api/content/upload",
+      "method": ["GET", "POST"],
+      "description": "Загрузка видео файлов"
+    },
+    {
+      "path": "/api/content/rutube",
+      "method": ["POST"],
+      "description": "Обработка ссылок RuTube"
+    },
+    {
+      "path": "/api/content/publish",
+      "method": ["GET", "POST"],
+      "description": "Публикация контента"
+    }
+  ],
+  "dependencies": {
+    "required": [],
+    "recommended": [
+      "ffmpeg (для обработки видео)",
+      "sharp (для обработки изображений)"
+    ]
+  }
+}

@@ -45,6 +45,34 @@ export default function AdminDashboard() {
 
   const quickActions = [
     {
+      title: "Управление контентом",
+      description: "Загрузка видео, генерация обложек и публикация",
+      href: "/admin/content",
+      icon: Activity,
+      color: "bg-violet-500",
+    },
+    {
+      title: "Омниканальные чаты",
+      description: "Единый центр управления всеми диалогами",
+      href: "/admin/chat",
+      icon: BarChart3,
+      color: "bg-emerald-500",
+    },
+    {
+      title: "Управление тренировками",
+      description: "Типы занятий, пакеты и расписание",
+      href: "/admin/trainings", 
+      icon: Calendar,
+      color: "bg-orange-500",
+    },
+    {
+      title: "CRM",
+      description: "Воронка продаж и управление лидами",
+      href: "/admin/crm",
+      icon: TrendingUp,
+      color: "bg-purple-500",
+    },
+    {
       title: "Управление клиентами",
       description: "Просмотр и редактирование профилей клиентов",
       href: "/admin/clients",
@@ -78,6 +106,13 @@ export default function AdminDashboard() {
       href: "/admin/backup",
       icon: Database,
       color: "bg-orange-500",
+    },
+    {
+      title: "База знаний",
+      description: "Управление информацией для AI-ассистента",
+      href: "/admin/knowledge",
+      icon: BookOpen,
+      color: "bg-indigo-500",
     },
     {
       title: "Аналитика",

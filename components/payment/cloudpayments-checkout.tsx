@@ -1,0 +1,289 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Loader2, Lock, CreditCard, Shield, CheckCircle2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+declare global {
+  interface Window {
+    cp: any
+  }
+}
+
+interface CloudPaymentsCheckoutProps {
+  amount: number
+  currency?: string
+  description: string
+  accountId?: string
+  email?: string
+  data?: any
+  onSuccess?: (transaction: any) => void
+  onFail?: (reason: any) => void
+  onComplete?: () => void
+}
+
+export function CloudPaymentsCheckout({
+  amount,
+  currency = "RUB",
+  description,
+  accountId,
+  email,
+  data = {},
+  onSuccess,
+  onFail,
+  onComplete
+}: CloudPaymentsCheckoutProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [userEmail, setUserEmail] = useState(email || "")
+  const [acceptTerms, setAcceptTerms] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Загружаем скрипт CloudPayments
+    if (!window.cp) {
+      const script = document.createElement("script")
+      script.src = "https://widget.cloudpayments.ru/bundles/cloudpayments.js"
+      script.async = true
+      document.body.appendChild(script)
+    }
+  }, [])
+
+  const handlePayment = async () => {
+    if (!window.cp) {
+      console.error("CloudPayments widget not loaded")
+      return
+    }
+
+    if (!userEmail) {
+      alert("Пожалуйста, укажите email")
+      return
+    }
+
+    if (!acceptTerms) {
+      alert("Необходимо принять условия оферты")
+      return
+    }
+
+    setIsLoading(true)
+
+    const widget = new window.cp.CloudPayments()
+    
+    const paymentData = {
+      publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001",
+      description: description,
+      amount: amount,
+      currency: currency,
+      accountId: accountId || userEmail,
+      email: userEmail,
+      data: {
+        ...data,
+        email: userEmail,
+      }
+    }
+
+    widget.pay("auth", paymentData,
+      {
+        onSuccess: (options: any) => {
+          // Платеж прошел успешно
+          console.log("Payment success:", options)
+          setIsLoading(false)
+          setShowSuccessDialog(true)
+          
+          // Сохраняем информацию о покупке
+          fetch("/api/payments/success", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              transactionId: options.id,
+              amount: amount,
+              description: description,
+              email: userEmail,
+              data: data
+            })
+          })
+
+          if (onSuccess) {
+            onSuccess(options)
+          }
+
+          // Перенаправляем на страницу успеха через 3 секунды
+          setTimeout(() => {
+            if (data.courseId) {
+              router.push(`/player/${data.courseId}`)
+            } else if (data.bookingId) {
+              router.push("/booking/success")
+            }
+          }, 3000)
+        },
+        onFail: (reason: any, options: any) => {
+          // Платеж не прошел
+          console.error("Payment failed:", reason, options)
+          setIsLoading(false)
+          alert(`Ошибка оплаты: ${reason}`)
+          
+          if (onFail) {
+            onFail(reason)
+          }
+        },
+        onComplete: (paymentResult: any, options: any) => {
+          // Вызывается как при успехе, так и при неудаче
+          setIsLoading(false)
+          
+          if (onComplete) {
+            onComplete()
+          }
+        }
+      }
+    )
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Оформление заказа</CardTitle>
+          <CardDescription>
+            Безопасная оплата через CloudPayments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Payment Info */}
+          <div className="rounded-lg bg-muted p-4 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Товар:</span>
+              <span className="font-medium">{description}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">К оплате:</span>
+              <span className="text-2xl font-bold">{amount} ₽</span>
+            </div>
+          </div>
+
+          {/* Email Input */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email для доступа</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              На этот email будут отправлены данные для доступа
+            </p>
+          </div>
+
+          {/* Terms Checkbox */}
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              id="terms"
+              checked={acceptTerms}
+              onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+            />
+            <label
+              htmlFor="terms"
+              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Я принимаю{" "}
+              <a href="/offer" target="_blank" className="text-primary underline">
+                условия оферты
+              </a>{" "}
+              и{" "}
+              <a href="/privacy" target="_blank" className="text-primary underline">
+                политику конфиденциальности
+              </a>
+            </label>
+          </div>
+
+          {/* Security Badges */}
+          <div className="flex items-center justify-center gap-4 py-4 border-y">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Lock className="h-4 w-4" />
+              <span>SSL</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>PCI DSS</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CreditCard className="h-4 w-4" />
+              <span>3D-Secure</span>
+            </div>
+          </div>
+
+          {/* Payment Methods */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Принимаем к оплате:</p>
+            <div className="flex flex-wrap gap-2">
+              <img src="/api/placeholder/60/40" alt="Visa" className="h-8" />
+              <img src="/api/placeholder/60/40" alt="Mastercard" className="h-8" />
+              <img src="/api/placeholder/60/40" alt="Mir" className="h-8" />
+              <img src="/api/placeholder/60/40" alt="ApplePay" className="h-8" />
+              <img src="/api/placeholder/60/40" alt="GooglePay" className="h-8" />
+            </div>
+          </div>
+
+          {/* Pay Button */}
+          <Button 
+            onClick={handlePayment}
+            disabled={isLoading || !userEmail || !acceptTerms}
+            className="w-full"
+            size="lg"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Обработка...
+              </>
+            ) : (
+              <>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Оплатить {amount} ₽
+              </>
+            )}
+          </Button>
+
+          {/* Additional Info */}
+          <p className="text-xs text-center text-muted-foreground">
+            Нажимая кнопку "Оплатить", вы соглашаетесь с условиями оферты.
+            Оплата происходит через защищенное соединение.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            </div>
+            <DialogTitle className="text-center">Оплата прошла успешно!</DialogTitle>
+            <DialogDescription className="text-center">
+              Спасибо за покупку! Сейчас вы будете перенаправлены к вашему контенту.
+              Также мы отправили данные для доступа на email {userEmail}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-4">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}

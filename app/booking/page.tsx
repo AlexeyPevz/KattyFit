@@ -1,450 +1,324 @@
 "use client"
 
 import { useState } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Button } from "@/components/ui/button"
+import { Navbar } from "@/components/landing/navbar"
+import { Footer } from "@/components/landing/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Clock, MapPin, Video, CalendarIcon, CreditCard, CheckCircle } from "lucide-react"
-import { motion } from "framer-motion"
+import { 
+  CalendarDays,
+  Clock,
+  MapPin,
+  Monitor,
+  Users,
+  User,
+  CreditCard,
+  Info
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
-const services = [
+// В реальном приложении загружается из API
+const trainingTypes = [
   {
-    id: "personal",
-    title: "Персональная тренировка",
-    description: "Индивидуальное занятие с полным вниманием тренера",
-    duration: 60,
-    price: 3500,
-    type: "personal",
-    features: ["Индивидуальная программа", "Персональные корректировки", "Гибкий график"],
-  },
-  {
-    id: "stretching",
-    title: "Растяжка",
-    description: "Специализированное занятие по развитию гибкости",
-    duration: 90,
+    id: "online-personal",
+    title: "Персональная онлайн",
     price: 2500,
-    type: "stretching",
-    features: ["Все группы мышц", "Безопасные техники", "Прогрессивная нагрузка"],
-  },
-  {
-    id: "aerial",
-    title: "Аэройога",
-    description: "Занятие в воздушных полотнах",
-    duration: 90,
-    price: 4000,
-    type: "aerial",
-    features: ["Профессиональное оборудование", "Техника безопасности", "Все уровни"],
-  },
-  {
-    id: "consultation",
-    title: "Консультация",
-    description: "Оценка физического состояния и составление программы",
-    duration: 30,
-    price: 1500,
-    type: "consultation",
-    features: ["Анализ состояния", "Персональные рекомендации", "План тренировок"],
-  },
+    duration: "60 минут",
+    description: "Индивидуальное занятие через Zoom",
+    icon: Monitor,
+    active: true,
+    benefits: [
+      "Полное внимание тренера",
+      "Индивидуальная программа",
+      "Удобное время",
+      "Запись занятия"
+    ]
+  }
 ]
 
-const timeSlots = ["09:00", "10:30", "12:00", "13:30", "15:00", "16:30", "18:00", "19:30"]
+// Пакеты тренировок
+const trainingPackages = [
+  {
+    id: "package-5",
+    title: "Пакет 5 занятий",
+    sessions: 5,
+    price: 11250,
+    discount: 10,
+    validDays: 60,
+    description: "Скидка 10% при покупке пакета"
+  },
+  {
+    id: "package-10",
+    title: "Пакет 10 занятий", 
+    sessions: 10,
+    price: 21250,
+    discount: 15,
+    validDays: 90,
+    description: "Скидка 15% при покупке пакета"
+  }
+]
+
+// Моковые данные доступных слотов
+const availableSlots = {
+  "2024-01-20": ["10:00", "12:00", "17:00", "19:00"],
+  "2024-01-21": ["11:00", "15:00", "18:00"],
+  "2024-01-22": ["10:00", "14:00", "16:00", "19:00"],
+  "2024-01-23": ["09:00", "13:00", "17:00"],
+  "2024-01-24": ["10:00", "12:00", "18:00", "20:00"],
+  "2024-01-25": ["11:00", "15:00", "17:00"],
+  "2024-01-26": ["10:00", "12:00", "14:00"],
+}
 
 export default function BookingPage() {
-  const [selectedService, setSelectedService] = useState(services[0])
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [selectedTime, setSelectedTime] = useState("")
-  const [sessionType, setSessionType] = useState<"online" | "offline">("offline")
-  const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    experience: "",
-    goals: "",
-    notes: "",
-  })
+  const router = useRouter()
+  const [bookingMode, setBookingMode] = useState<"single" | "package">("single")
+  const [selectedType, setSelectedType] = useState("online-personal")
+  const [selectedPackage, setSelectedPackage] = useState<string | undefined>(undefined)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined)
 
-  const handleServiceSelect = (service: (typeof services)[0]) => {
-    setSelectedService(service)
-  }
-
-  const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  const selectedTraining = trainingTypes.find(t => t.id === selectedType)
+  const dateKey = selectedDate ? selectedDate.toISOString().split('T')[0] : ""
+  const slots = availableSlots[dateKey as keyof typeof availableSlots] || []
 
   const handleBooking = () => {
-    // Handle booking logic here
-    console.log("Booking data:", {
-      service: selectedService,
-      date: selectedDate,
+    if (!selectedDate || !selectedTime || !selectedTraining) return
+
+    // В реальном приложении здесь будет создание записи и переход к оплате
+    const bookingData = {
+      type: selectedType,
+      date: selectedDate.toISOString(),
       time: selectedTime,
-      type: sessionType,
-      ...formData,
-    })
+      price: selectedTraining.price
+    }
+
+    // Сохраняем в localStorage для передачи на страницу оплаты
+    localStorage.setItem("bookingData", JSON.stringify(bookingData))
+    
+    // Переходим к оплате
+    router.push("/checkout/booking")
   }
 
   return (
     <div className="min-h-screen">
-      <Header />
-
-      <main className="container px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Запись на{" "}
-            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              тренировку
-            </span>
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Выберите удобное время и тип занятия для достижения ваших целей
-          </p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className="flex items-center">
-                <div
-                  className={`
-                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                  ${currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}
-                `}
-                >
-                  {currentStep > step ? <CheckCircle className="w-4 h-4" /> : step}
-                </div>
-                {step < 3 && (
-                  <div
-                    className={`
-                    w-12 h-0.5 mx-2
-                    ${currentStep > step ? "bg-primary" : "bg-muted"}
-                  `}
-                  />
-                )}
-              </div>
-            ))}
+      <Navbar />
+      
+      <section className="pt-24 pb-20">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Запись на тренировку
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Выберите удобный формат занятия и время. Я помогу вам достичь ваших целей!
+            </p>
           </div>
-        </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* Step 1: Service Selection */}
-          {currentStep === 1 && (
-            <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Left Column - Training Types */}
+            <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Выберите тип тренировки</CardTitle>
-                  <CardDescription>Выберите подходящий формат занятия из доступных вариантов</CardDescription>
+                  <CardTitle>1. Выберите тип тренировки</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
-                    {services.map((service) => (
-                      <Card
-                        key={service.id}
-                        className={`cursor-pointer transition-all duration-200 ${
-                          selectedService.id === service.id ? "ring-2 ring-primary bg-primary/5" : "hover:shadow-md"
-                        }`}
-                        onClick={() => handleServiceSelect(service)}
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg">{service.title}</CardTitle>
-                            <Badge variant="outline">{service.price.toLocaleString()} ₽</Badge>
-                          </div>
-                          <CardDescription>{service.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex items-center text-sm text-muted-foreground mb-3">
-                            <Clock className="w-4 h-4 mr-1" />
-                            {service.duration} минут
-                          </div>
-                          <div className="space-y-1">
-                            {service.features.map((feature, idx) => (
-                              <div key={idx} className="flex items-center text-sm">
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary mr-2" />
-                                {feature}
+                  <RadioGroup value={selectedType} onValueChange={setSelectedType}>
+                    <div className="grid gap-4">
+                      {trainingTypes.map((type) => {
+                        const Icon = type.icon
+                        return (
+                          <div key={type.id}>
+                            <RadioGroupItem
+                              value={type.id}
+                              id={type.id}
+                              className="peer sr-only"
+                            />
+                            <Label
+                              htmlFor={type.id}
+                              className={cn(
+                                "flex cursor-pointer rounded-lg border p-4 hover:bg-accent",
+                                "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                              )}
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-start gap-4">
+                                  <div className="p-2 rounded-lg bg-muted">
+                                    <Icon className="h-6 w-6" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h3 className="font-semibold">{type.title}</h3>
+                                      <p className="text-2xl font-bold">{type.price} ₽</p>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mb-1">
+                                      {type.description}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                      <Clock className="inline h-3 w-3 mr-1" />
+                                      {type.duration}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {type.benefits.map((benefit, index) => (
+                                        <div key={index} className="flex items-center gap-1 text-xs">
+                                          <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                                          <span>{benefit}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            ))}
+                            </Label>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  <Tabs value={sessionType} onValueChange={(value) => setSessionType(value as "online" | "offline")}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="offline" className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Офлайн
-                      </TabsTrigger>
-                      <TabsTrigger value="online" className="flex items-center">
-                        <Video className="w-4 h-4 mr-2" />
-                        Онлайн
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="offline" className="mt-4">
-                      <Card>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center space-x-2 text-muted-foreground">
-                            <MapPin className="w-4 h-4" />
-                            <span>Москва, ул. Примерная, д. 123, студия "Гармония"</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="online" className="mt-4">
-                      <Card>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center space-x-2 text-muted-foreground">
-                            <Video className="w-4 h-4" />
-                            <span>Ссылка на видеоконференцию будет отправлена на email</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
-
-                  <div className="flex justify-end mt-6">
-                    <Button onClick={handleNext} className="yoga-gradient text-white">
-                      Далее
-                    </Button>
-                  </div>
+                        )
+                      })}
+                    </div>
+                  </RadioGroup>
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
 
-          {/* Step 2: Date & Time Selection */}
-          {currentStep === 2 && (
-            <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Выберите дату и время</CardTitle>
-                  <CardDescription>Выберите удобные дату и время для проведения тренировки</CardDescription>
+                  <CardTitle>2. Выберите дату и время</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <Label className="text-base font-medium mb-4 block">Дата</Label>
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        disabled={(date) => date < new Date() || date.getDay() === 0}
-                        className="rounded-md border"
-                      />
-                    </div>
+                <CardContent className="space-y-6">
+                  <div>
+                    <Label className="mb-3 block">Доступные даты</Label>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={(date) => 
+                        date < new Date() || 
+                        date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                      }
+                      className="rounded-md border"
+                    />
+                  </div>
 
+                  {selectedDate && (
                     <div>
-                      <Label className="text-base font-medium mb-4 block">Время</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {timeSlots.map((time) => (
-                          <Button
-                            key={time}
-                            variant={selectedTime === time ? "default" : "outline"}
-                            className={`${selectedTime === time ? "yoga-gradient text-white" : ""}`}
-                            onClick={() => setSelectedTime(time)}
-                          >
-                            {time}
-                          </Button>
-                        ))}
-                      </div>
-
-                      {selectedDate && selectedTime && (
-                        <Card className="mt-6 bg-primary/5 border-primary/20">
-                          <CardContent className="pt-6">
-                            <div className="flex items-center space-x-2 text-primary">
-                              <CalendarIcon className="w-4 h-4" />
-                              <span className="font-medium">
-                                {selectedDate.toLocaleDateString("ru-RU", {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })}{" "}
-                                в {selectedTime}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
+                      <Label className="mb-3 block">Доступное время</Label>
+                      {slots.length > 0 ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {slots.map((time) => (
+                            <Button
+                              key={time}
+                              variant={selectedTime === time ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setSelectedTime(time)}
+                            >
+                              {time}
+                            </Button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Нет доступных слотов на выбранную дату
+                        </p>
                       )}
                     </div>
-                  </div>
-
-                  <div className="flex justify-between mt-6">
-                    <Button variant="outline" onClick={handleBack}>
-                      Назад
-                    </Button>
-                    <Button
-                      onClick={handleNext}
-                      disabled={!selectedDate || !selectedTime}
-                      className="yoga-gradient text-white"
-                    >
-                      Далее
-                    </Button>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
+            </div>
 
-          {/* Step 3: Personal Information & Payment */}
-          {currentStep === 3 && (
-            <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Личная информация</CardTitle>
-                    <CardDescription>Заполните данные для связи и уточнения деталей</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Имя *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Ваше имя"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="phone">Телефон *</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+7 (999) 123-45-67"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="your@email.com"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="experience">Опыт тренировок</Label>
-                      <Select
-                        value={formData.experience}
-                        onValueChange={(value) => setFormData({ ...formData, experience: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите уровень" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Новичок</SelectItem>
-                          <SelectItem value="intermediate">Средний</SelectItem>
-                          <SelectItem value="advanced">Продвинутый</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="goals">Цели тренировок</Label>
-                      <Textarea
-                        id="goals"
-                        value={formData.goals}
-                        onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
-                        placeholder="Расскажите о ваших целях..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="notes">Дополнительные пожелания</Label>
-                      <Textarea
-                        id="notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder="Особые пожелания или ограничения..."
-                        rows={3}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Детали заказа</CardTitle>
-                    <CardDescription>Проверьте информацию перед оплатой</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+            {/* Right Column - Summary */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Детали записи</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {selectedTraining && (
                     <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{selectedService.title}</span>
-                        <span>{selectedService.price.toLocaleString()} ₽</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Тип:</span>
+                        <span className="font-medium">{selectedTraining.title}</span>
                       </div>
-
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Продолжительность:</span>
-                        <span>{selectedService.duration} мин</span>
-                      </div>
-
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Формат:</span>
-                        <span>{sessionType === "online" ? "Онлайн" : "Офлайн"}</span>
-                      </div>
-
-                      {selectedDate && selectedTime && (
-                        <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>Дата и время:</span>
-                          <span>
-                            {selectedDate.toLocaleDateString("ru-RU")} в {selectedTime}
+                      {selectedDate && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Дата:</span>
+                          <span className="font-medium">
+                            {selectedDate.toLocaleDateString("ru-RU", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric"
+                            })}
                           </span>
                         </div>
                       )}
-                    </div>
-
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between font-semibold text-lg">
-                        <span>Итого:</span>
-                        <span>{selectedService.price.toLocaleString()} ₽</span>
+                      {selectedTime && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Время:</span>
+                          <span className="font-medium">{selectedTime}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Длительность:</span>
+                        <span className="font-medium">{selectedTraining.duration}</span>
+                      </div>
+                      {selectedType.includes("offline") && (
+                        <div className="flex items-start justify-between">
+                          <span className="text-muted-foreground">Адрес:</span>
+                          <span className="font-medium text-right text-sm">
+                            Москва, ул. Примерная, 123
+                          </span>
+                        </div>
+                      )}
+                      <div className="border-t pt-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg">К оплате:</span>
+                          <span className="text-2xl font-bold">{selectedTraining.price} ₽</span>
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    <Button className="w-full yoga-gradient text-white" size="lg" onClick={handleBooking}>
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Оплатить и забронировать
-                    </Button>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    disabled={!selectedDate || !selectedTime}
+                    onClick={handleBooking}
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Перейти к оплате
+                  </Button>
 
-                    <div className="text-xs text-muted-foreground text-center">
-                      Нажимая кнопку, вы соглашаетесь с условиями оферты и политикой конфиденциальности
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>• Оплата происходит онлайн</p>
+                    <p>• Отмена бесплатно за 24 часа</p>
+                    <p>• Перенос возможен за 12 часов</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+                <CardContent className="p-4">
+                  <div className="flex gap-3">
+                    <Info className="h-5 w-5 text-orange-600 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium mb-1">Важная информация</p>
+                      <ul className="space-y-1 text-muted-foreground">
+                        <li>• Приходите в удобной одежде</li>
+                        <li>• Коврик предоставляется</li>
+                        <li>• За час не есть</li>
+                        <li>• Возьмите воду</li>
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={handleBack}>
-                  Назад
-                </Button>
-              </div>
-            </motion.div>
-          )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
 
       <Footer />
     </div>
