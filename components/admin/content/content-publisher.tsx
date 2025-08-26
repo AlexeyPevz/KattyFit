@@ -95,9 +95,22 @@ export function ContentPublisher() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["ru"])
   const [publishing, setPublishing] = useState(false)
   const [publishStatus, setPublishStatus] = useState<any[]>([])
+  const [contentItems, setContentItems] = useState<any[]>([])
 
-  // Загрузка статуса публикаций
+  // Загрузка контента и статуса публикаций
   useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const res = await fetch('/api/content/upload')
+        const data = await res.json()
+        if (data.success) {
+          setContentItems(data.content)
+        }
+      } catch (e) {
+        console.error('Ошибка загрузки контента:', e)
+      }
+    }
+    loadContent()
     if (selectedContent) {
       fetchPublishStatus(selectedContent)
     }
@@ -235,20 +248,33 @@ export function ContentPublisher() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Для демонстрации выбран первый контент из списка. 
-              В полной версии здесь будет список контента для выбора.
-            </AlertDescription>
-          </Alert>
-          <Button 
-            className="mt-4" 
-            onClick={() => setSelectedContent("1")}
-            variant={selectedContent ? "default" : "outline"}
-          >
-            {selectedContent ? "Контент выбран" : "Выбрать контент"}
-          </Button>
+          {contentItems.length === 0 ? (
+            <div className="text-sm text-muted-foreground">Контент не найден. Загрузите видео во вкладке "Загрузка".</div>
+          ) : (
+            <div className="grid gap-3 max-h-80 overflow-auto">
+              {contentItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={`w-full text-left border rounded-md p-3 hover:bg-muted/40 ${selectedContent === item.id ? 'border-primary' : ''}`}
+                  onClick={() => setSelectedContent(item.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-10 bg-muted rounded overflow-hidden flex items-center justify-center">
+                      {item.thumbnail ? (
+                        <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-xs text-muted-foreground">no cover</div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium line-clamp-1">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">{item.type} • {item.status}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

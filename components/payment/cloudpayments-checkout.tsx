@@ -49,6 +49,9 @@ export function CloudPaymentsCheckout({
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [userEmail, setUserEmail] = useState(email || "")
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const [promoCode, setPromoCode] = useState("")
+  const [discount, setDiscount] = useState<number>(0)
+  const [finalAmount, setFinalAmount] = useState<number>(amount)
   const router = useRouter()
 
   useEffect(() => {
@@ -60,6 +63,29 @@ export function CloudPaymentsCheckout({
       document.body.appendChild(script)
     }
   }, [])
+
+  useEffect(() => {
+    const applied = Math.max(0, Math.min(100, discount))
+    const discounted = Math.max(0, Math.round((amount * (100 - applied)) / 100))
+    setFinalAmount(discounted)
+  }, [amount, discount])
+
+  const applyPromo = async () => {
+    if (!promoCode) return
+    try {
+      const res = await fetch(`/api/promocodes/validate?code=${encodeURIComponent(promoCode)}&amount=${amount}`)
+      const data = await res.json()
+      if (res.ok && data.valid) {
+        setDiscount(data.discountPercent || 0)
+      } else {
+        setDiscount(0)
+        alert(data.error || "Промокод недействителен")
+      }
+    } catch {
+      setDiscount(0)
+      alert("Не удалось применить промокод")
+    }
+  }
 
   const handlePayment = async () => {
     if (!window.cp) {
@@ -84,13 +110,15 @@ export function CloudPaymentsCheckout({
     const paymentData = {
       publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001",
       description: description,
-      amount: amount,
+      amount: finalAmount,
       currency: currency,
       accountId: accountId || userEmail,
       email: userEmail,
       data: {
         ...data,
         email: userEmail,
+        promoCode: promoCode || undefined,
+        discountPercent: discount || undefined,
       }
     }
 
@@ -108,10 +136,10 @@ export function CloudPaymentsCheckout({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               transactionId: options.id,
-              amount: amount,
+              amount: finalAmount,
               description: description,
               email: userEmail,
-              data: data
+              data: { ...data, promoCode, discountPercent: discount }
             })
           })
 
@@ -166,11 +194,31 @@ export function CloudPaymentsCheckout({
               <span className="text-muted-foreground">Товар:</span>
               <span className="font-medium">{description}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Скидка:</span>
+                <span className="text-green-600">- {discount}%</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-muted-foreground">К оплате:</span>
-              <span className="text-2xl font-bold">{amount} ₽</span>
+              <span className="text-2xl font-bold">{finalAmount} ₽</span>
             </div>
           </div>
+          {/* Promo Code */}
+          <div className="space-y-2">
+            <Label htmlFor="promo">Промокод</Label>
+            <div className="flex gap-2">
+              <Input
+                id="promo"
+                placeholder="Введите промокод"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.trim())}
+              />
+              <Button type="button" variant="outline" onClick={applyPromo}>Применить</Button>
+            </div>
+          </div>
+
 
           {/* Email Input */}
           <div className="space-y-2">

@@ -26,13 +26,21 @@ async function publishToVK(content: any, language: string) {
   if (!vkToken) {
     throw new Error("VK API token не настроен")
   }
-
-  // TODO: Реализовать публикацию через VK API
-  // Пока возвращаем заглушку
-  return {
-    success: true,
-    url: `https://vk.com/video-123456789_${Date.now()}`,
+  // Базовая публикация текста со ссылкой/обложкой (messages.send как пост-заглушка)
+  const message = `${content.title}${content.url ? `\n${content.url}` : ''}`
+  const params = new URLSearchParams({
+    access_token: vkToken,
+    v: '5.131',
+    message,
+    random_id: Date.now().toString(),
+    // Для реальной стены нужен wall.post с owner_id/group_id
+  })
+  const res = await fetch(`https://api.vk.com/method/messages.send?${params.toString()}`)
+  const data = await res.json()
+  if (data.error) {
+    throw new Error(`VK error: ${data.error.error_msg}`)
   }
+  return { success: true, url: 'https://vk.com/im' }
 }
 
 // Публикация в Telegram
@@ -44,12 +52,18 @@ async function publishToTelegram(content: any, language: string) {
     throw new Error("Telegram не настроен")
   }
 
-  // TODO: Реализовать публикацию через Telegram Bot API
-  // Пока возвращаем заглушку
-  return {
-    success: true,
-    url: `https://t.me/channel/${Date.now()}`,
+  const text = `${content.title}${content.url ? `\n${content.url}` : ''}`
+  const res = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: telegramChatId, text })
+  })
+  const data = await res.json()
+  if (!res.ok || !data.ok) {
+    throw new Error(data.description || 'Telegram sendMessage failed')
   }
+  const msgId = data.result?.message_id
+  return { success: true, url: `https://t.me/c/${telegramChatId}/${msgId || ''}` }
 }
 
 // Публикация в YouTube (требует OAuth)
