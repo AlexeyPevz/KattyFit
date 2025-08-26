@@ -165,6 +165,42 @@ CREATE INDEX idx_purchases_status ON purchases(status);
 CREATE INDEX idx_course_access_user_email ON course_access(user_email);
 CREATE INDEX idx_course_progress_user_course ON course_progress(user_email, course_id);
 
+-- Таблица лидов CRM
+CREATE TABLE IF NOT EXISTS leads (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    source TEXT NOT NULL,
+    stage TEXT CHECK (stage IN ('new', 'contacted', 'interested', 'negotiation', 'customer', 'lost')) DEFAULT 'new',
+    value DECIMAL(10,2) DEFAULT 0,
+    score INTEGER DEFAULT 50,
+    tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+    notes TEXT,
+    metadata JSONB DEFAULT '{}'::JSONB,
+    last_contact TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Таблица активностей лидов
+CREATE TABLE IF NOT EXISTS lead_activities (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+    type TEXT NOT NULL,
+    description TEXT,
+    metadata JSONB DEFAULT '{}'::JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Индексы для CRM
+CREATE INDEX idx_leads_email ON leads(email);
+CREATE INDEX idx_leads_phone ON leads(phone);
+CREATE INDEX idx_leads_stage ON leads(stage);
+CREATE INDEX idx_leads_source ON leads(source);
+CREATE INDEX idx_leads_created_at ON leads(created_at DESC);
+CREATE INDEX idx_lead_activities_lead_id ON lead_activities(lead_id);
+
 -- Функция для обновления updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

@@ -66,6 +66,13 @@ export default function AdminDashboard() {
       color: "bg-orange-500",
     },
     {
+      title: "CRM",
+      description: "Воронка продаж и управление лидами",
+      href: "/admin/crm",
+      icon: TrendingUp,
+      color: "bg-purple-500",
+    },
+    {
       title: "Управление клиентами",
       description: "Просмотр и редактирование профилей клиентов",
       href: "/admin/clients",
