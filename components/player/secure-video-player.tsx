@@ -66,6 +66,7 @@ export function SecureVideoPlayer({
   const [playbackRate, setPlaybackRate] = useState(1)
   const [quality, setQuality] = useState<number>(-1)
   const [availableQualities, setAvailableQualities] = useState<any[]>([])
+  const [proxiedSrc, setProxiedSrc] = useState<string>("")
 
   let controlsTimeout: any
 
@@ -76,6 +77,15 @@ export function SecureVideoPlayer({
 
     // Инициализация HLS
     if (Hls.isSupported()) {
+      // Wrap src with proxy that checks access. For demo we pass email from localStorage
+      try {
+        const email = typeof window !== 'undefined' ? (localStorage.getItem('userEmail') || 'demo@example.com') : ''
+        const courseId = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('courseId') || ''
+        const proxyUrl = `/api/hls/stream.m3u8?courseId=${encodeURIComponent(courseId)}&email=${encodeURIComponent(email)}&upstream=${encodeURIComponent(src)}`
+        setProxiedSrc(proxyUrl)
+      } catch {
+        setProxiedSrc(src)
+      }
       const hls = new Hls({
         // Защищенные настройки
         xhrSetup: (xhr: XMLHttpRequest, url: string) => {
@@ -91,7 +101,7 @@ export function SecureVideoPlayer({
         maxBufferSize: 60 * 1000 * 1000, // 60 MB
       })
 
-      hls.loadSource(src)
+      hls.loadSource(proxiedSrc || src)
       hls.attachMedia(video)
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
