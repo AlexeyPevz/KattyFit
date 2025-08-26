@@ -15,16 +15,37 @@ interface KnowledgeItem {
   context?: any
 }
 
-// Получение API ключей для AI сервисов
+// Получение API ключей для AI сервисов из переменных окружения (v0 / Vercel)
 async function getAIServiceKey(service: "yandexgpt" | "openai"): Promise<string | null> {
-  const { data } = await supabase
-    .from("api_keys")
-    .select("key_value")
-    .eq("service", service)
-    .eq("is_active", true)
-    .single()
-  
-  return data?.key_value || null
+  // В v0 все секреты хранятся как Environment Variables.
+  // Поддерживаем следующие имена переменных:
+  //  - YANDEX_GPT_API_KEY
+  //  - OPENAI_API_KEY
+  const envVarMap: Record<typeof service, string> = {
+    yandexgpt: "YANDEX_GPT_API_KEY",
+    openai: "OPENAI_API_KEY",
+  }
+
+  const keyName = envVarMap[service]
+  const value = process.env[keyName]
+
+  if (value && value.length > 0) {
+    return value
+  }
+
+  // Fallback: если переменной нет, пытаемся получить из БД (сохранена для legacy)
+  try {
+    const { data } = await supabase
+      .from("api_keys")
+      .select("key_value")
+      .eq("service", service)
+      .eq("is_active", true)
+      .single()
+
+    return data?.key_value || null
+  } catch {
+    return null
+  }
 }
 
 // Поиск релевантной информации в базе знаний
