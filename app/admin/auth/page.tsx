@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,29 +16,37 @@ export default function AdminAuthPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    // Simulate authentication delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Call API to authenticate
+      const response = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      })
 
-    if (username === "KattyFit" && password === "BestTrainer") {
-      // Create session data
-      const sessionData = {
-        username: "KattyFit",
-        loginTime: Date.now(),
-        expiresAt: Date.now() + 8 * 60 * 60 * 1000, // 8 hours
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Save to localStorage for client-side state
+        localStorage.setItem("admin_authenticated", "true")
+        localStorage.setItem("admin_user", JSON.stringify({ username }))
+        
+        // Redirect to admin panel
+        router.push("/admin")
+      } else {
+        setError(data.error || "Неверный логин или пароль")
       }
-
-      localStorage.setItem("admin_session", JSON.stringify(sessionData))
-
-      // Force redirect to admin panel
-      window.location.href = "/admin"
-    } else {
-      setError("Неверный логин или пароль")
+    } catch (error) {
+      setError("Ошибка при входе. Попробуйте еще раз.")
     }
 
     setIsLoading(false)
@@ -96,7 +105,7 @@ export default function AdminAuthPage() {
               Логин: <strong>KattyFit</strong>
             </p>
             <p>
-              Пароль: <strong>BestTrainer</strong>
+              Пароль: <strong>admin123</strong>
             </p>
           </div>
         </CardContent>
