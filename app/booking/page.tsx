@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Navbar } from "@/components/landing/navbar"
-import { Footer } from "@/components/landing/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -106,7 +106,7 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Header />
       
       <section className="pt-24 pb-20">
         <div className="container mx-auto px-4">

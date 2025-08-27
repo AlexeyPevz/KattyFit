@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Navbar } from "@/components/landing/navbar"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { CloudPaymentsCheckout } from "@/components/payment/cloudpayments-checkout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -64,7 +65,7 @@ export default function BookingCheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Header />
       
       <div className="container mx-auto px-4 pt-24 pb-12">
         {/* Back Button */}
@@ -176,6 +177,8 @@ export default function BookingCheckoutPage() {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   )
 }

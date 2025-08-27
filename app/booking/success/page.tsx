@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Navbar } from "@/components/landing/navbar"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { Footer } from "@/components/landing/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,7 +11,7 @@ import { CheckCircle2, Calendar, Mail, MessageSquare, Home } from "lucide-react"
 export default function BookingSuccessPage() {
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Header />
       
       <section className="pt-24 pb-20">
         <div className="container mx-auto px-4">

@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Menu, User, ShoppingCart, Settings } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { AdminAccessButton } from "@/components/admin/admin-access-button"
+import { UserMenu } from "@/components/user-menu"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -15,8 +16,9 @@ export function Header() {
     { name: "Главная", href: "/" },
     { name: "Курсы", href: "/courses" },
     { name: "Запись", href: "/booking" },
-    { name: "О тренере", href: "#about" },
-    { name: "Отзывы", href: "#testimonials" },
+    { name: "О тренере", href: "/about" },
+    { name: "Блог", href: "/blog" },
+    { name: "FAQ", href: "/faq" },
   ]
 
   return (
@@ -42,17 +44,19 @@ export function Header() {
 
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          <Button variant="ghost" size="icon">
-            <ShoppingCart className="h-5 w-5" />
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/checkout">
+              <ShoppingCart className="h-5 w-5" />
+            </Link>
           </Button>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
+          <UserMenu />
 
           {/* Заменить простую кнопку на умный компонент */}
           <AdminAccessButton />
 
-          <Button className="hidden md:inline-flex yoga-gradient text-white">Записаться</Button>
+          <Button className="hidden md:inline-flex yoga-gradient text-white" asChild>
+            <Link href="/booking">Записаться</Link>
+          </Button>
 
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -84,7 +88,9 @@ export function Header() {
                   Админ-панель
                 </Link>
 
-                <Button className="mt-4 yoga-gradient text-white">Записаться на тренировку</Button>
+                <Button className="mt-4 yoga-gradient text-white" asChild>
+                  <Link href="/booking" onClick={() => setIsOpen(false)}>Записаться на тренировку</Link>
+                </Button>
               </nav>
             </SheetContent>
           </Sheet>
