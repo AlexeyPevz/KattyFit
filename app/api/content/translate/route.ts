@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { env } from "@/lib/env"
 
-// Получение API ключа ElevenLabs
+// Получение API ключа ElevenLabs только из env (v0)
 async function getElevenLabsKey(): Promise<string | null> {
-  if (process.env.ELEVENLABS_API_KEY) {
-    return process.env.ELEVENLABS_API_KEY
-  }
-
-  // legacy fallback
-  const { data } = await supabaseAdmin
-    .from("api_keys")
-    .select("key_value")
-    .eq("service", "elevenlabs")
-    .eq("is_active", true)
-    .single()
-
-  return data?.key_value || null
+  return env.elevenLabsApiKey
 }
 
 // Функция для запуска дубляжа через ElevenLabs
@@ -98,7 +87,7 @@ export async function POST(request: NextRequest) {
       videoUrl = content.url // RuTube или другая платформа
     } else if (content.filename) {
       // Локальный файл - нужен публичный URL
-      videoUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/uploads/${content.filename}`
+      videoUrl = `${env.appUrl}/uploads/${content.filename}`
     }
 
     if (!videoUrl) {

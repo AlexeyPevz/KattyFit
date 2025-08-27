@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { env } from "@/lib/env"
 
-// Получение API ключа ContentStudio
+// Получение API ключа ContentStudio только из env (v0)
 async function getContentStudioKey(): Promise<string | null> {
-  if (process.env.CONTENTSTUDIO_API_KEY) {
-    return process.env.CONTENTSTUDIO_API_KEY
-  }
-
-  // fallback legacy
-  const { data } = await supabaseAdmin
-    .from("api_keys")
-    .select("key_value")
-    .eq("service", "contentstudio")
-    .eq("is_active", true)
-    .single()
-
-  return data?.key_value || null
+  return env.contentStudioApiKey
 }
 
 // Генерация обложек через ContentStudio AI

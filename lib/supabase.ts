@@ -1,10 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import { env } from '@/lib/env'
 
-// Эти переменные должны быть установлены в переменных окружения
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Безопасная инициализация клиента: в среде билда env может быть пустым.
+// В рантайме на v0 переменные должны присутствовать.
+export const supabase = createClient(env.supabaseUrl || 'http://localhost', env.supabaseAnonKey || 'public-anon-key')
 
 // Типы для таблиц Supabase
 export interface ContentRow {

@@ -1,12 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import { env } from '@/lib/env'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-
-// Fallback to anon in non-prod if service role is not set, but prefer service role for server-side APIs
-const effectiveKey = supabaseServiceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-export const supabaseAdmin = createClient(supabaseUrl, effectiveKey, {
+// Create client with safe fallbacks for build-time environments without env.
+// On v0 runtime, real env values will be present.
+export const supabaseAdmin = createClient(env.supabaseUrl || 'http://localhost', env.supabaseServiceRoleKey || 'service-role-key', {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
