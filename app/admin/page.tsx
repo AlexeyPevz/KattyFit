@@ -17,6 +17,7 @@ import {
   Activity,
   TrendingUp,
   Clock,
+  Bell,
 } from "lucide-react"
 import { AdminGuard } from "@/components/auth/admin-guard"
 
@@ -120,6 +121,13 @@ export default function AdminDashboard() {
       href: "/admin/analytics",
       icon: BarChart3,
       color: "bg-indigo-500",
+    },
+    {
+      title: "Уведомления",
+      description: "Настройка push-уведомлений",
+      href: "/admin/notifications",
+      icon: Bell,
+      color: "bg-red-500",
     },
   ]
 

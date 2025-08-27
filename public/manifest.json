@@ -1,0 +1,42 @@
+{
+  "name": "KattyFit - Растяжка и Аэройога",
+  "short_name": "KattyFit",
+  "description": "Персональные тренировки по растяжке и аэройоге с профессиональным тренером",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["fitness", "health", "sports"],
+  "lang": "ru",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Мои тренировки",
+      "short_name": "Тренировки",
+      "url": "/profile",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Записаться",
+      "short_name": "Запись",
+      "url": "/booking",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

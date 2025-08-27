@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Download } from "lucide-react"
+import { pushNotifications } from "@/lib/push-notifications"
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -28,6 +29,8 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         .register("/sw.js")
         .then((registration) => {
           console.log("SW registered: ", registration)
+          // Инициализируем push-уведомления
+          pushNotifications.init()
         })
         .catch((registrationError) => {
           console.log("SW registration failed: ", registrationError)
