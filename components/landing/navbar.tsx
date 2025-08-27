@@ -76,10 +76,12 @@ export function Navbar() {
             </DropdownMenu>
 
             {/* Auth Button */}
-            <Button variant="outline" size="sm" className="gap-2">
-              <User className="h-4 w-4" />
-              Войти
-            </Button>
+            <Link href="/admin/auth">
+              <Button variant="outline" size="sm" className="gap-2">
+                <User className="h-4 w-4" />
+                Войти
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -109,10 +111,12 @@ export function Navbar() {
               </Link>
             ))}
             <div className="pt-4 border-t space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start gap-2">
-                <User className="h-4 w-4" />
-                Войти
-              </Button>
+              <Link href="/admin/auth" className="w-full">
+                <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                  <User className="h-4 w-4" />
+                  Войти
+                </Button>
+              </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
