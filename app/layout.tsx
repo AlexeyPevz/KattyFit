@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { PWAProvider } from "@/components/pwa-provider"
+import { ChatWidget } from "@/components/chat/chat-widget"
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
@@ -13,15 +14,20 @@ export const metadata: Metadata = {
   description: "Персональные тренировки по растяжке и аэройоге с профессиональным тренером",
   keywords: "растяжка, аэройога, фитнес, тренер, персональные тренировки, онлайн курсы",
   authors: [{ name: "KattyFit", url: "https://t.me/kattyFit_bgd" }],
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-  themeColor: "#8b5cf6",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "KattyFit",
   },
-    generator: 'v0.app'
+  generator: 'v0.app'
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#8b5cf6',
 }
 
 export default function RootLayout({
@@ -35,6 +41,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <PWAProvider>
             {children}
+            <ChatWidget />
             <Toaster />
           </PWAProvider>
         </ThemeProvider>

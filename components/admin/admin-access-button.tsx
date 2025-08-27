@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,12 +14,13 @@ import {
 import { Settings, Shield, LogIn, User, BarChart3 } from "lucide-react"
 
 export function AdminAccessButton() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("admin_authenticated") === "true"
+      setIsAuthenticated(localStorage.getItem("admin_authenticated") === "true")
     }
-    return false
-  })
+  }, [])
 
   const adminUser = isAuthenticated
     ? (() => {

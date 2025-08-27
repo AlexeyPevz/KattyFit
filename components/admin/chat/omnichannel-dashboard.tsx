@@ -182,12 +182,12 @@ export function OmnichannelDashboard() {
   ]
 
   return (
-    <div className="flex h-[calc(100vh-200px)]">
+    <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-200px)]">
       {/* Список чатов */}
-      <div className="w-96 border-r flex flex-col">
+      <div className="w-full lg:w-96 lg:border-r flex flex-col max-h-96 lg:max-h-full">
         {/* Статистика */}
         <div className="p-4 border-b">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
             {stats.map((stat, index) => (
               <Card key={index} className="p-3">
                 <div className="flex items-center justify-between">

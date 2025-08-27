@@ -55,6 +55,15 @@ const platformParsers = {
       messageId: message?.id,
     }
   },
+
+  web: (body: any): UnifiedMessage => ({
+    userId: body.message?.from?.id?.toString(),
+    userName: body.message?.from?.first_name || "Пользователь сайта",
+    text: body.message?.text || "",
+    platform: "web",
+    chatId: body.message?.chat?.id?.toString(),
+    messageId: body.message?.message_id?.toString(),
+  }),
 }
 
 // Функция для отправки сообщений
@@ -70,6 +79,9 @@ async function sendMessage(platform: string, userId: string, text: string, extra
       return sendInstagramMessage(apiKeys, userId, text, extras)
     case "whatsapp":
       return sendWhatsAppMessage(apiKeys, userId, text, extras)
+    case "web":
+      // Для веб-чата ответ отправляется через веб-сокеты или polling
+      return { success: true, platform: "web", message: text }
     default:
       throw new Error(`Неподдерживаемая платформа: ${platform}`)
   }
@@ -299,6 +311,10 @@ export async function GET(
         return new Response(challenge)
       }
       break
+
+    case "web":
+      // Веб-чат не требует верификации
+      return NextResponse.json({ ok: true })
   }
 
   return NextResponse.json({ error: "Invalid request" }, { status: 400 })
