@@ -184,9 +184,13 @@ export function Footer() {
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 Сделано с <Heart className="h-3 w-3 fill-current text-red-500" /> для KattyFit
               </p>
-              <p className="text-xs text-muted-foreground">
-                Разработка: <a href="mailto:dev@kattyfit.ru" className="hover:text-foreground transition-colors">dev@kattyfit.ru</a>
-              </p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Разработчик:</span>
+                <a href="https://t.me/alex_dmr" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                  <Send className="h-3 w-3" />
+                  <span>Связаться</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
