@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { Footer } from "@/components/landing/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle2, Calendar, Mail, MessageSquare, Home } from "lucide-react"
