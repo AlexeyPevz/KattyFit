@@ -1,22 +1,56 @@
 import { NextRequest } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { env } from "@/lib/env"
+import crypto from "crypto"
 
-// Very simple proxy that checks access via email+courseId query and then fetches upstream HLS resource
+function verifyJwt(token: string, secret: string): { sub: string; courseId: string; exp: number } | null {
+  try {
+    const [headerB64, payloadB64, signatureB64] = token.split('.')
+    if (!headerB64 || !payloadB64 || !signatureB64) return null
+    const data = `${headerB64}.${payloadB64}`
+    const expected = crypto.createHmac('sha256', secret).update(data).digest('base64url')
+    if (expected !== signatureB64) return null
+    const payloadJson = Buffer.from(payloadB64, 'base64url').toString('utf8')
+    const payload = JSON.parse(payloadJson)
+    if (typeof payload.exp === 'number' && Date.now() / 1000 > payload.exp) return null
+    return payload
+  } catch {
+    return null
+  }
+}
+
+// Hardened proxy: require signed token and restrict upstream hosts via allowlist
 export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
   const url = new URL(request.url)
-  const courseId = url.searchParams.get('courseId')
-  const email = url.searchParams.get('email')
+  const token = url.searchParams.get('token') || ''
   const upstream = url.searchParams.get('upstream') // full upstream URL to m3u8/ts
 
-  if (!courseId || !email || !upstream) {
+  if (!token || !upstream) {
     return new Response('Bad request', { status: 400 })
+  }
+
+  const payload = verifyJwt(token, env.hlsJwtSecret)
+  if (!payload) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
+  // Restrict upstream host
+  let upstreamUrl: URL
+  try {
+    upstreamUrl = new URL(upstream)
+  } catch {
+    return new Response('Invalid upstream', { status: 400 })
+  }
+  const allowed = env.hlsAllowedHosts.includes(upstreamUrl.host)
+  if (!allowed) {
+    return new Response('Upstream not allowed', { status: 403 })
   }
 
   const { data: access } = await supabaseAdmin
     .from('course_access')
     .select('id')
-    .eq('user_email', email)
-    .eq('course_id', courseId)
+    .eq('user_email', payload.sub)
+    .eq('course_id', payload.courseId)
     .is('revoked_at', null)
     .maybeSingle()
 

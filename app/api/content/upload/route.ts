@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
-import { existsSync } from "fs"
+import { env } from "@/lib/env"
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,16 +23,27 @@ export async function POST(request: NextRequest) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
     const filename = `${uniqueSuffix}-${file.name}`
     
-    // Для демо - сохраняем локально. В продакшене используйте Supabase Storage
-    const uploadsDir = path.join(process.cwd(), "public", "uploads")
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
+    // Загрузка в Supabase Storage (v0 env)
+    const fileBytes = await file.arrayBuffer()
+    const { data: storageUpload, error: storageError } = await supabaseAdmin
+      .storage
+      .from(env.storageBucket)
+      .upload(`content/${filename}`, new Uint8Array(fileBytes), {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream',
+      })
+
+    if (storageError) {
+      console.error("Ошибка загрузки в Storage:", storageError)
+      return NextResponse.json({ error: "Ошибка загрузки файла" }, { status: 500 })
     }
-    
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const filepath = path.join(uploadsDir, filename)
-    await writeFile(filepath, buffer)
+
+    // Публичный URL файла
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from(env.storageBucket)
+      .getPublicUrl(storageUpload.path)
+    const publicUrl = publicUrlData.publicUrl
 
     // Создаем запись в БД
     const { data: content, error } = await supabaseAdmin
@@ -53,6 +62,7 @@ export async function POST(request: NextRequest) {
         platforms: [],
         views: 0,
         thumbnail: null,
+        url: publicUrl,
       })
       .select()
       .single()
