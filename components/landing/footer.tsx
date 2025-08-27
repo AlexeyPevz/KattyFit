@@ -8,7 +8,9 @@ import {
   Mail, 
   Phone, 
   MapPin,
-  Heart
+  Heart,
+  Facebook,
+  Twitter
 } from "lucide-react"
 
 const footerLinks = {
@@ -69,15 +71,31 @@ export function Footer() {
 
             {/* Social */}
             <div className="flex gap-2">
-              <Button variant="outline" size="icon">
-                <Instagram className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Youtube className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Send className="h-4 w-4" />
-              </Button>
+              <a href="https://instagram.com/kattyfit" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon">
+                  <Instagram className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://youtube.com/@kattyfit" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon">
+                  <Youtube className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://t.me/kattyfit" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://facebook.com/kattyfit" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon">
+                  <Facebook className="h-4 w-4" />
+                </Button>
+              </a>
+              <a href="https://twitter.com/kattyfit" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon">
+                  <Twitter className="h-4 w-4" />
+                </Button>
+              </a>
             </div>
           </div>
 
@@ -149,7 +167,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2024 KattyFit. Все права защищены.
+              © 2025 KattyFit. Все права защищены.
             </p>
             <div className="flex items-center gap-4">
               {footerLinks.legal.map((link) => (
@@ -162,9 +180,14 @@ export function Footer() {
                 </Link>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              Сделано с <Heart className="h-3 w-3 fill-current text-red-500" /> для KattyFit
-            </p>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                Сделано с <Heart className="h-3 w-3 fill-current text-red-500" /> для KattyFit
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Разработка: <a href="mailto:dev@kattyfit.ru" className="hover:text-foreground transition-colors">dev@kattyfit.ru</a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
