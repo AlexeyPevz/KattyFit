@@ -32,10 +32,18 @@ export function AdminAccessButton() {
       })()
     : null
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Call API to logout and clear cookie
+    await fetch("/api/admin/auth", {
+      method: "DELETE",
+    })
+    
+    // Clear localStorage
     localStorage.removeItem("admin_authenticated")
     localStorage.removeItem("admin_user")
     setIsAuthenticated(false)
+    
+    // Redirect to login page
     window.location.href = "/admin/auth"
   }
 

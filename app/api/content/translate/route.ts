@@ -8,20 +8,31 @@ async function getElevenLabsKey(): Promise<string | null> {
 }
 
 // Функция для запуска дубляжа через ElevenLabs
-async function startDubbing(videoUrl: string, targetLanguages: string[], apiKey: string) {
+async function startDubbing(videoUrl: string, targetLanguages: string[], apiKey: string, voiceId?: string) {
+  const body: any = {
+    source_url: videoUrl,
+    target_lang: targetLanguages,
+    mode: "automatic", // или "manual" для ручного контроля
+    num_speakers: 1, // Количество спикеров
+    watermark: false, // Без водяного знака
+  }
+
+  // Если указан voice_id, используем клонированный голос
+  if (voiceId) {
+    body.voice_settings = {
+      voice_id: voiceId,
+      similarity_boost: 0.75, // Уровень похожести голоса (0.5-1.0)
+      stability: 0.5, // Стабильность голоса
+    }
+  }
+
   const response = await fetch("https://api.elevenlabs.io/v1/dubbing", {
     method: "POST",
     headers: {
       "xi-api-key": apiKey,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      source_url: videoUrl,
-      target_lang: targetLanguages,
-      mode: "automatic", // или "manual" для ручного контроля
-      num_speakers: 1, // Количество спикеров
-      watermark: false, // Без водяного знака
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -97,8 +108,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Получаем voice_id из переменных окружения или из запроса
+    const voiceId = process.env.ELEVENLABS_VOICE_ID || request.headers.get("x-voice-id") || undefined
+    
     // Запускаем дубляж
-    const dubbingResult = await startDubbing(videoUrl, targetLanguages, apiKey)
+    const dubbingResult = await startDubbing(videoUrl, targetLanguages, apiKey, voiceId)
 
     // Сохраняем задачу дубляжа в БД
     const { error: taskError } = await supabaseAdmin
