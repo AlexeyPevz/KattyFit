@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { Navbar } from "@/components/landing/navbar"
-import { Footer } from "@/components/landing/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -156,7 +156,7 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Header />
       
       {/* Hero Section */}
       <section className="pt-24 pb-12 bg-muted/30">

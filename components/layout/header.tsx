@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Menu, User, ShoppingCart, Settings } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { AdminAccessButton } from "@/components/admin/admin-access-button"
+import { UserMenu } from "@/components/user-menu"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -48,11 +49,7 @@ export function Header() {
               <ShoppingCart className="h-5 w-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/login">
-              <User className="h-5 w-5" />
-            </Link>
-          </Button>
+          <UserMenu />
 
           {/* Заменить простую кнопку на умный компонент */}
           <AdminAccessButton />
