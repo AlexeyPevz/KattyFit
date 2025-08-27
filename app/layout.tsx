@@ -14,15 +14,20 @@ export const metadata: Metadata = {
   description: "Персональные тренировки по растяжке и аэройоге с профессиональным тренером",
   keywords: "растяжка, аэройога, фитнес, тренер, персональные тренировки, онлайн курсы",
   authors: [{ name: "KattyFit", url: "https://t.me/kattyFit_bgd" }],
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-  themeColor: "#8b5cf6",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "KattyFit",
   },
-    generator: 'v0.app'
+  generator: 'v0.app'
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#8b5cf6',
 }
 
 export default function RootLayout({

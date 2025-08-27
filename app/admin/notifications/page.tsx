@@ -21,7 +21,7 @@ import {
   Send
 } from "lucide-react"
 import Link from "next/link"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 interface NotificationSetting {
   id: string
