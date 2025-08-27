@@ -37,8 +37,11 @@ export default function AdminAuthPage() {
 
       if (response.ok && data.success) {
         // Save to localStorage for client-side state
-        localStorage.setItem("admin_authenticated", "true")
-        localStorage.setItem("admin_user", JSON.stringify({ username }))
+        const sessionData = {
+          username: username,
+          expiresAt: Date.now() + (8 * 60 * 60 * 1000) // 8 hours
+        }
+        localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
         // Redirect to admin panel
         router.push("/admin")
