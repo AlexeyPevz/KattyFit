@@ -83,17 +83,23 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold">Услуги</h3>
             <nav className="flex flex-col space-y-2">
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/booking" className="text-muted-foreground hover:text-primary transition-colors">
                 Персональные тренировки
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/booking" className="text-muted-foreground hover:text-primary transition-colors">
                 Групповые занятия
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/courses" className="text-muted-foreground hover:text-primary transition-colors">
                 Онлайн курсы
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+              <Link href="/courses" className="text-muted-foreground hover:text-primary transition-colors">
                 Аэройога
+              </Link>
+              <Link href="/blog" className="text-muted-foreground hover:text-primary transition-colors">
+                Блог
+              </Link>
+              <Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors">
+                FAQ
               </Link>
             </nav>
           </div>

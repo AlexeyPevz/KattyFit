@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Star, Clock, Users, Play, ShoppingCart, Heart, BookOpen } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import Link from "next/link"
 
 const courses = [
   {
@@ -294,10 +295,18 @@ export default function CoursesPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button className="flex-1 yoga-gradient text-white">
+                    <Button 
+                      className="flex-1 yoga-gradient text-white"
+                      onClick={() => {
+                        // Временная заглушка - в реальном приложении добавляем в корзину
+                        alert('Курс добавлен в корзину! (Функционал корзины в разработке)')
+                      }}
+                    >
                       <ShoppingCart className="w-4 h-4 mr-2" />В корзину
                     </Button>
-                    <Button variant="outline">Подробнее</Button>
+                    <Button variant="outline" asChild>
+                      <Link href={`/courses/${course.id}`}>Подробнее</Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
