@@ -29,18 +29,18 @@ export default function OmnichannelChatPage() {
 
         <div className="container px-4 py-8">
           <Tabs defaultValue="chats" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="chats" className="gap-2">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1">
+              <TabsTrigger value="chats" className="gap-1 sm:gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Чаты
+                <span className="truncate">Чаты</span>
               </TabsTrigger>
-              <TabsTrigger value="bot" className="gap-2">
+              <TabsTrigger value="bot" className="gap-1 sm:gap-2">
                 <Bot className="h-4 w-4" />
-                AI Настройки
+                <span className="truncate">AI Настройки</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2">
+              <TabsTrigger value="settings" className="gap-1 sm:gap-2">
                 <Settings className="h-4 w-4" />
-                Настройки
+                <span className="truncate">Настройки</span>
               </TabsTrigger>
             </TabsList>
 
