@@ -50,17 +50,63 @@ export function ChatWidget() {
     setInputValue("")
     setIsLoading(true)
 
-    // Имитация ответа бота
-    setTimeout(() => {
-      const botMessage: Message = {
+    try {
+      // Отправляем сообщение через веб-чат API
+      const response = await fetch('/api/chat/webhook/web', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: {
+            from: {
+              id: localStorage.getItem('web_chat_user_id') || `web_${Date.now()}`,
+              first_name: 'Пользователь сайта'
+            },
+            text: inputValue,
+            chat: {
+              id: localStorage.getItem('web_chat_id') || `chat_${Date.now()}`
+            },
+            message_id: Date.now().toString()
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Ошибка отправки сообщения')
+      }
+
+      // Сохраняем ID пользователя и чата
+      if (!localStorage.getItem('web_chat_user_id')) {
+        localStorage.setItem('web_chat_user_id', `web_${Date.now()}`)
+      }
+      if (!localStorage.getItem('web_chat_id')) {
+        localStorage.setItem('web_chat_id', `chat_${Date.now()}`)
+      }
+
+      // Ждем ответ от бота (имитация, так как webhook работает асинхронно)
+      setTimeout(async () => {
+        // В реальной реализации здесь нужно подписаться на получение сообщений
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: "Спасибо за ваше сообщение! Я обработаю ваш запрос и отвечу в ближайшее время.",
+          sender: "bot",
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, botMessage])
+        setIsLoading(false)
+      }, 1000)
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error)
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Спасибо за ваше сообщение! Наш специалист свяжется с вами в ближайшее время.",
+        text: "Извините, произошла ошибка. Пожалуйста, попробуйте позже.",
         sender: "bot",
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, botMessage])
+      setMessages(prev => [...prev, errorMessage])
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
