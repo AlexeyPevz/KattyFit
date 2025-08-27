@@ -6,7 +6,10 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "check-env": "node scripts/check-env.js",
+    "setup": "npm run check-env",
+    "postbuild": "npm run check-env || echo 'Внимание: проверьте переменные окружения!'"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

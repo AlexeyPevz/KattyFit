@@ -20,6 +20,7 @@ import {
   Bell,
 } from "lucide-react"
 import { AdminGuard } from "@/components/auth/admin-guard"
+import { EnvStatusCard } from "@/components/admin/env-status"
 
 export default function AdminDashboard() {
   const [username, setUsername] = useState("")
@@ -198,6 +199,11 @@ export default function AdminDashboard() {
                 </Link>
               ))}
             </div>
+          </div>
+
+          {/* Environment Status */}
+          <div className="mb-8">
+            <EnvStatusCard />
           </div>
 
           {/* Recent Activity */}

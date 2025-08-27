@@ -1,0 +1,41 @@
+name: Check Environment Variables
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-env:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Check required environment variables
+      run: |
+        echo "🔍 Проверка переменных окружения..."
+        
+        # Проверяем наличие .env.example
+        if [ -f .env.example ]; then
+          echo "✅ Файл .env.example найден"
+        else
+          echo "❌ Файл .env.example отсутствует!"
+          exit 1
+        fi
+        
+        # Проверяем наличие инструкции
+        if [ -f V0_ENV_SETUP.md ]; then
+          echo "✅ Инструкция V0_ENV_SETUP.md найдена"
+        else
+          echo "❌ Инструкция V0_ENV_SETUP.md отсутствует!"
+          exit 1
+        fi
+        
+        echo "✅ Все необходимые файлы конфигурации присутствуют"
