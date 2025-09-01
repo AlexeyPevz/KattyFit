@@ -19,14 +19,22 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Привет! 👋 Я ваш виртуальный помощник. Чем могу помочь?",
+      text: "Привет! 👋 Я ассистент KattyFit. Помогу выбрать программу тренировок или записаться на занятие. Что вас интересует?",
       sender: "bot",
       timestamp: new Date()
     }
   ])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showQuickReplies, setShowQuickReplies] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  const quickReplies = [
+    "💰 Узнать цены",
+    "📅 Записаться на занятие", 
+    "🎯 Выбрать программу",
+    "❓ Есть вопрос"
+  ]
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })

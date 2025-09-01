@@ -6,7 +6,8 @@ import { Footer } from "@/components/layout/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar } from "@/components/ui/calendar"
+import { CalendarBooking } from "@/components/booking/calendar-booking"
+
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { 
@@ -63,16 +64,7 @@ const trainingPackages = [
   }
 ]
 
-// Моковые данные доступных слотов
-const availableSlots = {
-  "2024-01-20": ["10:00", "12:00", "17:00", "19:00"],
-  "2024-01-21": ["11:00", "15:00", "18:00"],
-  "2024-01-22": ["10:00", "14:00", "16:00", "19:00"],
-  "2024-01-23": ["09:00", "13:00", "17:00"],
-  "2024-01-24": ["10:00", "12:00", "18:00", "20:00"],
-  "2024-01-25": ["11:00", "15:00", "17:00"],
-  "2024-01-26": ["10:00", "12:00", "14:00"],
-}
+
 
 export default function BookingPage() {
   const router = useRouter()
@@ -83,8 +75,6 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined)
 
   const selectedTraining = trainingTypes.find(t => t.id === selectedType)
-  const dateKey = selectedDate ? selectedDate.toISOString().split('T')[0] : ""
-  const slots = availableSlots[dateKey as keyof typeof availableSlots] || []
 
   const handleBooking = () => {
     if (!selectedDate || !selectedTime || !selectedTraining) return
@@ -188,43 +178,15 @@ export default function BookingPage() {
                   <CardTitle>2. Выберите дату и время</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div>
-                    <Label className="mb-3 block">Доступные даты</Label>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      disabled={(date) => 
-                        date < new Date() || 
-                        date > new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                      }
-                      className="rounded-md border"
-                    />
-                  </div>
-
-                  {selectedDate && (
-                    <div>
-                      <Label className="mb-3 block">Доступное время</Label>
-                      {slots.length > 0 ? (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                          {slots.map((time) => (
-                            <Button
-                              key={time}
-                              variant={selectedTime === time ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setSelectedTime(time)}
-                            >
-                              {time}
-                            </Button>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Нет доступных слотов на выбранную дату
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  <CalendarBooking
+                    trainingType={selectedTraining}
+                    onSlotSelect={(date, time) => {
+                      setSelectedDate(date)
+                      setSelectedTime(time)
+                    }}
+                    selectedDate={selectedDate}
+                    selectedTime={selectedTime}
+                  />
                 </CardContent>
               </Card>
             </div>

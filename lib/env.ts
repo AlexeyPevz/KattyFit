@@ -21,6 +21,7 @@ export const env = {
   contentStudioApiKey: process.env.CONTENTSTUDIO_API_KEY || '',
 
   // Payments/Webhooks
+  cloudPaymentsPublicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || '',
   cloudPaymentsSecret: process.env.CLOUDPAYMENTS_SECRET || '',
   metaWebhookToken: process.env.META_WEBHOOK_TOKEN || '',
 

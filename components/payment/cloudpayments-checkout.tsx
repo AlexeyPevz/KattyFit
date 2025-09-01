@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Loader2, Lock, CreditCard, Shield, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { trackEvent, ANALYTICS_EVENTS } from "@/lib/analytics"
 
 declare global {
   interface Window {
@@ -77,6 +78,11 @@ export function CloudPaymentsCheckout({
       const data = await res.json()
       if (res.ok && data.valid) {
         setDiscount(data.discountPercent || 0)
+        trackEvent(ANALYTICS_EVENTS.PROMO_APPLIED, {
+          code: promoCode,
+          discount: data.discountPercent,
+          amount: amount
+        })
       } else {
         setDiscount(0)
         alert(data.error || "Промокод недействителен")
@@ -108,7 +114,7 @@ export function CloudPaymentsCheckout({
     const widget = new window.cp.CloudPayments()
     
     const paymentData = {
-      publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001",
+      publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001", // v0 will use env var
       description: description,
       amount: finalAmount,
       currency: currency,
@@ -129,6 +135,13 @@ export function CloudPaymentsCheckout({
           console.log("Payment success:", options)
           setIsLoading(false)
           setShowSuccessDialog(true)
+          
+          trackEvent(ANALYTICS_EVENTS.PURCHASE, {
+            amount: finalAmount,
+            description: description,
+            promoCode: promoCode || undefined,
+            transactionId: options.id
+          })
           
           // Сохраняем информацию о покупке
           fetch("/api/payments/success", {
