@@ -5,12 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { PWAProvider } from "@/components/pwa-provider"
-import dynamic from "next/dynamic"
-
-const ChatWidget = dynamic(
-  () => import("@/components/chat/chat-widget").then(mod => mod.ChatWidget),
-  { ssr: false }
-)
+import { ChatWidget } from "@/components/chat/chat-widget"
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
