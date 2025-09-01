@@ -77,13 +77,16 @@ export function SecureVideoPlayer({
 
     // Инициализация HLS
     if (Hls.isSupported()) {
-      // Wrap src with proxy that checks access. For demo we pass email from localStorage
-      try {
-        const email = typeof window !== 'undefined' ? (localStorage.getItem('userEmail') || 'demo@example.com') : ''
-        const courseId = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('courseId') || ''
-        const proxyUrl = `/api/hls/stream.m3u8?courseId=${encodeURIComponent(courseId)}&email=${encodeURIComponent(email)}&upstream=${encodeURIComponent(src)}`
+      // Используем прокси для проверки доступа
+      const email = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : ''
+      const courseId = window.location.pathname.split('/').pop() || ''
+      
+      if (email && courseId && src.includes('.m3u8')) {
+        // Для HLS контента используем защищенный прокси
+        const proxyUrl = `/api/hls/stream?courseId=${encodeURIComponent(courseId)}&email=${encodeURIComponent(email)}&url=${encodeURIComponent(src)}`
         setProxiedSrc(proxyUrl)
-      } catch {
+      } else {
+        // Для обычных видео используем прямой URL
         setProxiedSrc(src)
       }
       const hls = new Hls({

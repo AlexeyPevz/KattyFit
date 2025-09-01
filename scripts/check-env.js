@@ -18,10 +18,13 @@ const OPTIONAL_ENV_VARS = [
   'VAPID_PRIVATE_KEY',
   'TELEGRAM_BOT_TOKEN',
   'VK_API_TOKEN',
-  'YOOKASSA_SHOP_ID',
-  'YOOKASSA_SECRET_KEY',
+  'NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID',
+  'CLOUDPAYMENTS_SECRET',
   'YANDEXGPT_API_KEY',
   'OPENAI_API_KEY',
+  'ELEVENLABS_API_KEY',
+  'CONTENTSTUDIO_API_KEY',
+  'META_WEBHOOK_TOKEN',
 ];
 
 console.log('🔍 Проверка переменных окружения для KattyFit...\n');

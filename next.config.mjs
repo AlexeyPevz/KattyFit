@@ -7,7 +7,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    unoptimized: false,
+    domains: ['localhost', 'supabase.co'],
+    formats: ['image/avif', 'image/webp'],
   },
 }
 

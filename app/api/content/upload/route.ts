@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
+import { apiHandler, logEvent } from "@/lib/api-utils"
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = apiHandler(async (request: NextRequest) => {
     const formData = await request.formData()
     const file = formData.get("file") as File
     const title = formData.get("title") as string
@@ -83,21 +83,21 @@ export async function POST(request: NextRequest) {
         .eq("id", content.id)
     }, 3000)
 
+    // Логируем успешную загрузку
+    logEvent('content_uploaded', {
+      contentId: content.id,
+      type: type,
+      hasTranslation: enableTranslation,
+      languages: targetLanguages
+    })
+
     return NextResponse.json({
       success: true,
       content: content,
     })
-  } catch (error) {
-    console.error("Ошибка загрузки:", error)
-    return NextResponse.json(
-      { error: "Ошибка при загрузке файла" },
-      { status: 500 }
-    )
-  }
-}
+})
 
-export async function GET() {
-  try {
+export const GET = apiHandler(async (request: NextRequest) => {
     const { data: content, error } = await supabaseAdmin
       .from("content")
       .select("*")
@@ -115,11 +115,4 @@ export async function GET() {
       success: true,
       content: content || [],
     })
-  } catch (error) {
-    console.error("Ошибка:", error)
-    return NextResponse.json(
-      { error: "Внутренняя ошибка сервера" },
-      { status: 500 }
-    )
-  }
-}
+})
