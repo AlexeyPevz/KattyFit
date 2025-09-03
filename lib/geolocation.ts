@@ -80,7 +80,7 @@ export async function getUserGeolocation(): Promise<GeoLocation | null> {
 }
 
 export function isRussianUser(location: GeoLocation | null): boolean {
-  if (!location) return false
+  if (!location || !location.countryCode) return false
   
   // Проверяем по коду страны
   const russianCodes = ['RU', 'RUS']

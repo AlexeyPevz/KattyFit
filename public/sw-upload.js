@@ -146,7 +146,7 @@ async function uploadChunk(uploadId, chunkIndex) {
         'X-Upload-Source': 'service-worker'
       },
       // Таймаут для предотвращения вечного ожидания
-      signal: AbortSignal.timeout(60000) // 60 секунд
+      signal: AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined
     })
   } catch (error) {
     if (error.name === 'AbortError') {

@@ -29,8 +29,19 @@ export async function POST(request: NextRequest) {
     
     // Генерируем уникальное имя файла
     const timestamp = Date.now()
-    const sanitizedFileName = (metadata.fileName || 'video.mp4').replace(/[^a-zA-Z0-9.-]/g, '_')
-    const fileName = `${timestamp}_${sanitizedFileName}`
+    // Сохраняем расширение и основное имя
+    const originalName = metadata.fileName || 'video.mp4'
+    const lastDotIndex = originalName.lastIndexOf('.')
+    const extension = lastDotIndex > 0 ? originalName.slice(lastDotIndex) : '.mp4'
+    const baseName = lastDotIndex > 0 ? originalName.slice(0, lastDotIndex) : originalName
+    
+    // Санитизация с сохранением Unicode символов
+    const sanitizedBaseName = baseName
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') // Удаляем недопустимые символы файловой системы
+      .replace(/\.+/g, '.') // Множественные точки в одну
+      .slice(0, 100) // Ограничиваем длину
+    
+    const fileName = `${timestamp}_${sanitizedBaseName}${extension}`
     const { data: storageData, error: storageError } = await supabaseAdmin.storage
       .from('videos')
       .upload(fileName, completeBuffer, {

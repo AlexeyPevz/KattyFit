@@ -31,11 +31,20 @@ function UploadItem({ uploadId }: UploadItemProps) {
   const [remainingTime, setRemainingTime] = useState<number | null>(null)
 
   useEffect(() => {
-    // Обновляем состояние при изменениях
+    // Обновляем состояние только для активных загрузок
+    if (task?.status === 'completed' || task?.status === 'failed') {
+      return // Не нужно обновлять завершенные
+    }
+    
     const interval = setInterval(() => {
       const currentTask = uploadManager.getUploadStatus(uploadId)
       if (currentTask) {
         setTask(currentTask)
+        
+        // Останавливаем обновления если загрузка завершена
+        if (currentTask.status === 'completed' || currentTask.status === 'failed') {
+          clearInterval(interval)
+        }
         
         // Рассчитываем скорость и оставшееся время
         // TODO: реализовать расчет скорости
@@ -43,7 +52,7 @@ function UploadItem({ uploadId }: UploadItemProps) {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [uploadId])
+  }, [uploadId, task?.status])
 
   if (!task) return null
 
@@ -196,13 +205,18 @@ export function BackgroundUploadUI() {
     window.addEventListener('offline', handleOffline)
 
     // Проверяем уровень батареи (для мобильных)
+    let batteryManager: any = null
+    const handleBatteryChange = () => {
+      if (batteryManager) {
+        setBatteryLevel(batteryManager.level * 100)
+      }
+    }
+    
     if ('getBattery' in navigator) {
       (navigator as any).getBattery().then((battery: any) => {
+        batteryManager = battery
         setBatteryLevel(battery.level * 100)
-        
-        battery.addEventListener('levelchange', () => {
-          setBatteryLevel(battery.level * 100)
-        })
+        battery.addEventListener('levelchange', handleBatteryChange)
       })
     }
 
@@ -212,6 +226,11 @@ export function BackgroundUploadUI() {
       window.removeEventListener('upload-error', handleError)
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
+      
+      // Очищаем battery listener
+      if (batteryManager) {
+        batteryManager.removeEventListener('levelchange', handleBatteryChange)
+      }
     }
   }, [])
 

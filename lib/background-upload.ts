@@ -69,8 +69,10 @@ export class BackgroundUploadManager {
         }
 
         if (!db.objectStoreNames.contains('chunks')) {
-          const store = db.createObjectStore('chunks', { keyPath: ['uploadId', 'index'] })
+          // Используем составной ключ вместо массива для совместимости
+          const store = db.createObjectStore('chunks', { autoIncrement: true })
           store.createIndex('uploadId', 'uploadId', { unique: false })
+          store.createIndex('uploadId_index', ['uploadId', 'index'], { unique: true })
         }
       }
     })
@@ -285,6 +287,7 @@ export class BackgroundUploadManager {
 
   // Вспомогательные методы
   private calculateProgress(task: UploadTask): number {
+    if (!task.chunks || task.chunks.length === 0) return 0
     const uploadedChunks = task.chunks.filter(c => c.uploaded).length
     return Math.round((uploadedChunks / task.chunks.length) * 100)
   }

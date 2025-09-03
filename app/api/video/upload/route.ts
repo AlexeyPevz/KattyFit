@@ -191,6 +191,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Проверяем размер файла (макс 5GB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "Размер файла превышает 5GB" },
+        { status: 413 }
+      )
+    }
+
+    // Проверяем тип файла
+    const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo']
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Неподдерживаемый формат видео" },
+        { status: 415 }
+      )
+    }
+
     // Загружаем параллельно на обе платформы
     const [vkResult, youtubeResult] = await Promise.allSettled([
       uploadToVK(file, title, description, true),
