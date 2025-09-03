@@ -22,10 +22,17 @@ export async function GET(request: NextRequest) {
       const response = await fetch(`https://ipapi.co/${clientIp}/json/`)
       if (response.ok) {
         const data = await response.json()
+        
+        // Проверяем на ошибку в ответе API
+        if (data.error || data.reason === 'RateLimited') {
+          console.warn('ipapi.co returned error:', data)
+          throw new Error('Geolocation API error')
+        }
+        
         return NextResponse.json({
           country: data.country_name || 'Unknown',
           countryCode: data.country_code || 'XX',
-          city: data.city,
+          city: data.city || undefined,
           ip: clientIp
         })
       }

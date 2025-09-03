@@ -147,6 +147,11 @@ export class BackgroundUploadManager {
   private createChunks(file: File): ChunkInfo[] {
     const chunks: ChunkInfo[] = []
     const totalChunks = Math.ceil(file.size / this.CHUNK_SIZE)
+    
+    // Защита от слишком больших файлов (макс 1000 чанков = ~5GB)
+    if (totalChunks > 1000) {
+      throw new Error(`Файл слишком большой: ${totalChunks} чанков (макс: 1000)`)
+    }
 
     for (let i = 0; i < totalChunks; i++) {
       const start = i * this.CHUNK_SIZE
@@ -421,22 +426,31 @@ export class BackgroundUploadManager {
   private async loadPendingTasks() {
     if (!this.db) return
 
-    const transaction = this.db.transaction(['uploads'], 'readonly')
-    const store = transaction.objectStore('uploads')
-    const index = store.index('status')
-    
-    const request = index.openCursor(IDBKeyRange.only('uploading'))
-    
-    request.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest).result
-      if (cursor) {
-        const task = cursor.value
-        // Восстанавливаем загрузку
-        console.log('Восстанавливаем загрузку:', task.id)
-        this.resumeUpload(task.id)
-        cursor.continue()
+    return new Promise<void>((resolve, reject) => {
+      const transaction = this.db!.transaction(['uploads'], 'readonly')
+      const store = transaction.objectStore('uploads')
+      const index = store.index('status')
+      
+      const request = index.openCursor(IDBKeyRange.only('uploading'))
+      const pendingUploads: string[] = []
+      
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result
+        if (cursor) {
+          const task = cursor.value
+          pendingUploads.push(task.id)
+          cursor.continue()
+        } else {
+          // Все задачи собраны, восстанавливаем их
+          Promise.all(pendingUploads.map(id => {
+            console.log('Восстанавливаем загрузку:', id)
+            return this.resumeUpload(id)
+          })).then(() => resolve()).catch(reject)
+        }
       }
-    }
+      
+      request.onerror = () => reject(request.error)
+    })
   }
 
   // Возобновление загрузки

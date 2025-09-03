@@ -107,8 +107,15 @@ export async function POST(request: NextRequest) {
 
     const uploadData = chunkStorage.get(uploadId)!
     
-    // Обновляем размер если чанк новый
-    if (!uploadData.chunks.has(chunkIndex)) {
+    // Обновляем размер с учетом замены существующего чанка
+    const existingChunk = uploadData.chunks.get(chunkIndex)
+    if (existingChunk) {
+      // Заменяем существующий чанк - обновляем разницу в размере
+      const sizeDiff = buffer.length - existingChunk.length
+      uploadData.totalSize += sizeDiff
+      currentMemoryUsage += sizeDiff
+    } else {
+      // Новый чанк
       uploadData.totalSize += buffer.length
       currentMemoryUsage += buffer.length
     }
@@ -156,7 +163,7 @@ async function saveChunkInfo(
         chunk_index: chunkIndex,
         etag,
         size,
-        uploaded_at: new Date().toISOString()
+        uploaded_at: new Date().toISOString() // Всегда UTC
       }, {
         onConflict: "upload_id,chunk_index"
       })

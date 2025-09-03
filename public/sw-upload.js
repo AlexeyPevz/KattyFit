@@ -101,14 +101,19 @@ async function processUpload(uploadId) {
   } catch (error) {
     console.error('[SW] Ошибка загрузки:', error)
     
-    task.retryCount++
+    // Проверяем что task еще существует
+    const currentTask = UPLOAD_QUEUE.get(uploadId)
+    if (!currentTask) return
     
-    if (task.retryCount < 3) {
-      // Повторяем через 5 секунд
-      setTimeout(() => processUpload(uploadId), 5000)
+    currentTask.retryCount = (currentTask.retryCount || 0) + 1
+    
+    if (currentTask.retryCount < 3) {
+      // Повторяем через экспоненциальную задержку
+      const delay = Math.min(5000 * Math.pow(2, currentTask.retryCount - 1), 30000)
+      setTimeout(() => processUpload(uploadId), delay)
     } else {
       // Уведомляем об ошибке
-      await notifyError(uploadId, error.message)
+      await notifyError(uploadId, error.message || 'Upload failed')
       UPLOAD_QUEUE.delete(uploadId)
     }
   }

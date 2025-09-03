@@ -55,8 +55,10 @@ async function uploadToVK(
     }
 
     const uploadResult = await uploadResponse.json()
-    if (!uploadResult.video_id) {
-      console.error("VK upload failed:", uploadResult)
+    
+    // Проверяем обязательные поля
+    if (!uploadResult.video_id || !uploadResult.owner_id) {
+      console.error("VK upload failed - missing required fields:", uploadResult)
       return null
     }
 

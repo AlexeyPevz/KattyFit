@@ -72,12 +72,14 @@ export function GeoVideoPlayer({
         setShowGeoInfo(true)
         
         // Скрываем информацию о стране через 3 секунды
-        const timer = setTimeout(() => {
-          if (!cancelled) setShowGeoInfo(false)
-        }, 3000)
-        
-        // Очищаем таймер при отмене
-        if (cancelled) clearTimeout(timer)
+        if (!cancelled) {
+          const timer = setTimeout(() => {
+            if (!cancelled) setShowGeoInfo(false)
+          }, 3000)
+          
+          // Сохраняем таймер для очистки при размонтировании
+          return () => clearTimeout(timer)
+        }
       }
 
       const { url, source } = await selectVideoSource(vkUrl, youtubeUrl)
@@ -208,11 +210,16 @@ export function GeoVideoPlayer({
         src={videoUrl}
         className="w-full h-full rounded-lg"
         frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
         title={title || "Video player"}
-        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+        sandbox={
+          videoSource === 'hls' 
+            ? undefined // Наш контент - без sandbox
+            : "allow-scripts allow-same-origin allow-presentation" // Внешний контент - с ограничениями
+        }
         referrerPolicy="no-referrer"
+        loading="lazy"
       />
       
       {/* Эмулируем события для внешних плееров */}
