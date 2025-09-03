@@ -438,10 +438,61 @@ export class BackgroundUploadManager {
 
   // Возобновление загрузки
   async resumeUpload(uploadId: string) {
-    // Загружаем данные задачи из БД
-    // Проверяем какие чанки уже загружены
-    // Продолжаем с последнего незагруженного
-    this.startUpload(uploadId)
+    try {
+      // Проверяем, есть ли задача в памяти
+      let task = this.tasks.get(uploadId)
+      
+      if (!task) {
+        // Пытаемся восстановить из БД
+        if (!this.db) return
+        
+        const transaction = this.db.transaction(['uploads'], 'readonly')
+        const store = transaction.objectStore('uploads')
+        const request = store.get(uploadId)
+        
+        await new Promise((resolve, reject) => {
+          request.onsuccess = () => resolve(request.result)
+          request.onerror = () => reject(request.error)
+        })
+        
+        const savedTask = request.result
+        if (!savedTask) {
+          console.error('Задача не найдена:', uploadId)
+          return
+        }
+        
+        // Восстанавливаем файл из кеша
+        if ('caches' in window) {
+          const cache = await caches.open('upload-files')
+          const response = await cache.match(`/uploads/${uploadId}`)
+          
+          if (response) {
+            const blob = await response.blob()
+            const file = new File([blob], savedTask.file.name, {
+              type: savedTask.file.type,
+              lastModified: savedTask.file.lastModified
+            })
+            
+            // Восстанавливаем задачу с файлом
+            task = {
+              ...savedTask,
+              file,
+              chunks: savedTask.chunks || []
+            }
+            
+            this.tasks.set(uploadId, task)
+          } else {
+            console.error('Файл не найден в кеше:', uploadId)
+            return
+          }
+        }
+      }
+      
+      // Продолжаем загрузку
+      this.startUpload(uploadId)
+    } catch (error) {
+      console.error('Ошибка восстановления загрузки:', error)
+    }
   }
 
   // Остановка загрузки

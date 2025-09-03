@@ -2,24 +2,43 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import crypto from "crypto"
 
-// Временное хранилище для чанков (в продакшене использовать Redis/БД)
+// Временное хранилище для чанков с ограничением памяти
+const MAX_MEMORY_SIZE = 500 * 1024 * 1024 // 500MB макс
+let currentMemoryUsage = 0
+
 const chunkStorage = new Map<string, {
   chunks: Map<number, Buffer>
   metadata: any
   totalChunks: number
   uploadedAt: Date
+  totalSize: number
 }>()
 
-// Очистка старых загрузок (запускать периодически)
-setInterval(() => {
+// Очистка старых загрузок и контроль памяти
+const cleanupInterval = setInterval(() => {
   const now = new Date()
+  let memoryFreed = 0
+  
   for (const [uploadId, data] of chunkStorage.entries()) {
     const age = now.getTime() - data.uploadedAt.getTime()
-    if (age > 24 * 60 * 60 * 1000) { // 24 часа
+    if (age > 24 * 60 * 60 * 1000 || currentMemoryUsage > MAX_MEMORY_SIZE) {
+      memoryFreed += data.totalSize
       chunkStorage.delete(uploadId)
     }
   }
+  
+  currentMemoryUsage -= memoryFreed
+  
+  // Логируем использование памяти
+  if (currentMemoryUsage > MAX_MEMORY_SIZE * 0.8) {
+    console.warn(`High memory usage in chunk storage: ${(currentMemoryUsage / 1024 / 1024).toFixed(2)}MB`)
+  }
 }, 60 * 60 * 1000) // Каждый час
+
+// Очистка интервала при завершении процесса
+if (typeof process !== 'undefined') {
+  process.on('SIGTERM', () => clearInterval(cleanupInterval))
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,17 +86,33 @@ export async function POST(request: NextRequest) {
     // Вычисляем ETag для чанка
     const etag = crypto.createHash('md5').update(buffer).digest('hex')
 
+    // Проверяем лимит памяти перед сохранением
+    if (currentMemoryUsage + buffer.length > MAX_MEMORY_SIZE) {
+      return NextResponse.json(
+        { error: "Превышен лимит памяти сервера. Попробуйте позже." },
+        { status: 507 } // Insufficient Storage
+      )
+    }
+
     // Сохраняем чанк
     if (!chunkStorage.has(uploadId)) {
       chunkStorage.set(uploadId, {
         chunks: new Map(),
         metadata: null,
         totalChunks,
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
+        totalSize: 0
       })
     }
 
     const uploadData = chunkStorage.get(uploadId)!
+    
+    // Обновляем размер если чанк новый
+    if (!uploadData.chunks.has(chunkIndex)) {
+      uploadData.totalSize += buffer.length
+      currentMemoryUsage += buffer.length
+    }
+    
     uploadData.chunks.set(chunkIndex, buffer)
 
     // Проверяем, все ли чанки загружены
@@ -197,5 +232,13 @@ export function getUploadedChunks(uploadId: string): Buffer[] | null {
 
 // Очистка после завершения
 export function cleanupUpload(uploadId: string) {
-  chunkStorage.delete(uploadId)
+  const uploadData = chunkStorage.get(uploadId)
+  if (uploadData) {
+    // Освобождаем память
+    currentMemoryUsage -= uploadData.totalSize
+    chunkStorage.delete(uploadId)
+    
+    // Логируем освобождение памяти
+    console.log(`Freed ${(uploadData.totalSize / 1024 / 1024).toFixed(2)}MB from upload ${uploadId}`)
+  }
 }

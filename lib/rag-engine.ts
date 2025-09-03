@@ -25,12 +25,15 @@ async function getAIServiceKey(service: "yandexgpt" | "openai"): Promise<string 
 
 // Поиск релевантной информации в базе знаний
 async function searchKnowledge(query: string): Promise<KnowledgeItem[]> {
+  // Защита от SQL injection
+  const sanitizedQuery = query.replace(/[%_]/g, '\\$&')
+  
   // Простой текстовый поиск (в идеале использовать векторный поиск)
   const { data, error } = await supabase
     .from("knowledge_base")
     .select("*")
     .eq("is_active", true)
-    .or(`question.ilike.%${query}%,answer.ilike.%${query}%`)
+    .or(`question.ilike.%${sanitizedQuery}%,answer.ilike.%${sanitizedQuery}%`)
     .limit(5)
 
   if (error) {

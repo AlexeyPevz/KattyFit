@@ -27,13 +27,10 @@ export async function POST(request: NextRequest) {
     // Объединяем чанки в один файл
     const completeBuffer = Buffer.concat(uploadedChunks)
     
-    // Создаем File объект для дальнейшей обработки
-    const file = new File([completeBuffer], metadata.fileName || 'video.mp4', {
-      type: metadata.fileType || 'video/mp4'
-    })
-
-    // Загружаем файл в Supabase Storage
-    const fileName = `${Date.now()}_${metadata.fileName || 'video.mp4'}`
+    // Генерируем уникальное имя файла
+    const timestamp = Date.now()
+    const sanitizedFileName = (metadata.fileName || 'video.mp4').replace(/[^a-zA-Z0-9.-]/g, '_')
+    const fileName = `${timestamp}_${sanitizedFileName}`
     const { data: storageData, error: storageError } = await supabaseAdmin.storage
       .from('videos')
       .upload(fileName, completeBuffer, {

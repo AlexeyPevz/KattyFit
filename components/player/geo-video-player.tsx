@@ -82,6 +82,8 @@ export function GeoVideoPlayer({
 
       const { url, source } = await selectVideoSource(vkUrl, youtubeUrl)
       
+      if (cancelled) return // Проверяем отмену после async операции
+      
       if (url) {
         // Для VK видео нужно преобразовать URL в embed
         if (source === 'vk' && url.includes('vk.com/video')) {
@@ -113,25 +115,31 @@ export function GeoVideoPlayer({
           setVideoUrl(url)
         }
         
-        setVideoSource(source)
+        if (!cancelled) {
+          setVideoSource(source)
+        }
       } else {
         console.error("Нет доступных источников видео")
       }
     } catch (error) {
       console.error("Ошибка выбора источника видео:", error)
       // Fallback на первый доступный источник
-      if (hlsUrl) {
-        setVideoUrl(hlsUrl)
-        setVideoSource('hls')
-      } else if (vkUrl) {
-        setVideoUrl(vkUrl)
-        setVideoSource('vk')
-      } else if (youtubeUrl) {
-        setVideoUrl(youtubeUrl)
-        setVideoSource('youtube')
+      if (!cancelled) {
+        if (hlsUrl) {
+          setVideoUrl(hlsUrl)
+          setVideoSource('hls')
+        } else if (vkUrl) {
+          setVideoUrl(vkUrl)
+          setVideoSource('vk')
+        } else if (youtubeUrl) {
+          setVideoUrl(youtubeUrl)
+          setVideoSource('youtube')
+        }
       }
     } finally {
-      setIsLoading(false)
+      if (!cancelled) {
+        setIsLoading(false)
+      }
     }
   }
 

@@ -128,19 +128,41 @@ async function uploadChunk(uploadId, chunkIndex) {
   formData.append('totalChunks', task.chunks.length.toString())
   formData.append('chunk', chunkData)
 
+  // Проверяем онлайн статус перед загрузкой
+  if (!navigator.onLine) {
+    throw new Error('No internet connection')
+  }
+
   // Используем fetch с опцией keepalive для продолжения загрузки при закрытии
-  const response = await fetch('/api/video/upload-chunk', {
-    method: 'POST',
-    body: formData,
-    // Важные опции для фоновой загрузки
-    keepalive: true,
-    // Добавляем заголовок для идентификации SW запросов
-    headers: {
-      'X-Upload-Source': 'service-worker'
+  let response
+  try {
+    response = await fetch('/api/video/upload-chunk', {
+      method: 'POST',
+      body: formData,
+      // Важные опции для фоновой загрузки
+      keepalive: true,
+      // Добавляем заголовок для идентификации SW запросов
+      headers: {
+        'X-Upload-Source': 'service-worker'
+      },
+      // Таймаут для предотвращения вечного ожидания
+      signal: AbortSignal.timeout(60000) // 60 секунд
+    })
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Upload timeout')
     }
-  })
+    throw error
+  }
 
   if (!response.ok) {
+    // Специальная обработка для разных статусов
+    if (response.status === 507) {
+      throw new Error('Server storage full')
+    }
+    if (response.status >= 500) {
+      throw new Error(`Server error: ${response.status}`)
+    }
     throw new Error(`Chunk upload failed: ${response.statusText}`)
   }
 
