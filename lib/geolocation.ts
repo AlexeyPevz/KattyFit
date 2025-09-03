@@ -15,7 +15,22 @@ export async function getUserGeolocation(): Promise<GeoLocation | null> {
   if (geoCache) return geoCache
 
   try {
-    // Используем несколько бесплатных сервисов для надежности
+    // Проверяем, выполняется ли код на клиенте
+    if (typeof window !== 'undefined') {
+      // На клиенте используем наш API endpoint
+      try {
+        const response = await fetch('/api/geolocation')
+        if (response.ok) {
+          const data = await response.json()
+          geoCache = data
+          return data
+        }
+      } catch (error) {
+        console.error('Ошибка получения геолокации через API:', error)
+      }
+    }
+
+    // На сервере используем внешние сервисы
     const services = [
       'https://ipapi.co/json/',
       'https://ipinfo.io/json',

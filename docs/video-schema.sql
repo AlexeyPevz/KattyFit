@@ -109,3 +109,27 @@ CREATE POLICY "Users can view own progress" ON video_progress
 
 CREATE POLICY "Users can update own progress" ON video_progress
     FOR ALL USING (user_id = auth.uid());
+
+-- Таблица для временного хранения чанков при загрузке
+CREATE TABLE IF NOT EXISTS upload_chunks (
+    upload_id TEXT NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    etag TEXT NOT NULL,
+    size BIGINT NOT NULL,
+    uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (upload_id, chunk_index)
+);
+
+-- Индекс для быстрого поиска чанков
+CREATE INDEX idx_upload_chunks_upload_id ON upload_chunks(upload_id);
+
+-- Автоочистка старых чанков (старше 24 часов)
+CREATE OR REPLACE FUNCTION cleanup_old_chunks() RETURNS void AS $$
+BEGIN
+    DELETE FROM upload_chunks 
+    WHERE uploaded_at < NOW() - INTERVAL '24 hours';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Периодический запуск очистки (требует pg_cron)
+-- SELECT cron.schedule('cleanup-old-chunks', '0 * * * *', 'SELECT cleanup_old_chunks();');

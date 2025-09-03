@@ -21,8 +21,8 @@ async function uploadToVK(
     const uploadUrlResponse = await fetch(
       `https://api.vk.com/method/video.save?` +
       `group_id=${vkGroupId}&` +
-      `name=${encodeURIComponent(title)}&` +
-      `description=${encodeURIComponent(description)}&` +
+      `name=${encodeURIComponent(title || 'Видео')}&` +
+      `description=${encodeURIComponent(description || '')}&` +
       `is_private=${isPrivate ? 1 : 0}&` +
       `access_token=${vkToken}&` +
       `v=5.131`

@@ -18,9 +18,10 @@ export async function GET(request: NextRequest) {
       dbQuery = dbQuery.eq("type", type)
     }
 
-    // Поиск по тексту
+    // Поиск по тексту (защита от SQL injection)
     if (query) {
-      dbQuery = dbQuery.or(`question.ilike.%${query}%,answer.ilike.%${query}%`)
+      const sanitizedQuery = query.replace(/[%_]/g, '\\$&')
+      dbQuery = dbQuery.or(`question.ilike.%${sanitizedQuery}%,answer.ilike.%${sanitizedQuery}%`)
     }
 
     const { data, error } = await dbQuery
@@ -44,6 +45,23 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { type, question, answer, context } = body
+
+    // Валидация обязательных полей
+    if (!type || !question || !answer) {
+      return NextResponse.json(
+        { error: "Поля type, question и answer обязательны" },
+        { status: 400 }
+      )
+    }
+
+    // Валидация типа
+    const validTypes = ['faq', 'dialog_example', 'course_info', 'pricing']
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { error: "Недопустимый тип элемента" },
+        { status: 400 }
+      )
+    }
 
     const { data, error } = await supabaseAdmin
       .from("knowledge_base")

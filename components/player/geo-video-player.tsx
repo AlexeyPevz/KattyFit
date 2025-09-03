@@ -66,9 +66,10 @@ export function GeoVideoPlayer({
         // Для VK видео нужно преобразовать URL в embed
         if (source === 'vk' && url.includes('vk.com/video')) {
           // Извлекаем ID видео из URL
-          const match = url.match(/video(-?\d+_\d+)/)
+          const match = url.match(/video(-?\d+)_(\d+)/)
           if (match) {
-            const [ownerId, videoId] = match[1].split('_')
+            const ownerId = match[1]
+            const videoId = match[2]
             const embedUrl = `https://vk.com/video_ext.php?oid=${ownerId}&id=${videoId}`
             setVideoUrl(embedUrl)
           } else {
@@ -76,10 +77,16 @@ export function GeoVideoPlayer({
           }
         } else if (source === 'youtube' && url.includes('youtube.com/watch')) {
           // Преобразуем YouTube URL в embed
-          const videoId = new URL(url).searchParams.get('v')
-          if (videoId) {
-            setVideoUrl(`https://www.youtube.com/embed/${videoId}`)
-          } else {
+          try {
+            const urlObj = new URL(url)
+            const videoId = urlObj.searchParams.get('v')
+            if (videoId) {
+              setVideoUrl(`https://www.youtube.com/embed/${videoId}`)
+            } else {
+              setVideoUrl(url)
+            }
+          } catch (error) {
+            console.error('Invalid YouTube URL:', url)
             setVideoUrl(url)
           }
         } else {

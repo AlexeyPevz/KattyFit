@@ -347,20 +347,43 @@ export class BackgroundUploadManager {
   private async saveTaskToDB(task: UploadTask) {
     if (!this.db) return
 
-    const transaction = this.db.transaction(['uploads'], 'readwrite')
-    const store = transaction.objectStore('uploads')
-    
-    // Сохраняем без файла (файл храним отдельно)
-    const taskData = {
-      ...task,
-      file: {
-        name: task.file.name,
-        size: task.file.size,
-        type: task.file.type
+    try {
+      const transaction = this.db.transaction(['uploads'], 'readwrite')
+      const store = transaction.objectStore('uploads')
+      
+      // Сохраняем без файла (файл храним отдельно)
+      const taskData = {
+        ...task,
+        file: {
+          name: task.file.name,
+          size: task.file.size,
+          type: task.file.type,
+          lastModified: task.file.lastModified
+        },
+        // Преобразуем Map в массив для сохранения
+        chunks: task.chunks
+      }
+      
+      await store.put(taskData)
+      
+      // Сохраняем сам файл отдельно если нужно восстановить
+      await this.saveFileToCache(task.id, task.file)
+    } catch (error) {
+      console.error('Ошибка сохранения в БД:', error)
+    }
+  }
+
+  // Сохранение файла в Cache API для надежности
+  private async saveFileToCache(uploadId: string, file: File) {
+    if ('caches' in window) {
+      try {
+        const cache = await caches.open('upload-files')
+        const response = new Response(file)
+        await cache.put(`/uploads/${uploadId}`, response)
+      } catch (error) {
+        console.error('Ошибка сохранения файла в кеш:', error)
       }
     }
-    
-    store.put(taskData)
   }
 
   private async saveChunkState(uploadId: string, chunk: ChunkInfo) {
