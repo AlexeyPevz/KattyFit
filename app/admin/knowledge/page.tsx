@@ -75,40 +75,23 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     fetchKnowledge()
-  }, [])
+  }, [searchQuery, filterType])
 
   const fetchKnowledge = async () => {
     try {
       setLoading(true)
-      // Здесь будет запрос к API
-      // Пока используем моковые данные
-      const mockData: KnowledgeItem[] = [
-        {
-          id: "1",
-          type: "faq",
-          question: "Какая стоимость занятий?",
-          answer: "Индивидуальное занятие - 2500₽, групповые - от 800₽, абонемент на 8 занятий - 6000₽ (скидка 20%)",
-          is_active: true,
-          created_at: "2024-01-15",
-        },
-        {
-          id: "2",
-          type: "dialog_example",
-          question: "Здравствуйте! Хочу записаться на растяжку",
-          answer: "Здравствуйте! Рада вас видеть! У нас есть индивидуальные и групповые занятия. Что вам больше подходит?",
-          is_active: true,
-          created_at: "2024-01-14",
-        },
-        {
-          id: "3",
-          type: "course_info",
-          question: "Курс для начинающих",
-          answer: "8 занятий по 60 минут. Программа включает базовые упражнения на растяжку всех групп мышц, дыхательные практики и релаксацию.",
-          is_active: true,
-          created_at: "2024-01-13",
-        },
-      ]
-      setItems(mockData)
+      const params = new URLSearchParams()
+      if (searchQuery) params.append("q", searchQuery)
+      if (filterType !== "all") params.append("type", filterType)
+      
+      const response = await fetch(`/api/knowledge?${params}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setItems(data.items)
+      } else {
+        console.error("Ошибка загрузки:", data.error)
+      }
     } catch (error) {
       console.error("Ошибка загрузки базы знаний:", error)
     } finally {
@@ -125,19 +108,52 @@ export default function KnowledgeBasePage() {
   })
 
   const handleSubmit = async () => {
-    // Здесь будет сохранение в БД
-    console.log("Сохранение:", formData)
-    setShowAddDialog(false)
-    setEditingItem(null)
-    setFormData({ type: "faq", question: "", answer: "" })
-    fetchKnowledge()
+    try {
+      const method = editingItem ? "PUT" : "POST"
+      const body = editingItem 
+        ? { id: editingItem.id, ...formData }
+        : formData
+      
+      const response = await fetch("/api/knowledge", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setShowAddDialog(false)
+        setEditingItem(null)
+        setFormData({ type: "faq", question: "", answer: "" })
+        fetchKnowledge()
+      } else {
+        console.error("Ошибка сохранения:", data.error)
+      }
+    } catch (error) {
+      console.error("Ошибка сохранения:", error)
+    }
   }
 
   const handleDelete = async (id: string) => {
     if (confirm("Удалить этот элемент?")) {
-      // Здесь будет удаление из БД
-      console.log("Удаление:", id)
-      fetchKnowledge()
+      try {
+        const response = await fetch(`/api/knowledge?id=${id}`, {
+          method: "DELETE",
+        })
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          fetchKnowledge()
+        } else {
+          console.error("Ошибка удаления:", data.error)
+        }
+      } catch (error) {
+        console.error("Ошибка удаления:", error)
+      }
     }
   }
 
