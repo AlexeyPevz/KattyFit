@@ -36,6 +36,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Валидация uploadId (защита от path traversal)
+    if (!/^upload_[\w\d_-]+$/.test(uploadId)) {
+      return NextResponse.json(
+        { error: "Неверный формат uploadId" },
+        { status: 400 }
+      )
+    }
+
+    // Проверка размера чанка (макс 10MB)
+    const MAX_CHUNK_SIZE = 10 * 1024 * 1024
+    if (chunk.size > MAX_CHUNK_SIZE) {
+      return NextResponse.json(
+        { error: "Размер чанка превышает лимит" },
+        { status: 413 }
+      )
+    }
+
+    // Проверка общего количества чанков (макс 1000)
+    if (totalChunks > 1000 || totalChunks < 1) {
+      return NextResponse.json(
+        { error: "Недопустимое количество чанков" },
+        { status: 400 }
+      )
+    }
+
     // Преобразуем чанк в Buffer
     const buffer = Buffer.from(await chunk.arrayBuffer())
     

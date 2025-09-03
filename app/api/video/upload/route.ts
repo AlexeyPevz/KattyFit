@@ -34,6 +34,12 @@ async function uploadToVK(
       return null
     }
 
+    // Проверяем наличие upload_url
+    if (!uploadData.response?.upload_url) {
+      console.error("VK API не вернул upload_url:", uploadData)
+      return null
+    }
+
     // 2. Загружаем видео
     const formData = new FormData()
     formData.append("video_file", file)
@@ -42,6 +48,11 @@ async function uploadToVK(
       method: "POST",
       body: formData,
     })
+
+    if (!uploadResponse.ok) {
+      console.error("VK upload HTTP error:", uploadResponse.status)
+      return null
+    }
 
     const uploadResult = await uploadResponse.json()
     if (!uploadResult.video_id) {
@@ -56,7 +67,7 @@ async function uploadToVK(
     return {
       videoId: videoId,
       url: `https://vk.com/video${videoId}${accessKey ? `?access_key=${accessKey}` : ""}`,
-      embedUrl: `https://vk.com/video_ext.php?oid=${uploadResult.owner_id}&id=${uploadResult.video_id}&hash=${uploadResult.video_hash || ""}`
+      embedUrl: `https://vk.com/video_ext.php?oid=${uploadResult.owner_id}&id=${uploadResult.video_id}${uploadResult.video_hash ? `&hash=${uploadResult.video_hash}` : ""}`
     }
   } catch (error) {
     console.error("VK upload error:", error)

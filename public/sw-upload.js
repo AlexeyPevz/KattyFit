@@ -162,7 +162,12 @@ async function finalizeUpload(uploadId, task) {
     },
     body: JSON.stringify({
       uploadId,
-      metadata: task.metadata,
+      metadata: {
+        ...task.metadata,
+        fileName: task.file.name,
+        fileType: task.file.type,
+        fileSize: task.file.size
+      },
       chunks: task.chunks.map(c => ({ 
         index: c.index, 
         etag: c.etag 

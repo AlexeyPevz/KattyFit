@@ -304,6 +304,22 @@ export class BackgroundUploadManager {
       task.progress = 100
       await this.saveTaskToDB(task)
       this.notifyComplete(uploadId)
+      
+      // Очищаем большие данные из памяти через некоторое время
+      setTimeout(() => {
+        // Удаляем файл из кеша
+        if ('caches' in window) {
+          caches.open('upload-files').then(cache => {
+            cache.delete(`/uploads/${uploadId}`)
+          })
+        }
+        
+        // Удаляем из памяти, но оставляем метаданные
+        const taskMeta = this.tasks.get(uploadId)
+        if (taskMeta && taskMeta.status === 'completed') {
+          this.tasks.delete(uploadId)
+        }
+      }, 5 * 60 * 1000) // Через 5 минут
     }
   }
 

@@ -74,7 +74,11 @@ export default function KnowledgeBasePage() {
   })
 
   useEffect(() => {
-    fetchKnowledge()
+    const debounceTimer = setTimeout(() => {
+      fetchKnowledge()
+    }, searchQuery ? 500 : 0) // Задержка только для поиска
+
+    return () => clearTimeout(debounceTimer)
   }, [searchQuery, filterType])
 
   const fetchKnowledge = async () => {

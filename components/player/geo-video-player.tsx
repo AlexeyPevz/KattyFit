@@ -35,29 +35,49 @@ export function GeoVideoPlayer({
   const [showGeoInfo, setShowGeoInfo] = useState(false)
 
   useEffect(() => {
-    selectBestVideoSource()
+    let cancelled = false
+    
+    const selectSource = async () => {
+      await selectBestVideoSource(cancelled)
+    }
+    
+    selectSource()
+    
+    return () => {
+      cancelled = true
+    }
   }, [vkUrl, youtubeUrl, hlsUrl])
 
-  const selectBestVideoSource = async () => {
+  const selectBestVideoSource = async (cancelled: boolean) => {
     try {
       setIsLoading(true)
 
       // Если есть HLS URL (self-hosted), используем его приоритетно
       if (hlsUrl) {
-        setVideoUrl(hlsUrl)
-        setVideoSource('hls')
-        setIsLoading(false)
+        if (!cancelled) {
+          setVideoUrl(hlsUrl)
+          setVideoSource('hls')
+          setIsLoading(false)
+        }
         return
       }
 
       // Определяем геолокацию и выбираем источник
       const location = await getUserGeolocation()
+      
+      if (cancelled) return // Проверяем отмену после async операции
+      
       if (location) {
         setUserCountry(location.country)
         setShowGeoInfo(true)
         
         // Скрываем информацию о стране через 3 секунды
-        setTimeout(() => setShowGeoInfo(false), 3000)
+        const timer = setTimeout(() => {
+          if (!cancelled) setShowGeoInfo(false)
+        }, 3000)
+        
+        // Очищаем таймер при отмене
+        if (cancelled) clearTimeout(timer)
       }
 
       const { url, source } = await selectVideoSource(vkUrl, youtubeUrl)
@@ -183,6 +203,8 @@ export function GeoVideoPlayer({
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         title={title || "Video player"}
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+        referrerPolicy="no-referrer"
       />
       
       {/* Эмулируем события для внешних плееров */}
