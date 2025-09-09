@@ -5,8 +5,9 @@
  * Проверяет доступность прокси и отправляет уведомления
  */
 
-const https = require('https')
-const http = require('http')
+import https from 'https'
+import http from 'http'
+import fetch from 'node-fetch'
 
 // Конфигурация
 const config = {
@@ -249,8 +250,8 @@ process.on('unhandledRejection', (reason, promise) => {
 })
 
 // Запуск
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   start()
 }
 
-module.exports = { runMonitoring, checkProxy, checkService }
+export { runMonitoring, checkProxy, checkService }

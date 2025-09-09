@@ -70,7 +70,7 @@ services:
   # Мониторинг прокси
   proxy-monitor:
     build: .
-    command: node scripts/proxy-monitor.js
+    command: node scripts/proxy-monitor.mjs
     environment:
       - ASOCKS_HOST=${ASOCKS_HOST}
       - ASOCKS_PORT=${ASOCKS_PORT}

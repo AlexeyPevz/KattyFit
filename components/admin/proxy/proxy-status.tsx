@@ -24,23 +24,21 @@ interface ServiceStatus {
   error?: string
 }
 
-interface ProxyStatus {
-  total: number
-  active: number
-  healthy: number
-  proxies: Array<{
-    id: string
-    name: string
-    type: string
-    isActive: boolean
-    isHealthy: boolean
-    responseTime?: number
-    lastChecked?: string
-  }>
-}
-
 interface StatusData {
-  proxy: ProxyStatus
+  proxy: {
+    total: number
+    active: number
+    healthy: number
+    proxies: Array<{
+      id: string
+      name: string
+      type: string
+      isActive: boolean
+      isHealthy: boolean
+      responseTime?: number
+      lastChecked?: string
+    }>
+  }
   services: ServiceStatus[]
   timestamp: string
 }

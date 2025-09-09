@@ -37,23 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
-interface ProxyConfig {
-  id: string
-  name: string
-  type: 'asocks' | 'beget' | 'custom'
-  host: string
-  port: number
-  username?: string
-  password?: string
-  isActive: boolean
-  priority: number
-  allowedServices: string[]
-  healthCheckUrl?: string
-  lastChecked?: string
-  isHealthy?: boolean
-  responseTime?: number
-}
+import { ProxyConfig } from "@/lib/proxy-manager"
 
 interface ProxyStats {
   total: number

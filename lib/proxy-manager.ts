@@ -13,7 +13,7 @@ export interface ProxyConfig {
   priority: number // 1 = высший приоритет
   allowedServices: string[] // Какие сервисы проксировать
   healthCheckUrl?: string
-  lastChecked?: Date
+  lastChecked?: Date | string
   isHealthy?: boolean
   responseTime?: number
 }
@@ -281,20 +281,25 @@ class ProxyManager {
   private async asocksRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
     const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
     
+    // Используем HttpsProxyAgent для Node.js
+    const { HttpsProxyAgent } = require('https-proxy-agent')
+    
     return fetch(request.url, {
       method: request.method,
       headers: request.headers,
       body: request.body,
       // @ts-ignore - Node.js fetch не поддерживает agent, но это работает в некоторых средах
-      agent: new (require('https-proxy-agent'))(proxyUrl)
+      agent: new HttpsProxyAgent(proxyUrl)
     })
   }
 
   // Beget VPS прокси запрос
   private async begetRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
-    const proxyUrl = `${proxy.host}:${proxy.port}`
+    const proxyUrl = `http://${proxy.host}:${proxy.port}`
     
     // Beget прокси работает как обычный HTTP прокси
+    const { HttpsProxyAgent } = require('https-proxy-agent')
+    
     return fetch(request.url, {
       method: request.method,
       headers: {
@@ -304,7 +309,7 @@ class ProxyManager {
       },
       body: request.body,
       // @ts-ignore
-      agent: new (require('https-proxy-agent'))(`http://${proxyUrl}`)
+      agent: new HttpsProxyAgent(proxyUrl)
     })
   }
 
@@ -314,12 +319,14 @@ class ProxyManager {
       ? `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
       : `http://${proxy.host}:${proxy.port}`
     
+    const { HttpsProxyAgent } = require('https-proxy-agent')
+    
     return fetch(request.url, {
       method: request.method,
       headers: request.headers,
       body: request.body,
       // @ts-ignore
-      agent: new (require('https-proxy-agent'))(proxyUrl)
+      agent: new HttpsProxyAgent(proxyUrl)
     })
   }
 
@@ -394,24 +401,45 @@ export const proxyManager = new ProxyManager()
 
 // Утилиты для работы с прокси
 export async function makeProxiedRequest(url: string, options: RequestInit = {}): Promise<Response> {
-  const request: ProxyRequest = {
-    url,
-    method: options.method || 'GET',
-    headers: options.headers as Record<string, string>,
-    body: options.body
-  }
-
-  const result = await proxyManager.makeRequest(request)
+  const proxy = proxyManager.selectProxy(url)
   
-  if (!result.success) {
-    throw new Error(result.error || 'Proxy request failed')
+  if (!proxy) {
+    // Прямой запрос без прокси
+    return fetch(url, options)
   }
 
-  // Возвращаем Response объект
-  return new Response(JSON.stringify(result.data), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' }
-  })
+  try {
+    let response: Response
+    
+    if (proxy.type === 'asocks') {
+      response = await proxyManager['asocksRequest'](proxy, {
+        url,
+        method: options.method || 'GET',
+        headers: options.headers as Record<string, string>,
+        body: options.body
+      })
+    } else if (proxy.type === 'beget') {
+      response = await proxyManager['begetRequest'](proxy, {
+        url,
+        method: options.method || 'GET',
+        headers: options.headers as Record<string, string>,
+        body: options.body
+      })
+    } else {
+      response = await proxyManager['customProxyRequest'](proxy, {
+        url,
+        method: options.method || 'GET',
+        headers: options.headers as Record<string, string>,
+        body: options.body
+      })
+    }
+
+    return response
+  } catch (error) {
+    // Fallback на прямой запрос
+    console.warn(`Proxy request failed for ${url}, falling back to direct:`, error)
+    return fetch(url, options)
+  }
 }
 
 // Проверка доступности сервиса
