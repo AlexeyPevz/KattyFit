@@ -285,136 +285,136 @@ export default function IntegrationsPage() {
                       </div>
                     ) : (
                       <>
-                    {integration.clientIdRequired && (
-                      <div className="space-y-2">
-                        <Label htmlFor={`${integration.id}-client-id`}>Client ID</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id={`${integration.id}-client-id`}
-                            placeholder="Введите Client ID"
-                            value={credentials[integration.id]?.clientId || ""}
-                            onChange={(e) => setCredentials(prev => ({
-                              ...prev,
-                              [integration.id]: {
-                                ...prev[integration.id],
-                                clientId: e.target.value
-                              }
-                            }))}
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => copyToClipboard(credentials[integration.id]?.clientId || "")}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {integration.clientSecretRequired && (
-                      <div className="space-y-2">
-                        <Label htmlFor={`${integration.id}-client-secret`}>Client Secret</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id={`${integration.id}-client-secret`}
-                            type={showSecrets[`${integration.id}-secret`] ? "text" : "password"}
-                            placeholder="Введите Client Secret"
-                            value={credentials[integration.id]?.clientSecret || ""}
-                            onChange={(e) => setCredentials(prev => ({
-                              ...prev,
-                              [integration.id]: {
-                                ...prev[integration.id],
-                                clientSecret: e.target.value
-                              }
-                            }))}
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => toggleShowSecret(`${integration.id}-secret`)}
-                          >
-                            {showSecrets[`${integration.id}-secret`] ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {integration.apiKeyRequired && (
-                      <div className="space-y-2">
-                        <Label htmlFor={`${integration.id}-api-key`}>API Key</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id={`${integration.id}-api-key`}
-                            type={showSecrets[`${integration.id}-key`] ? "text" : "password"}
-                            placeholder="Введите API ключ"
-                            value={credentials[integration.id]?.apiKey || ""}
-                            onChange={(e) => setCredentials(prev => ({
-                              ...prev,
-                              [integration.id]: {
-                                ...prev[integration.id],
-                                apiKey: e.target.value
-                              }
-                            }))}
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => toggleShowSecret(`${integration.id}-key`)}
-                          >
-                            {showSecrets[`${integration.id}-key`] ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {integration.requiresOAuth && (
-                      <Alert>
-                        <Info className="h-4 w-4" />
-                        <AlertDescription>
-                          Для получения OAuth учетных данных:
-                          <ol className="mt-2 ml-4 list-decimal space-y-1 text-sm">
-                            <li>Перейдите в консоль разработчика по ссылке выше</li>
-                            <li>Создайте новый проект или выберите существующий</li>
-                            <li>Включите необходимые API</li>
-                            <li>Создайте OAuth 2.0 учетные данные</li>
-                            <li>Добавьте разрешенные redirect URI</li>
-                          </ol>
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="flex justify-end">
-                      <Button 
-                        onClick={() => handleSaveCredentials(integration.id)}
-                        disabled={
-                          saving === integration.id ||
-                          (integration.clientIdRequired && !credentials[integration.id]?.clientId) ||
-                          (integration.clientSecretRequired && !credentials[integration.id]?.clientSecret) ||
-                          (integration.apiKeyRequired && !credentials[integration.id]?.apiKey)
-                        }
-                      >
-                        {saving === integration.id ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Сохранение...
-                          </>
-                        ) : (
-                          "Сохранить"
+                        {integration.clientIdRequired && (
+                          <div className="space-y-2">
+                            <Label htmlFor={`${integration.id}-client-id`}>Client ID</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id={`${integration.id}-client-id`}
+                                placeholder="Введите Client ID"
+                                value={credentials[integration.id]?.clientId || ""}
+                                onChange={(e) => setCredentials(prev => ({
+                                  ...prev,
+                                  [integration.id]: {
+                                    ...prev[integration.id],
+                                    clientId: e.target.value
+                                  }
+                                }))}
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => copyToClipboard(credentials[integration.id]?.clientId || "")}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
                         )}
-                      </Button>
-                    </div>
-                  </div>
-                    </>
+
+                        {integration.clientSecretRequired && (
+                          <div className="space-y-2">
+                            <Label htmlFor={`${integration.id}-client-secret`}>Client Secret</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id={`${integration.id}-client-secret`}
+                                type={showSecrets[`${integration.id}-secret`] ? "text" : "password"}
+                                placeholder="Введите Client Secret"
+                                value={credentials[integration.id]?.clientSecret || ""}
+                                onChange={(e) => setCredentials(prev => ({
+                                  ...prev,
+                                  [integration.id]: {
+                                    ...prev[integration.id],
+                                    clientSecret: e.target.value
+                                  }
+                                }))}
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => toggleShowSecret(`${integration.id}-secret`)}
+                              >
+                                {showSecrets[`${integration.id}-secret`] ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {integration.apiKeyRequired && (
+                          <div className="space-y-2">
+                            <Label htmlFor={`${integration.id}-api-key`}>API Key</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id={`${integration.id}-api-key`}
+                                type={showSecrets[`${integration.id}-key`] ? "text" : "password"}
+                                placeholder="Введите API ключ"
+                                value={credentials[integration.id]?.apiKey || ""}
+                                onChange={(e) => setCredentials(prev => ({
+                                  ...prev,
+                                  [integration.id]: {
+                                    ...prev[integration.id],
+                                    apiKey: e.target.value
+                                  }
+                                }))}
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => toggleShowSecret(`${integration.id}-key`)}
+                              >
+                                {showSecrets[`${integration.id}-key`] ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {integration.requiresOAuth && (
+                          <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertDescription>
+                              Для получения OAuth учетных данных:
+                              <ol className="mt-2 ml-4 list-decimal space-y-1 text-sm">
+                                <li>Перейдите в консоль разработчика по ссылке выше</li>
+                                <li>Создайте новый проект или выберите существующий</li>
+                                <li>Включите необходимые API</li>
+                                <li>Создайте OAuth 2.0 учетные данные</li>
+                                <li>Добавьте разрешенные redirect URI</li>
+                              </ol>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+
+                        <div className="flex justify-end">
+                          <Button 
+                            onClick={() => handleSaveCredentials(integration.id)}
+                            disabled={
+                              saving === integration.id ||
+                              (integration.clientIdRequired && !credentials[integration.id]?.clientId) ||
+                              (integration.clientSecretRequired && !credentials[integration.id]?.clientSecret) ||
+                              (integration.apiKeyRequired && !credentials[integration.id]?.apiKey)
+                            }
+                          >
+                            {saving === integration.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Сохранение...
+                              </>
+                            ) : (
+                              "Сохранить"
+                            )}
+                          </Button>
+                        </div>
+                      </>
                     )}
+                  </div>
                 </CardContent>
               </Card>
             ))}

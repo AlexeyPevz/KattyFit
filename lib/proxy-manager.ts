@@ -282,7 +282,7 @@ class ProxyManager {
     const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
     
     // Используем HttpsProxyAgent для Node.js
-    const { HttpsProxyAgent } = require('https-proxy-agent')
+    const { HttpsProxyAgent } = await import('https-proxy-agent')
     
     // Создаем прокси URL для fetch
     const proxyAgent = new HttpsProxyAgent(proxyUrl)
@@ -301,7 +301,7 @@ class ProxyManager {
     const proxyUrl = `http://${proxy.host}:${proxy.port}`
     
     // Beget прокси работает как обычный HTTP прокси
-    const { HttpsProxyAgent } = require('https-proxy-agent')
+    const { HttpsProxyAgent } = await import('https-proxy-agent')
     
     const proxyAgent = new HttpsProxyAgent(proxyUrl)
     
@@ -324,7 +324,7 @@ class ProxyManager {
       ? `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
       : `http://${proxy.host}:${proxy.port}`
     
-    const { HttpsProxyAgent } = require('https-proxy-agent')
+    const { HttpsProxyAgent } = await import('https-proxy-agent')
     
     const proxyAgent = new HttpsProxyAgent(proxyUrl)
     
