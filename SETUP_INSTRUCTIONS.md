@@ -9,10 +9,10 @@
 
 ### Настройка переменных окружения
 В настройках проекта v0 добавьте:
-```
+\`\`\`
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
+\`\`\`
 
 ## 2. Настройка API ключей
 
@@ -26,7 +26,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 ### Через Supabase (альтернативный способ)
 Выполните SQL для добавления ключей:
-```sql
+\`\`\`sql
 -- VK API
 INSERT INTO api_keys (service, key_name, key_value, is_active)
 VALUES ('vk', 'api_key', 'YOUR_VK_TOKEN', true);
@@ -40,7 +40,7 @@ VALUES
 -- ElevenLabs
 INSERT INTO api_keys (service, key_name, key_value, is_active)
 VALUES ('elevenlabs', 'api_key', 'YOUR_ELEVENLABS_KEY', true);
-```
+\`\`\`
 
 ## 3. Настройка OAuth (требует совместной сессии)
 
@@ -84,11 +84,11 @@ VALUES ('elevenlabs', 'api_key', 'YOUR_ELEVENLABS_KEY', true);
 
 ### Хранилище файлов (опционально)
 Для production рекомендуется настроить Supabase Storage или Cloudinary:
-```
+\`\`\`
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-```
+\`\`\`
 
 ### Планировщик задач (опционально)
 Для автоматической публикации настройте cron jobs или используйте Vercel Cron Functions.

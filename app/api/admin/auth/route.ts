@@ -31,4 +31,3 @@ export async function DELETE() {
   res.cookies.set("admin_auth", "", { path: "/", maxAge: 0 })
   return res
 }
-

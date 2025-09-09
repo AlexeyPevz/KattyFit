@@ -18,7 +18,7 @@
 Добавьте эти переменные в настройках v0:
 
 ### Обязательные (без них не запустится)
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -27,17 +27,17 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # Админ доступ
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_secure_password
-```
+\`\`\`
 
 ### Платежи (для монетизации)
-```env
+\`\`\`env
 # CloudPayments
 NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=your_public_id
 CLOUDPAYMENTS_SECRET=your_api_secret
-```
+\`\`\`
 
 ### AI и интеграции (для полного функционала)
-```env
+\`\`\`env
 # Чат-бот (выберите один)
 YANDEXGPT_API_KEY=your_yandex_key    # Для русского языка
 OPENAI_API_KEY=your_openai_key       # Альтернатива
@@ -50,10 +50,10 @@ ELEVENLABS_API_KEY=your_key          # Дубляж видео
 TELEGRAM_BOT_TOKEN=your_bot_token
 VK_API_TOKEN=your_vk_token
 META_WEBHOOK_TOKEN=your_meta_token
-```
+\`\`\`
 
 ### Дополнительные (опционально)
-```env
+\`\`\`env
 # Push уведомления
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public
 VAPID_PRIVATE_KEY=your_vapid_private
@@ -64,7 +64,7 @@ HLS_JWT_SECRET=your_jwt_secret
 
 # Хранилище
 SUPABASE_STORAGE_BUCKET=content
-```
+\`\`\`
 
 ## 🗄️ Настройка базы данных
 
@@ -72,7 +72,7 @@ SUPABASE_STORAGE_BUCKET=content
 2. Выполните скрипт `/scripts/final-schema.sql`
 3. Добавьте тестовые данные:
 
-```sql
+\`\`\`sql
 -- Добавить тестовые промокоды
 INSERT INTO promocodes (code, discount_percent, max_uses) VALUES
   ('WELCOME10', 10, NULL),
@@ -88,7 +88,7 @@ INSERT INTO training_types (code, title, price, type) VALUES
 INSERT INTO training_packages (code, title, sessions, price, discount_percent) VALUES
   ('package-5', 'Пакет 5 занятий', 5, 11250, 10),
   ('package-10', 'Пакет 10 занятий', 10, 21250, 15);
-```
+\`\`\`
 
 ## 🚀 После деплоя
 
@@ -108,10 +108,10 @@ INSERT INTO training_packages (code, title, sessions, price, discount_percent) V
 - `/admin/knowledge` - добавьте FAQ для бота
 
 ### 4. Настройте Webhook для чатов
-```
+\`\`\`
 Telegram: https://your-v0-app.vercel.app/api/chat/webhook/telegram
 VK: https://your-v0-app.vercel.app/api/chat/webhook/vk
-```
+\`\`\`
 
 ## 🎯 Quick Start
 

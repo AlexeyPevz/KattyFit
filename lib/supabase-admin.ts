@@ -9,4 +9,3 @@ export const supabaseAdmin = createClient(env.supabaseUrl || 'http://localhost',
     persistSession: false,
   },
 })
-

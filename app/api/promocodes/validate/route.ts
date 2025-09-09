@@ -65,4 +65,3 @@ export const GET = apiHandler(async (request: NextRequest) => {
     }
   })
 })
-

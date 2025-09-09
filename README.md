@@ -40,7 +40,7 @@
 ### 1. Настройка окружения
 
 Создайте `.env.local` файл:
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -55,7 +55,7 @@ OPENAI_API_KEY=your_openai_key
 
 # Webhook для чатов
 META_WEBHOOK_TOKEN=your_webhook_verification_token
-```
+\`\`\`
 
 ### 2. База данных
 
@@ -63,10 +63,10 @@ META_WEBHOOK_TOKEN=your_webhook_verification_token
 
 ### 3. Установка и запуск
 
-```bash
+\`\`\`bash
 pnpm install
 pnpm dev
-```
+\`\`\`
 
 ### 4. Настройка интеграций
 
@@ -83,7 +83,7 @@ pnpm dev
 
 ## 📂 Структура проекта
 
-```
+\`\`\`
 /app
   /admin          # Админ-панель
     /content      # Управление контентом
@@ -98,7 +98,7 @@ pnpm dev
 /lib
   supabase.ts     # Клиент БД
   rag-engine.ts   # AI движок для чатов
-```
+\`\`\`
 
 ## 🔧 Основные API маршруты
 

@@ -23,10 +23,10 @@
 ## 🔧 Шаг 3: Настройка окружения в v0
 
 1. **Environment Variables** (Settings → Environment)
-   ```
+   \`\`\`
    NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
-   ```
+   \`\`\`
 
 2. **Убедиться что установлены компоненты Shadcn**
    - Если нет, v0 предложит установить автоматически
@@ -79,9 +79,9 @@
 
 ### Telegram
 - [ ] Установить webhook: 
-  ```
+  \`\`\`
   https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://yourdomain.vercel.app/api/chat/webhook/telegram
-  ```
+  \`\`\`
 
 ### VK
 - [ ] В настройках сообщества → Callback API

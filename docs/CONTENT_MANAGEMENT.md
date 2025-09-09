@@ -66,7 +66,7 @@
 - `GET /api/content/publish?contentId=ID` - статус публикаций
 
 ### Структура данных
-```typescript
+\`\`\`typescript
 interface Content {
   id: string
   title: string
@@ -80,7 +80,7 @@ interface Content {
   createdAt: string
   updatedAt: string
 }
-```
+\`\`\`
 
 ## Дальнейшее развитие
 

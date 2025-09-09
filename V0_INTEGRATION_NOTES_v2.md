@@ -63,7 +63,7 @@
 
 ## 📦 Структура для v0
 
-```
+\`\`\`
 /app (App Router)
   /admin
     /content - полноценный модуль контента
@@ -79,15 +79,15 @@
 /lib
   supabase.ts - клиент и типы БД
   rag-engine.ts - AI движок (pure TypeScript)
-```
+\`\`\`
 
 ## 🔧 Настройка в v0
 
 ### Environment Variables (добавить в v0):
-```
+\`\`\`
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
+\`\`\`
 
 ### Остальные ключи - через UI:
 - ContentStudio API

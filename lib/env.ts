@@ -32,4 +32,3 @@ export const env = {
   // Storage
   storageBucket: process.env.SUPABASE_STORAGE_BUCKET || '',
 }
-

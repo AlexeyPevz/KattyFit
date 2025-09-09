@@ -51,7 +51,7 @@
 
 Для автоматической настройки добавьте в `.env.local`:
 
-```bash
+\`\`\`bash
 # ASOCKS прокси
 ASOCKS_HOST=proxy.asocks.com
 ASOCKS_PORT=1080
@@ -68,7 +68,7 @@ CUSTOM_PROXY_HOST=proxy.example.com
 CUSTOM_PROXY_PORT=8080
 CUSTOM_PROXY_USERNAME=username
 CUSTOM_PROXY_PASSWORD=password
-```
+\`\`\`
 
 ## 🔧 Настройка через админку
 

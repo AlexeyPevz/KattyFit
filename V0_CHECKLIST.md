@@ -28,11 +28,11 @@
 ## 📋 Что делать дальше
 
 1. **Push в GitHub**
-   ```bash
+   \`\`\`bash
    git add .
    git commit -m "feat: Add content management system with thumbnail generator"
    git push
-   ```
+   \`\`\`
 
 2. **В v0**
    - Откройте проект
