@@ -9,11 +9,12 @@ async function getContentStudioKey(): Promise<string | null> {
 
 // Генерация обложек через ContentStudio AI
 async function generateThumbnails(apiKey: string, params: any) {
-  const response = await fetch("https://app.contentstudio.io/api/v1/ai/thumbnails", {
+  const { SmartAPI } = await import("@/lib/smart-proxy")
+  
+  const response = await SmartAPI.contentstudioRequest("/ai/thumbnails", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       video_url: params.videoUrl,
@@ -35,11 +36,12 @@ async function generateThumbnails(apiKey: string, params: any) {
 
 // Публикация через ContentStudio
 async function publishContent(apiKey: string, params: any) {
-  const response = await fetch("https://app.contentstudio.io/api/v1/posts", {
+  const { SmartAPI } = await import("@/lib/smart-proxy")
+  
+  const response = await SmartAPI.contentstudioRequest("/posts", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       content: params.content,
@@ -132,7 +134,8 @@ export async function POST(request: NextRequest) {
 
       case "getAccounts":
         // Получение списка подключенных аккаунтов
-        const accountsResponse = await fetch("https://app.contentstudio.io/api/v1/accounts", {
+        const { SmartAPI } = await import("@/lib/smart-proxy")
+        const accountsResponse = await SmartAPI.contentstudioRequest("/accounts", {
           headers: {
             "Authorization": `Bearer ${apiKey}`,
           },

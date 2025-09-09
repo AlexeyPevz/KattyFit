@@ -95,7 +95,9 @@ ${context.chatHistory?.map(m => `${m.type}: ${m.text}`).join("\n") || "Нача�
 Ответ:`
 
   try {
-    const response = await fetch("https://llm.api.cloud.yandex.net/foundationModels/v1/completion", {
+    const { smartFetch } = await import("@/lib/smart-proxy")
+    
+    const response = await smartFetch("https://llm.api.cloud.yandex.net/foundationModels/v1/completion", {
       method: "POST",
       headers: {
         "Authorization": `Api-Key ${apiKey}`,
@@ -147,11 +149,12 @@ Answer in Russian.`
   ).join("\n\n")
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const { SmartAPI } = await import("@/lib/smart-proxy")
+    
+    const response = await SmartAPI.openaiRequest("/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",

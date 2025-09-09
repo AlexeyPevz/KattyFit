@@ -26,11 +26,12 @@ async function startDubbing(videoUrl: string, targetLanguages: string[], apiKey:
     }
   }
 
-  const response = await fetch("https://api.elevenlabs.io/v1/dubbing", {
+  const { SmartAPI } = await import("@/lib/smart-proxy")
+  
+  const response = await SmartAPI.elevenlabsRequest("/dubbing", {
     method: "POST",
     headers: {
       "xi-api-key": apiKey,
-      "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
   })
@@ -45,7 +46,9 @@ async function startDubbing(videoUrl: string, targetLanguages: string[], apiKey:
 
 // Проверка статуса дубляжа
 async function checkDubbingStatus(dubbingId: string, apiKey: string) {
-  const response = await fetch(`https://api.elevenlabs.io/v1/dubbing/${dubbingId}`, {
+  const { SmartAPI } = await import("@/lib/smart-proxy")
+  
+  const response = await SmartAPI.elevenlabsRequest(`/dubbing/${dubbingId}`, {
     headers: {
       "xi-api-key": apiKey,
     },
