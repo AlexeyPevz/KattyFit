@@ -1,0 +1,129 @@
+# Docker Compose конфигурация с поддержкой прокси
+# Используйте этот файл для развертывания с прокси
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Основные настройки
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      
+      # Прокси настройки
+      - ASOCKS_HOST=${ASOCKS_HOST}
+      - ASOCKS_PORT=${ASOCKS_PORT}
+      - ASOCKS_USERNAME=${ASOCKS_USERNAME}
+      - ASOCKS_PASSWORD=${ASOCKS_PASSWORD}
+      
+      - BEGET_PROXY_HOST=${BEGET_PROXY_HOST}
+      - BEGET_PROXY_PORT=${BEGET_PROXY_PORT}
+      - BEGET_PROXY_API_KEY=${BEGET_PROXY_API_KEY}
+      
+      - CUSTOM_PROXY_HOST=${CUSTOM_PROXY_HOST}
+      - CUSTOM_PROXY_PORT=${CUSTOM_PROXY_PORT}
+      - CUSTOM_PROXY_USERNAME=${CUSTOM_PROXY_USERNAME}
+      - CUSTOM_PROXY_PASSWORD=${CUSTOM_PROXY_PASSWORD}
+      
+      # API ключи
+      - CONTENTSTUDIO_API_KEY=${CONTENTSTUDIO_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - YANDEX_GPT_API_KEY=${YANDEX_GPT_API_KEY}
+      
+      # Социальные сети
+      - VK_ACCESS_TOKEN=${VK_ACCESS_TOKEN}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - RUTUBE_API_KEY=${RUTUBE_API_KEY}
+      
+      # OAuth
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - TIKTOK_CLIENT_KEY=${TIKTOK_CLIENT_KEY}
+      - TIKTOK_CLIENT_SECRET=${TIKTOK_CLIENT_SECRET}
+      
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Опционально: собственный прокси-сервер
+  proxy-server:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf
+    environment:
+      - PROXY_UPSTREAM=${PROXY_UPSTREAM}
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Мониторинг прокси
+  proxy-monitor:
+    build: .
+    command: node scripts/proxy-monitor.js
+    environment:
+      - ASOCKS_HOST=${ASOCKS_HOST}
+      - ASOCKS_PORT=${ASOCKS_PORT}
+      - ASOCKS_USERNAME=${ASOCKS_USERNAME}
+      - ASOCKS_PASSWORD=${ASOCKS_PASSWORD}
+      - BEGET_PROXY_HOST=${BEGET_PROXY_HOST}
+      - BEGET_PROXY_PORT=${BEGET_PROXY_PORT}
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+# Пример .env файла для прокси
+# Скопируйте в .env.local и заполните своими данными
+
+# ASOCKS.COM прокси
+# ASOCKS_HOST=proxy.asocks.com
+# ASOCKS_PORT=1080
+# ASOCKS_USERNAME=your-email@example.com
+# ASOCKS_PASSWORD=your-password
+
+# Beget VPS прокси
+# BEGET_PROXY_HOST=your-vps-ip
+# BEGET_PROXY_PORT=3128
+# BEGET_PROXY_API_KEY=your-api-key
+
+# Custom прокси
+# CUSTOM_PROXY_HOST=proxy.example.com
+# CUSTOM_PROXY_PORT=8080
+# CUSTOM_PROXY_USERNAME=username
+# CUSTOM_PROXY_PASSWORD=password
+
+# Основные настройки
+# DATABASE_URL=postgresql://user:password@localhost:5432/kattyfit
+# NEXTAUTH_SECRET=your-secret-key
+# NEXTAUTH_URL=https://yourdomain.com
+
+# API ключи
+# CONTENTSTUDIO_API_KEY=your-contentstudio-key
+# ELEVENLABS_API_KEY=your-elevenlabs-key
+# OPENAI_API_KEY=your-openai-key
+# YANDEX_GPT_API_KEY=your-yandex-key
+
+# Социальные сети
+# VK_ACCESS_TOKEN=your-vk-token
+# TELEGRAM_BOT_TOKEN=your-telegram-token
+# RUTUBE_API_KEY=your-rutube-key
+
+# OAuth
+# GOOGLE_CLIENT_ID=your-google-client-id
+# GOOGLE_CLIENT_SECRET=your-google-client-secret
+# TIKTOK_CLIENT_KEY=your-tiktok-client-key
+# TIKTOK_CLIENT_SECRET=your-tiktok-client-secret

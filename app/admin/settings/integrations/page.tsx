@@ -109,6 +109,16 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
     apiKeyRequired: true,
     setupGuide: "https://core.telegram.org/bots",
   },
+  {
+    id: "proxy",
+    name: "Прокси",
+    icon: "🌐",
+    color: "#10B981",
+    connected: true,
+    requiresOAuth: false,
+    apiKeyRequired: false,
+    setupGuide: "/admin/settings/proxy",
+  },
 ]
 
 export default function IntegrationsPage() {
@@ -240,16 +250,41 @@ export default function IntegrationsPage() {
                     </div>
                     {integration.setupGuide && (
                       <Button variant="outline" size="sm" asChild>
-                        <a href={integration.setupGuide} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Инструкция
-                        </a>
+                        {integration.id === "proxy" ? (
+                          <Link href={integration.setupGuide}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Управление
+                          </Link>
+                        ) : (
+                          <a href={integration.setupGuide} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Инструкция
+                          </a>
+                        )}
                       </Button>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {integration.id === "proxy" ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Система автоматически определяет заблокированные в РФ сервисы и направляет трафик через прокси.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">ASOCKS.COM</Badge>
+                          <Badge variant="outline">Beget VPS</Badge>
+                          <Badge variant="outline">Custom</Badge>
+                        </div>
+                        <Button asChild className="w-full">
+                          <Link href="/admin/settings/proxy">
+                            Настроить прокси
+                          </Link>
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
                     {integration.clientIdRequired && (
                       <div className="space-y-2">
                         <Label htmlFor={`${integration.id}-client-id`}>Client ID</Label>
@@ -378,6 +413,8 @@ export default function IntegrationsPage() {
                       </Button>
                     </div>
                   </div>
+                    </>
+                    )}
                 </CardContent>
               </Card>
             ))}
