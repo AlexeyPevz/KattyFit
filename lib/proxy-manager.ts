@@ -278,27 +278,32 @@ class ProxyManager {
   }
 
   // ASOCKS прокси запрос
-  private async asocksRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async asocksRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
     const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
     
     // Используем HttpsProxyAgent для Node.js
     const { HttpsProxyAgent } = require('https-proxy-agent')
+    
+    // Создаем прокси URL для fetch
+    const proxyAgent = new HttpsProxyAgent(proxyUrl)
     
     return fetch(request.url, {
       method: request.method,
       headers: request.headers,
       body: request.body,
       // @ts-ignore - Node.js fetch не поддерживает agent, но это работает в некоторых средах
-      agent: new HttpsProxyAgent(proxyUrl)
+      agent: proxyAgent
     })
   }
 
   // Beget VPS прокси запрос
-  private async begetRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async begetRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
     const proxyUrl = `http://${proxy.host}:${proxy.port}`
     
     // Beget прокси работает как обычный HTTP прокси
     const { HttpsProxyAgent } = require('https-proxy-agent')
+    
+    const proxyAgent = new HttpsProxyAgent(proxyUrl)
     
     return fetch(request.url, {
       method: request.method,
@@ -309,24 +314,26 @@ class ProxyManager {
       },
       body: request.body,
       // @ts-ignore
-      agent: new HttpsProxyAgent(proxyUrl)
+      agent: proxyAgent
     })
   }
 
   // Custom прокси запрос
-  private async customProxyRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async customProxyRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
     const proxyUrl = proxy.username && proxy.password 
       ? `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
       : `http://${proxy.host}:${proxy.port}`
     
     const { HttpsProxyAgent } = require('https-proxy-agent')
     
+    const proxyAgent = new HttpsProxyAgent(proxyUrl)
+    
     return fetch(request.url, {
       method: request.method,
       headers: request.headers,
       body: request.body,
       // @ts-ignore
-      agent: new HttpsProxyAgent(proxyUrl)
+      agent: proxyAgent
     })
   }
 
@@ -412,21 +419,21 @@ export async function makeProxiedRequest(url: string, options: RequestInit = {})
     let response: Response
     
     if (proxy.type === 'asocks') {
-      response = await proxyManager['asocksRequest'](proxy, {
+      response = await proxyManager.asocksRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
         body: options.body
       })
     } else if (proxy.type === 'beget') {
-      response = await proxyManager['begetRequest'](proxy, {
+      response = await proxyManager.begetRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
         body: options.body
       })
     } else {
-      response = await proxyManager['customProxyRequest'](proxy, {
+      response = await proxyManager.customProxyRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
