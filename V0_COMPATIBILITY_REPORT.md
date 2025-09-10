@@ -25,7 +25,7 @@
 ## 🛠️ Внесенные исправления
 
 ### Middleware (middleware.ts)
-```typescript
+\`\`\`typescript
 // Skip middleware in v0 preview mode
 if (request.headers.get('x-vercel-preview') || 
     request.headers.get('x-v0-preview') ||
@@ -33,10 +33,10 @@ if (request.headers.get('x-vercel-preview') ||
     pathname.includes('/api/')) {
   return NextResponse.next()
 }
-```
+\`\`\`
 
 ### EnvStatus компонент (env-status.tsx)
-```typescript
+\`\`\`typescript
 // Заменено прямое использование process.env на API-запросы
 const response = await fetch('/api/integrations')
 if (response.ok) {
@@ -45,10 +45,10 @@ if (response.ok) {
 } else {
   // Fallback для preview режима
 }
-```
+\`\`\`
 
 ### API Integrations (integrations/route.ts)
-```typescript
+\`\`\`typescript
 // В preview режиме v0 Supabase может быть недоступен
 const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
 
@@ -56,16 +56,16 @@ let integrations = []
 if (!isPreview) {
   // Получаем данные только если не в preview режиме
 }
-```
+\`\`\`
 
 ### API Auth (admin/auth/route.ts)
-```typescript
+\`\`\`typescript
 // В preview режиме v0 переменные могут быть недоступны
 const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
 if (isPreview && !process.env.ADMIN_USERNAME) {
   console.log("Preview mode detected, using default credentials")
 }
-```
+\`\`\`
 
 ## ✅ Результаты тестирования
 
@@ -90,12 +90,12 @@ if (isPreview && !process.env.ADMIN_USERNAME) {
 
 ### 1. **Настройка переменных окружения**
 В v0 добавьте следующие переменные:
-```
+\`\`\`
 ADMIN_USERNAME=ваш_логин
 ADMIN_PASSWORD=ваш_пароль
 NEXT_PUBLIC_SUPABASE_URL=ваш_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=ваш_supabase_key
-```
+\`\`\`
 
 ### 2. **Preview режим**
 - Preview теперь работает без настройки переменных окружения
