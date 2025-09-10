@@ -23,10 +23,8 @@ export function AdminGuard({ children }: AdminGuardProps) {
     const checkAuth = () => {
       try {
         const sessionData = localStorage.getItem("admin_session")
-        console.log("AdminGuard: Checking auth, sessionData:", sessionData)
 
         if (!sessionData) {
-          console.log("AdminGuard: No session data found")
           setIsAuthenticated(false)
           setIsLoading(false)
           return
@@ -34,11 +32,9 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
         const session = JSON.parse(sessionData)
         const now = Date.now()
-        console.log("AdminGuard: Session data:", session, "Current time:", now, "Expires at:", session.expiresAt)
 
         // Check if session is expired
         if (now > session.expiresAt) {
-          console.log("AdminGuard: Session expired")
           localStorage.removeItem("admin_session")
           setIsAuthenticated(false)
           setIsLoading(false)
@@ -47,16 +43,13 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
         // Check if username matches expected admin username
         const expectedUser = env.adminUsername
-        console.log("AdminGuard: Expected user:", expectedUser, "Session user:", session.username)
         if (session.username === expectedUser) {
-          console.log("AdminGuard: Authentication successful")
           setIsAuthenticated(true)
         } else {
-          console.log("AdminGuard: Username mismatch")
           setIsAuthenticated(false)
         }
       } catch (error) {
-        console.error("AdminGuard: Auth check error:", error)
+        console.error("Auth check error:", error)
         localStorage.removeItem("admin_session")
         setIsAuthenticated(false)
       }
