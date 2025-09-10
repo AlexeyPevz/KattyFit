@@ -25,6 +25,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
         const sessionData = localStorage.getItem("admin_session")
 
         if (!sessionData) {
+          console.log("AdminGuard: No session data found")
           setIsAuthenticated(false)
           setIsLoading(false)
           return
@@ -35,6 +36,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
         // Check if session is expired
         if (now > session.expiresAt) {
+          console.log("AdminGuard: Session expired")
           localStorage.removeItem("admin_session")
           setIsAuthenticated(false)
           setIsLoading(false)
@@ -42,10 +44,18 @@ export function AdminGuard({ children }: AdminGuardProps) {
         }
 
         // Check if username matches expected admin username
-        const expectedUser = env.adminUsername
+        const expectedUser = env.adminUsernamePublic
+        console.log("AdminGuard auth check:", {
+          sessionUsername: session.username,
+          expectedUser: expectedUser,
+          match: session.username === expectedUser
+        })
+        
         if (session.username === expectedUser) {
+          console.log("AdminGuard: Authentication successful")
           setIsAuthenticated(true)
         } else {
+          console.log("AdminGuard: Username mismatch")
           setIsAuthenticated(false)
         }
       } catch (error) {
@@ -57,8 +67,23 @@ export function AdminGuard({ children }: AdminGuardProps) {
       setIsLoading(false)
     }
 
-    checkAuth()
-  }, [])
+    // Small delay to ensure localStorage is available
+    const timeoutId = setTimeout(checkAuth, 100)
+    
+    // Also listen for storage changes to update auth state
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "admin_session") {
+        checkAuth()
+      }
+    }
+    
+    window.addEventListener("storage", handleStorageChange)
+    
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [pathname])
 
   // If it's a public path, render children directly
   if (publicPaths.includes(pathname)) {
@@ -78,8 +103,13 @@ export function AdminGuard({ children }: AdminGuardProps) {
   if (!isAuthenticated) {
     // Only redirect if we're not already on the auth page
     if (pathname !== "/admin/auth") {
-      router.push("/admin/auth")
+      console.log("AdminGuard: Redirecting to auth page from", pathname)
+      // Use window.location for more reliable redirect
+      setTimeout(() => {
+        window.location.href = "/admin/auth"
+      }, 100)
     }
+    // Don't render anything if not authenticated
     return null
   }
 

@@ -33,6 +33,8 @@ export default function AdminAuthPage() {
     setError("")
 
     try {
+      console.log("Attempting admin login with:", { username, password: password ? "***" : "empty" })
+      
       // Call API to authenticate
       const response = await fetch("/api/admin/auth", {
         method: "POST",
@@ -44,6 +46,7 @@ export default function AdminAuthPage() {
       })
 
       const data = await response.json()
+      console.log("API response:", { status: response.status, data })
 
       if (response.ok && data.success) {
         // Save to localStorage for client-side state
@@ -53,12 +56,23 @@ export default function AdminAuthPage() {
         }
         localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
+        console.log("Admin auth successful:", {
+          username: username,
+          sessionData: sessionData,
+          redirectUrl: getRedirectUrl()
+        })
+        
         // Show success message
         setError("")
         
         // Redirect to intended page or admin panel
         const redirectUrl = getRedirectUrl()
-        router.push(redirectUrl)
+        console.log("Redirecting to:", redirectUrl)
+        
+        // Use window.location for more reliable redirect
+        setTimeout(() => {
+          window.location.href = redirectUrl
+        }, 100)
       } else if (response.status === 429) {
         setError("Слишком много попыток входа. Попробуйте через 15 минут.")
       } else if (response.status === 400) {
