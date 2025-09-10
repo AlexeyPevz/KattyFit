@@ -18,6 +18,15 @@ export default function AdminAuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
+  // Get redirect URL from query params
+  const getRedirectUrl = () => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search)
+      return urlParams.get("next") || "/admin"
+    }
+    return "/admin"
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -43,13 +52,24 @@ export default function AdminAuthPage() {
         }
         localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
-        // Redirect to admin panel
-        router.push("/admin")
+        // Show success message
+        setError("")
+        
+        // Redirect to intended page or admin panel
+        const redirectUrl = getRedirectUrl()
+        router.push(redirectUrl)
+      } else if (response.status === 429) {
+        setError("Слишком много попыток входа. Попробуйте через 15 минут.")
       } else {
-        setError(data.error || "Неверный логин или пароль")
+        setError(data.error || data.details || "Неверный логин или пароль")
       }
     } catch (error) {
-      setError("Ошибка при входе. Попробуйте еще раз.")
+      console.error("Login error:", error)
+      if (error instanceof Error) {
+        setError(`Ошибка: ${error.message}`)
+      } else {
+        setError("Ошибка при входе. Проверьте подключение к интернету.")
+      }
     }
 
     setIsLoading(false)
@@ -103,12 +123,15 @@ export default function AdminAuthPage() {
             </Button>
           </form>
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Тестовые данные:</p>
+            <p>Тестовые данные (по умолчанию):</p>
             <p>
               Логин: <strong>KattyFit</strong>
             </p>
             <p>
               Пароль: <strong>admin123</strong>
+            </p>
+            <p className="text-xs mt-2 text-muted-foreground">
+              * Для изменения используйте переменные окружения ADMIN_USERNAME и ADMIN_PASSWORD
             </p>
           </div>
         </CardContent>

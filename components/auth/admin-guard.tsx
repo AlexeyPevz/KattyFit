@@ -39,8 +39,10 @@ export function AdminGuard({ children }: AdminGuardProps) {
           return
         }
 
-        // Check if username matches
-        if (session.username === "KattyFit") {
+        // Check if username matches expected admin username
+        // В production это должно быть из переменных окружения
+        const expectedUser = "KattyFit"
+        if (session.username === expectedUser) {
           setIsAuthenticated(true)
         } else {
           setIsAuthenticated(false)

@@ -36,23 +36,59 @@ export function EnvStatusCard() {
     checkEnvStatus()
   }, [])
 
-  const checkEnvStatus = () => {
-    // В production эти проверки выполняются на сервере
-    // Здесь мы проверяем только публичные переменные
-    const envStatus: EnvStatus = {
-      supabase: !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-      auth: true, // Проверяется на сервере
-      push: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      ai: false, // Проверяется на сервере
-      payments: false, // Проверяется на сервере
-      messengers: {
-        telegram: false, // Проверяется на сервере
-        vk: false, // Проверяется на сервере
-        whatsapp: false // Проверяется на сервере
+  const checkEnvStatus = async () => {
+    try {
+      // В v0 preview переменные окружения могут быть недоступны
+      // Проверяем через API для корректной работы
+      const response = await fetch('/api/integrations')
+      if (response.ok) {
+        const data = await response.json()
+        const envStatus: EnvStatus = {
+          supabase: data.supabase || false,
+          auth: data.auth || false,
+          push: data.push || false,
+          ai: data.ai || false,
+          payments: data.payments || false,
+          messengers: {
+            telegram: data.telegram || false,
+            vk: data.vk || false,
+            whatsapp: data.whatsapp || false
+          }
+        }
+        setStatus(envStatus)
+      } else {
+        // Fallback для preview режима
+        const envStatus: EnvStatus = {
+          supabase: false,
+          auth: false,
+          push: false,
+          ai: false,
+          payments: false,
+          messengers: {
+            telegram: false,
+            vk: false,
+            whatsapp: false
+          }
+        }
+        setStatus(envStatus)
       }
+    } catch (error) {
+      console.warn('Не удалось проверить статус окружения:', error)
+      // Fallback для preview режима
+      const envStatus: EnvStatus = {
+        supabase: false,
+        auth: false,
+        push: false,
+        ai: false,
+        payments: false,
+        messengers: {
+          telegram: false,
+          vk: false,
+          whatsapp: false
+        }
+      }
+      setStatus(envStatus)
     }
-    
-    setStatus(envStatus)
   }
 
   if (!status) return null

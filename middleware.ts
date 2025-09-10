@@ -4,8 +4,19 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
+  // Skip middleware in v0 preview mode
+  if (request.headers.get('x-vercel-preview') || 
+      request.headers.get('x-v0-preview') ||
+      pathname.includes('/_next/') ||
+      pathname.includes('/api/')) {
+    return NextResponse.next()
+  }
+
+  // Public admin paths that don't require authentication
+  const publicAdminPaths = ['/admin/auth', '/admin/quick-access']
+  
   // Protect admin routes, allow auth page
-  if (pathname.startsWith('/admin') && pathname !== '/admin/auth') {
+  if (pathname.startsWith('/admin') && !publicAdminPaths.includes(pathname)) {
     const adminAuth = request.cookies.get('admin_auth')?.value
     if (!adminAuth) {
       const url = request.nextUrl.clone()
