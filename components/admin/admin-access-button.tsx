@@ -18,15 +18,51 @@ export function AdminAccessButton() {
   
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsAuthenticated(localStorage.getItem("admin_authenticated") === "true")
+      const checkAuth = () => {
+        try {
+          const sessionData = localStorage.getItem("admin_session")
+          if (!sessionData) {
+            setIsAuthenticated(false)
+            return
+          }
+
+          const session = JSON.parse(sessionData)
+          const now = Date.now()
+
+          // Check if session is expired
+          if (now > session.expiresAt) {
+            localStorage.removeItem("admin_session")
+            setIsAuthenticated(false)
+            return
+          }
+
+          // Check if username matches expected admin username
+          const expectedUser = (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_ADMIN_USERNAME) || "KattyFit"
+          if (session.username === expectedUser) {
+            setIsAuthenticated(true)
+          } else {
+            setIsAuthenticated(false)
+          }
+        } catch (error) {
+          console.error("Auth check error:", error)
+          localStorage.removeItem("admin_session")
+          setIsAuthenticated(false)
+        }
+      }
+
+      checkAuth()
     }
   }, [])
 
   const adminUser = isAuthenticated
     ? (() => {
         try {
-          const userStr = localStorage.getItem("admin_user")
-          return userStr ? JSON.parse(userStr) : null
+          const sessionData = localStorage.getItem("admin_session")
+          if (sessionData) {
+            const session = JSON.parse(sessionData)
+            return { username: session.username }
+          }
+          return null
         } catch {
           return null
         }
@@ -40,8 +76,7 @@ export function AdminAccessButton() {
     })
     
     // Clear localStorage
-    localStorage.removeItem("admin_authenticated")
-    localStorage.removeItem("admin_user")
+    localStorage.removeItem("admin_session")
     setIsAuthenticated(false)
     
     // Redirect to login page

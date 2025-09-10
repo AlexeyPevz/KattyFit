@@ -43,10 +43,13 @@ export default function AdminAuthPage() {
         }
         localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
+        // Show success message
+        setError("")
+        
         // Redirect to admin panel
         router.push("/admin")
       } else {
-        setError(data.error || "Неверный логин или пароль")
+        setError(data.error || data.details || "Неверный логин или пароль")
       }
     } catch (error) {
       setError("Ошибка при входе. Попробуйте еще раз.")
@@ -103,12 +106,15 @@ export default function AdminAuthPage() {
             </Button>
           </form>
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Тестовые данные:</p>
+            <p>Тестовые данные (по умолчанию):</p>
             <p>
               Логин: <strong>KattyFit</strong>
             </p>
             <p>
               Пароль: <strong>admin123</strong>
+            </p>
+            <p className="text-xs mt-2 text-muted-foreground">
+              * Для изменения используйте переменные окружения ADMIN_USERNAME и ADMIN_PASSWORD
             </p>
           </div>
         </CardContent>

@@ -39,8 +39,9 @@ export function AdminGuard({ children }: AdminGuardProps) {
           return
         }
 
-        // Check if username matches
-        if (session.username === "KattyFit") {
+        // Check if username matches expected admin username
+        const expectedUser = (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_ADMIN_USERNAME) || "KattyFit"
+        if (session.username === expectedUser) {
           setIsAuthenticated(true)
         } else {
           setIsAuthenticated(false)

@@ -4,12 +4,22 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json()
 
-    // Simple static credentials for MVP; in v0 this can be wired to Supabase/Auth later
+    // Get credentials from environment variables
     const expectedUser = process.env.ADMIN_USERNAME || "KattyFit"
     const expectedPass = process.env.ADMIN_PASSWORD || "admin123"
 
+    // Log for debugging (remove in production)
+    console.log("Admin auth attempt:", { 
+      provided: { username, password: password ? "***" : "empty" },
+      expected: { username: expectedUser, password: expectedPass ? "***" : "empty" }
+    })
+
     if (username === expectedUser && password === expectedPass) {
-      const res = NextResponse.json({ success: true })
+      const res = NextResponse.json({ 
+        success: true, 
+        username: username,
+        message: "Успешная аутентификация" 
+      })
       res.cookies.set("admin_auth", "1", {
         httpOnly: true,
         sameSite: "lax",
@@ -20,9 +30,16 @@ export async function POST(request: NextRequest) {
       return res
     }
 
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ 
+      error: "Неверный логин или пароль",
+      details: "Проверьте правильность введенных данных"
+    }, { status: 401 })
   } catch (e) {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 })
+    console.error("Admin auth error:", e)
+    return NextResponse.json({ 
+      error: "Ошибка сервера",
+      details: "Попробуйте еще раз позже"
+    }, { status: 400 })
   }
 }
 
