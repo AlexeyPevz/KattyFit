@@ -33,7 +33,7 @@ export const env = {
   storageBucket: process.env.SUPABASE_STORAGE_BUCKET || '',
 
   // Admin credentials
-  adminUsername: process.env.ADMIN_USERNAME || 'KattyFit',
-  adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
-  adminUsernamePublic: process.env.NEXT_PUBLIC_ADMIN_USERNAME || 'KattyFit',
+  adminUsername: process.env.ADMIN_USERNAME || '',
+  adminPassword: process.env.ADMIN_PASSWORD || '',
+  adminUsernamePublic: process.env.NEXT_PUBLIC_ADMIN_USERNAME || '',
 }

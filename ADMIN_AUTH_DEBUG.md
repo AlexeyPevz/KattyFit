@@ -6,11 +6,11 @@
 Откройте Developer Tools (F12) и перейдите на вкладку Console. При попытке входа вы должны увидеть:
 
 ```
-Attempting admin login with: {username: "KattyFit", password: "***"}
-API response: {status: 200, data: {success: true, username: "KattyFit", message: "Успешная аутентификация"}}
-Admin auth successful: {username: "KattyFit", sessionData: {...}, redirectUrl: "/admin"}
+Attempting admin login with: {username: "ваш_логин", password: "***"}
+API response: {status: 200, data: {success: true, username: "ваш_логин", message: "Успешная аутентификация"}}
+Admin auth successful: {username: "ваш_логин", sessionData: {...}, redirectUrl: "/admin"}
 Redirecting to: /admin
-AdminGuard auth check: {sessionUsername: "KattyFit", expectedUser: "KattyFit", match: true}
+AdminGuard auth check: {sessionUsername: "ваш_логин", expectedUser: "ваш_логин", match: true}
 AdminGuard: Authentication successful
 ```
 
@@ -20,9 +20,10 @@ AdminGuard: Authentication successful
 node test-admin-auth.js
 ```
 
-### 3. Данные для входа по умолчанию:
-- **Логин:** KattyFit
-- **Пароль:** admin123
+### 3. Данные для входа:
+Используйте данные, заданные в переменных окружения v0:
+- **Логин:** значение переменной `NEXT_PUBLIC_ADMIN_USERNAME`
+- **Пароль:** значение переменной `ADMIN_PASSWORD`
 
 ### 4. Возможные проблемы и решения:
 

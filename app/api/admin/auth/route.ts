@@ -63,10 +63,18 @@ export async function POST(request: NextRequest) {
 
     // Check if credentials are properly configured
     if (!expectedUser || !expectedPass) {
-      console.error("Admin credentials not properly configured")
+      console.error("Admin credentials not properly configured:", {
+        hasUsername: !!expectedUser,
+        hasPassword: !!expectedPass,
+        envVars: {
+          ADMIN_USERNAME: !!process.env.ADMIN_USERNAME,
+          ADMIN_PASSWORD: !!process.env.ADMIN_PASSWORD,
+          NEXT_PUBLIC_ADMIN_USERNAME: !!process.env.NEXT_PUBLIC_ADMIN_USERNAME
+        }
+      })
       return NextResponse.json({ 
         error: "Ошибка конфигурации",
-        details: "Админские учетные данные не настроены. Обратитесь к администратору."
+        details: "Админские учетные данные не настроены в переменных окружения. Установите ADMIN_USERNAME, ADMIN_PASSWORD и NEXT_PUBLIC_ADMIN_USERNAME."
       }, { status: 500 })
     }
 
