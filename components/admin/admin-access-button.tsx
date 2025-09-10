@@ -23,6 +23,7 @@ export function AdminAccessButton() {
         try {
           const sessionData = localStorage.getItem("admin_session")
           if (!sessionData) {
+            console.log("AdminAccessButton: No session data found")
             setIsAuthenticated(false)
             return
           }
@@ -32,6 +33,7 @@ export function AdminAccessButton() {
 
           // Check if session is expired
           if (now > session.expiresAt) {
+            console.log("AdminAccessButton: Session expired")
             localStorage.removeItem("admin_session")
             setIsAuthenticated(false)
             return
@@ -39,9 +41,17 @@ export function AdminAccessButton() {
 
           // Check if username matches expected admin username
           const expectedUser = env.adminUsernamePublic
+          console.log("AdminAccessButton auth check:", {
+            sessionUsername: session.username,
+            expectedUser: expectedUser,
+            match: session.username === expectedUser
+          })
+          
           if (session.username === expectedUser) {
+            console.log("AdminAccessButton: Authentication successful")
             setIsAuthenticated(true)
           } else {
+            console.log("AdminAccessButton: Username mismatch")
             setIsAuthenticated(false)
           }
         } catch (error) {
@@ -51,7 +61,9 @@ export function AdminAccessButton() {
         }
       }
 
-      checkAuth()
+      // Small delay to ensure localStorage is available
+      const timeoutId = setTimeout(checkAuth, 100)
+      return () => clearTimeout(timeoutId)
     }
   }, [])
 

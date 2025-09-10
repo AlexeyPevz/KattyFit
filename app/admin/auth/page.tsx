@@ -53,6 +53,12 @@ export default function AdminAuthPage() {
         }
         localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
+        console.log("Admin auth successful:", {
+          username: username,
+          sessionData: sessionData,
+          redirectUrl: getRedirectUrl()
+        })
+        
         // Show success message
         setError("")
         
