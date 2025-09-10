@@ -18,6 +18,15 @@ export default function AdminAuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
+  // Get redirect URL from query params
+  const getRedirectUrl = () => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search)
+      return urlParams.get("next") || "/admin"
+    }
+    return "/admin"
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -46,13 +55,21 @@ export default function AdminAuthPage() {
         // Show success message
         setError("")
         
-        // Redirect to admin panel
-        router.push("/admin")
+        // Redirect to intended page or admin panel
+        const redirectUrl = getRedirectUrl()
+        router.push(redirectUrl)
+      } else if (response.status === 429) {
+        setError("Слишком много попыток входа. Попробуйте через 15 минут.")
       } else {
         setError(data.error || data.details || "Неверный логин или пароль")
       }
     } catch (error) {
-      setError("Ошибка при входе. Попробуйте еще раз.")
+      console.error("Login error:", error)
+      if (error instanceof Error) {
+        setError(`Ошибка: ${error.message}`)
+      } else {
+        setError("Ошибка при входе. Проверьте подключение к интернету.")
+      }
     }
 
     setIsLoading(false)

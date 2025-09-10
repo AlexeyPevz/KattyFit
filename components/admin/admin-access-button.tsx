@@ -37,7 +37,8 @@ export function AdminAccessButton() {
           }
 
           // Check if username matches expected admin username
-          const expectedUser = (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_ADMIN_USERNAME) || "KattyFit"
+          // В production это должно быть из переменных окружения
+          const expectedUser = "KattyFit"
           if (session.username === expectedUser) {
             setIsAuthenticated(true)
           } else {

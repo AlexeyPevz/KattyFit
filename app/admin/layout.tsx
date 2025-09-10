@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { AdminGuard } from "@/components/auth/admin-guard"
 
 export const metadata: Metadata = {
   title: "KattyFit - Админ панель",
@@ -11,5 +12,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return <AdminGuard>{children}</AdminGuard>
 }
