@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,6 +25,7 @@ import { EnvStatusCard } from "@/components/admin/env-status"
 
 export default function AdminDashboard() {
   const [username, setUsername] = useState("")
+  const router = useRouter()
 
   useEffect(() => {
     const sessionData = localStorage.getItem("admin_session")
@@ -35,7 +37,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("admin_session")
-    window.location.href = "/admin/auth"
+    router.push("/admin/auth")
   }
 
   const stats = [

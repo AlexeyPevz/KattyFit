@@ -40,6 +40,7 @@ export default function AdminAuthPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
+        credentials: "include", // Include cookies
       })
 
       const data = await response.json()
@@ -50,6 +51,7 @@ export default function AdminAuthPage() {
           username: username,
           expiresAt: Date.now() + (8 * 60 * 60 * 1000) // 8 hours
         }
+        console.log("AdminAuth: Saving session data:", sessionData)
         localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
         // Show success message
@@ -57,6 +59,7 @@ export default function AdminAuthPage() {
         
         // Redirect to intended page or admin panel
         const redirectUrl = getRedirectUrl()
+        console.log("AdminAuth: Redirecting to:", redirectUrl)
         router.push(redirectUrl)
       } else if (response.status === 429) {
         setError("Слишком много попыток входа. Попробуйте через 15 минут.")
