@@ -17,13 +17,9 @@ export function middleware(request: NextRequest) {
   
   // Protect admin routes, allow auth page
   if (pathname.startsWith('/admin') && !publicAdminPaths.includes(pathname)) {
-    const adminAuth = request.cookies.get('admin_auth')?.value
-    if (!adminAuth) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/admin/auth'
-      url.search = `next=${encodeURIComponent(pathname + (search || ''))}`
-      return NextResponse.redirect(url)
-    }
+    // Skip middleware check for client-side routes - let AdminGuard handle it
+    // This prevents infinite redirects
+    return NextResponse.next()
   }
 
   return NextResponse.next()

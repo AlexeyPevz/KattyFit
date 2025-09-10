@@ -41,7 +41,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
         }
 
         // Check if username matches expected admin username
-        const expectedUser = env.adminUsernamePublic
+        const expectedUser = env.adminUsername
         if (session.username === expectedUser) {
           setIsAuthenticated(true)
         } else {
