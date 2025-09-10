@@ -60,8 +60,12 @@ export default function AdminAuthPage() {
         router.push(redirectUrl)
       } else if (response.status === 429) {
         setError("Слишком много попыток входа. Попробуйте через 15 минут.")
+      } else if (response.status === 400) {
+        setError(data.details || "Проверьте правильность введенных данных")
+      } else if (response.status === 500) {
+        setError(data.details || "Ошибка конфигурации сервера. Обратитесь к администратору.")
       } else {
-        setError(data.error || data.details || "Неверный логин или пароль")
+        setError(data.error || "Неверный логин или пароль")
       }
     } catch (error) {
       console.error("Login error:", error)
@@ -122,18 +126,6 @@ export default function AdminAuthPage() {
               {isLoading ? "Вход..." : "Войти"}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Тестовые данные (по умолчанию):</p>
-            <p>
-              Логин: <strong>KattyFit</strong>
-            </p>
-            <p>
-              Пароль: <strong>admin123</strong>
-            </p>
-            <p className="text-xs mt-2 text-muted-foreground">
-              * Для изменения используйте переменные окружения ADMIN_USERNAME и ADMIN_PASSWORD
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

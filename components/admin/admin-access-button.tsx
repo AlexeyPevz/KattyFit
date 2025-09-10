@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Settings, Shield, LogIn, User, BarChart3 } from "lucide-react"
+import { env } from "@/lib/env"
 
 export function AdminAccessButton() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -37,8 +38,7 @@ export function AdminAccessButton() {
           }
 
           // Check if username matches expected admin username
-          // В production это должно быть из переменных окружения
-          const expectedUser = "KattyFit"
+          const expectedUser = env.adminUsernamePublic
           if (session.username === expectedUser) {
             setIsAuthenticated(true)
           } else {

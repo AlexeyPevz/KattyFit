@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
+import { env } from "@/lib/env"
 
 interface AdminGuardProps {
   children: React.ReactNode
@@ -40,8 +41,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
         }
 
         // Check if username matches expected admin username
-        // В production это должно быть из переменных окружения
-        const expectedUser = "KattyFit"
+        const expectedUser = env.adminUsernamePublic
         if (session.username === expectedUser) {
           setIsAuthenticated(true)
         } else {

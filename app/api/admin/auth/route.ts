@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { env } from "@/lib/env"
 
 // Simple in-memory rate limiting (in production use Redis or similar)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -57,20 +58,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Get credentials from environment variables
-    // В v0 preview используем значения по умолчанию
-    const expectedUser = process.env.ADMIN_USERNAME || "KattyFit"
-    const expectedPass = process.env.ADMIN_PASSWORD || "admin123"
-    
-    // В preview режиме v0 переменные могут быть недоступны
-    const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
-    if (isPreview && !process.env.ADMIN_USERNAME) {
-      console.log("Preview mode detected, using default credentials")
+    const expectedUser = env.adminUsername
+    const expectedPass = env.adminPassword
+
+    // Check if credentials are properly configured
+    if (!expectedUser || !expectedPass) {
+      console.error("Admin credentials not properly configured")
+      return NextResponse.json({ 
+        error: "Ошибка конфигурации",
+        details: "Админские учетные данные не настроены. Обратитесь к администратору."
+      }, { status: 500 })
     }
 
     // Log for debugging (remove in production)
     console.log("Admin auth attempt:", { 
       provided: { username: cleanUsername, password: cleanPassword ? "***" : "empty" },
-      expected: { username: expectedUser, password: expectedPass ? "***" : "empty" }
+      expected: { username: expectedUser, password: expectedPass ? "***" : "empty" },
+      envVars: {
+        hasUsername: !!process.env.ADMIN_USERNAME,
+        hasPassword: !!process.env.ADMIN_PASSWORD
+      }
     })
 
     if (cleanUsername === expectedUser && cleanPassword === expectedPass) {
