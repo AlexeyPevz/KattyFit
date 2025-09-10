@@ -57,8 +57,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get credentials from environment variables
+    // В v0 preview используем значения по умолчанию
     const expectedUser = process.env.ADMIN_USERNAME || "KattyFit"
     const expectedPass = process.env.ADMIN_PASSWORD || "admin123"
+    
+    // В preview режиме v0 переменные могут быть недоступны
+    const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
+    if (isPreview && !process.env.ADMIN_USERNAME) {
+      console.log("Preview mode detected, using default credentials")
+    }
 
     // Log for debugging (remove in production)
     console.log("Admin auth attempt:", { 

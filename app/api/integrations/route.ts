@@ -3,16 +3,23 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 
 export async function GET(request: NextRequest) {
   try {
-    // Получаем все интеграции
-    const { data: integrations, error: intError } = await supabaseAdmin
-      .from("integrations")
-      .select("*")
-      .order("service")
+    // В preview режиме v0 Supabase может быть недоступен
+    const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
+    
+    let integrations = []
+    if (!isPreview) {
+      // Получаем все интеграции только если не в preview режиме
+      const { data, error: intError } = await supabaseAdmin
+        .from("integrations")
+        .select("*")
+        .order("service")
 
-    if (intError) throw intError
+      if (intError) throw intError
+      integrations = data || []
+    }
 
     // Проверяем наличие ключей в env (v0)
-    const envStatus = {
+    const apiKeysStatus = {
       elevenlabs: !!process.env.ELEVENLABS_API_KEY,
       openai: !!process.env.OPENAI_API_KEY,
       vk: !!process.env.VK_API_TOKEN,
@@ -48,8 +55,8 @@ export async function GET(request: NextRequest) {
         name: "ElevenLabs",
         icon: "🎙️",
         requiresOAuth: false,
-        connected: envStatus.elevenlabs,
-        hasApiKey: envStatus.elevenlabs,
+        connected: apiKeysStatus.elevenlabs,
+        hasApiKey: apiKeysStatus.elevenlabs,
       },
       {
         id: "openai",
@@ -57,8 +64,8 @@ export async function GET(request: NextRequest) {
         name: "OpenAI",
         icon: "🤖",
         requiresOAuth: false,
-        connected: envStatus.openai,
-        hasApiKey: envStatus.openai,
+        connected: apiKeysStatus.openai,
+        hasApiKey: apiKeysStatus.openai,
       },
       {
         id: "vk",
@@ -66,8 +73,8 @@ export async function GET(request: NextRequest) {
         name: "VKontakte",
         icon: "📱",
         requiresOAuth: false,
-        connected: envStatus.vk,
-        hasApiKey: envStatus.vk,
+        connected: apiKeysStatus.vk,
+        hasApiKey: apiKeysStatus.vk,
       },
       {
         id: "telegram",
@@ -75,14 +82,27 @@ export async function GET(request: NextRequest) {
         name: "Telegram Bot",
         icon: "✈️",
         requiresOAuth: false,
-        connected: envStatus.telegram,
-        hasApiKey: envStatus.telegram,
+        connected: apiKeysStatus.telegram,
+        hasApiKey: apiKeysStatus.telegram,
       },
     ]
+
+    // Добавляем проверку статуса окружения для v0 preview
+    const envStatus = {
+      supabase: !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      auth: !!(process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD),
+      push: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      ai: !!(process.env.YANDEXGPT_API_KEY || process.env.OPENAI_API_KEY),
+      payments: !!(process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID && process.env.CLOUDPAYMENTS_SECRET),
+      telegram: !!process.env.TELEGRAM_BOT_TOKEN,
+      vk: !!process.env.VK_API_TOKEN,
+      whatsapp: !!(process.env.WA_PHONE_NUMBER_ID && process.env.WA_TOKEN),
+    }
 
     return NextResponse.json({
       success: true,
       services,
+      ...envStatus, // Добавляем статус окружения
     })
   } catch (error) {
     console.error("Ошибка загрузки интеграций:", error)
