@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { env } from "@/lib/env"
 
 interface AdminGuardProps {
@@ -14,6 +14,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const pathname = usePathname()
+  const router = useRouter()
 
   // Public paths that don't require authentication
   const publicPaths = ["/admin/auth", "/admin/quick-access"]
@@ -41,7 +42,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
         }
 
         // Check if username matches expected admin username
-        const expectedUser = env.adminUsernamePublic
+        const expectedUser = env.adminUsername
         if (session.username === expectedUser) {
           setIsAuthenticated(true)
         } else {
@@ -75,8 +76,9 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
   // If not authenticated, redirect to auth page
   if (!isAuthenticated) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/admin/auth"
+    // Only redirect if we're not already on the auth page
+    if (pathname !== "/admin/auth") {
+      router.push("/admin/auth")
     }
     return null
   }

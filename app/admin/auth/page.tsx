@@ -40,6 +40,7 @@ export default function AdminAuthPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
+        credentials: "include", // Include cookies
       })
 
       const data = await response.json()
