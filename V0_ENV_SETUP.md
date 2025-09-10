@@ -16,7 +16,10 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 \`\`\`
 ADMIN_USERNAME=KattyFit
 ADMIN_PASSWORD=выберите_надежный_пароль
+NEXT_PUBLIC_ADMIN_USERNAME=KattyFit
 \`\`\`
+
+**Важно:** Убедитесь, что `NEXT_PUBLIC_ADMIN_USERNAME` совпадает с `ADMIN_USERNAME` для корректной работы аутентификации.
 
 ### 3. Push уведомления
 Сгенерируйте VAPID ключи на [vapidkeys.com](https://vapidkeys.com):
