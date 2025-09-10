@@ -33,6 +33,8 @@ export default function AdminAuthPage() {
     setError("")
 
     try {
+      console.log("Attempting admin login with:", { username, password: password ? "***" : "empty" })
+      
       // Call API to authenticate
       const response = await fetch("/api/admin/auth", {
         method: "POST",
@@ -44,6 +46,7 @@ export default function AdminAuthPage() {
       })
 
       const data = await response.json()
+      console.log("API response:", { status: response.status, data })
 
       if (response.ok && data.success) {
         // Save to localStorage for client-side state

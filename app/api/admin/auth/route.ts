@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get credentials from environment variables
-    const expectedUser = env.adminUsername
+    const expectedUser = env.adminUsernamePublic
     const expectedPass = env.adminPassword
 
     // Check if credentials are properly configured

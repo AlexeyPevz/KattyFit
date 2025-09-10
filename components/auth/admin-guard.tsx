@@ -105,7 +105,9 @@ export function AdminGuard({ children }: AdminGuardProps) {
     if (pathname !== "/admin/auth") {
       console.log("AdminGuard: Redirecting to auth page from", pathname)
       // Use window.location for more reliable redirect
-      window.location.href = "/admin/auth"
+      setTimeout(() => {
+        window.location.href = "/admin/auth"
+      }, 100)
     }
     // Don't render anything if not authenticated
     return null
