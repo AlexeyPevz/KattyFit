@@ -69,8 +69,21 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
     // Small delay to ensure localStorage is available
     const timeoutId = setTimeout(checkAuth, 100)
-    return () => clearTimeout(timeoutId)
-  }, [])
+    
+    // Also listen for storage changes to update auth state
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "admin_session") {
+        checkAuth()
+      }
+    }
+    
+    window.addEventListener("storage", handleStorageChange)
+    
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [pathname])
 
   // If it's a public path, render children directly
   if (publicPaths.includes(pathname)) {
@@ -91,7 +104,8 @@ export function AdminGuard({ children }: AdminGuardProps) {
     // Only redirect if we're not already on the auth page
     if (pathname !== "/admin/auth") {
       console.log("AdminGuard: Redirecting to auth page from", pathname)
-      router.push("/admin/auth")
+      // Use window.location for more reliable redirect
+      window.location.href = "/admin/auth"
     }
     // Don't render anything if not authenticated
     return null

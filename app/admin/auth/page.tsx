@@ -64,7 +64,12 @@ export default function AdminAuthPage() {
         
         // Redirect to intended page or admin panel
         const redirectUrl = getRedirectUrl()
-        router.push(redirectUrl)
+        console.log("Redirecting to:", redirectUrl)
+        
+        // Use window.location for more reliable redirect
+        setTimeout(() => {
+          window.location.href = redirectUrl
+        }, 100)
       } else if (response.status === 429) {
         setError("Слишком много попыток входа. Попробуйте через 15 минут.")
       } else if (response.status === 400) {

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -63,7 +62,20 @@ export function AdminAccessButton() {
 
       // Small delay to ensure localStorage is available
       const timeoutId = setTimeout(checkAuth, 100)
-      return () => clearTimeout(timeoutId)
+      
+      // Also listen for storage changes to update auth state
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === "admin_session") {
+          checkAuth()
+        }
+      }
+      
+      window.addEventListener("storage", handleStorageChange)
+      
+      return () => {
+        clearTimeout(timeoutId)
+        window.removeEventListener("storage", handleStorageChange)
+      }
     }
   }, [])
 
@@ -92,7 +104,7 @@ export function AdminAccessButton() {
     localStorage.removeItem("admin_session")
     setIsAuthenticated(false)
     
-    // Redirect to login page
+    // Force page reload to clear all state
     window.location.href = "/admin/auth"
   }
 
@@ -114,23 +126,17 @@ export function AdminAccessButton() {
             <p className="text-xs text-muted-foreground">Администратор</p>
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/admin" className="flex items-center">
-              <BarChart3 className="mr-2 h-4 w-4" />
-              Панель управления
-            </Link>
+          <DropdownMenuItem onClick={() => window.location.href = "/admin"}>
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Панель управления
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/admin/courses/builder" className="flex items-center">
-              <Settings className="mr-2 h-4 w-4" />
-              Конструктор курсов
-            </Link>
+          <DropdownMenuItem onClick={() => window.location.href = "/admin/courses/builder"}>
+            <Settings className="mr-2 h-4 w-4" />
+            Конструктор курсов
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/admin/clients" className="flex items-center">
-              <User className="mr-2 h-4 w-4" />
-              CRM клиентов
-            </Link>
+          <DropdownMenuItem onClick={() => window.location.href = "/admin/clients"}>
+            <User className="mr-2 h-4 w-4" />
+            CRM клиентов
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="text-red-600">
@@ -143,11 +149,16 @@ export function AdminAccessButton() {
   }
 
   return (
-    <Link href="/admin/auth">
-      <Button variant="outline" size="sm" className="flex items-center space-x-2 bg-transparent">
-        <Settings className="h-4 w-4" />
-        <span className="hidden md:inline">Админ</span>
-      </Button>
-    </Link>
+    <Button 
+      variant="outline" 
+      size="sm" 
+      className="flex items-center space-x-2 bg-transparent"
+      onClick={() => {
+        window.location.href = "/admin/auth"
+      }}
+    >
+      <Settings className="h-4 w-4" />
+      <span className="hidden md:inline">Админ</span>
+    </Button>
   )
 }

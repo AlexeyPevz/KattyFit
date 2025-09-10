@@ -20,7 +20,6 @@ import {
   Clock,
   Bell,
 } from "lucide-react"
-import { AdminGuard } from "@/components/auth/admin-guard"
 import { EnvStatusCard } from "@/components/admin/env-status"
 
 export default function AdminDashboard() {
@@ -37,7 +36,8 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("admin_session")
-    router.push("/admin/auth")
+    // Force page reload to clear all state
+    window.location.href = "/admin/auth"
   }
 
   const stats = [
@@ -135,8 +135,7 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <AdminGuard>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -244,6 +243,5 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </AdminGuard>
   )
 }
