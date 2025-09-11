@@ -50,3 +50,35 @@ export function getClientIP(request: NextRequest): string {
   
   return "unknown"
 }
+
+export function validateRequired(data: any, requiredFields: string[]): string | null {
+  for (const field of requiredFields) {
+    if (data[field] === undefined || data[field] === null || data[field] === '') {
+      return `Поле '${field}' обязательно для заполнения`
+    }
+  }
+  return null
+}
+
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+export function validatePhone(phone: string): boolean {
+  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+  return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))
+}
+
+export function sanitizeInput(input: string): string {
+  return input.trim().replace(/[<>]/g, '')
+}
+
+export function generateRandomString(length: number = 8): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
