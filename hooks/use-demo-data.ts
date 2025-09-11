@@ -57,8 +57,14 @@ export function useDemoData() {
     }
   }
 
-  const shouldShowDemo = (type: keyof Omit<DemoDataStatus, 'isLoading'>) => {
-    return !status[type]
+  const shouldShowDemo = (type: keyof Omit<DemoDataStatus, 'isLoading'> | 'users' | 'courses' | 'bookings' | 'lessons') => {
+    switch (type) {
+      case 'users': return !status.hasRealUsers
+      case 'courses': return !status.hasRealCourses  
+      case 'bookings': return !status.hasRealBookings
+      case 'lessons': return !status.hasRealLessons
+      default: return !status[type as keyof Omit<DemoDataStatus, 'isLoading'>]
+    }
   }
 
   return {

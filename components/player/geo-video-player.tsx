@@ -214,7 +214,7 @@ export function GeoVideoPlayer({
         allowFullScreen
         title={title || "Video player"}
         sandbox={
-          videoSource === 'hls' 
+          videoSource === 'hls' as any 
             ? undefined // Наш контент - без sandbox
             : "allow-scripts allow-same-origin allow-presentation" // Внешний контент - с ограничениями
         }

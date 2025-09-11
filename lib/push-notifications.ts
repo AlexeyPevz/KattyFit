@@ -10,7 +10,7 @@ interface NotificationOptions {
   silent?: boolean
   timestamp?: number
   data?: any
-  actions?: NotificationAction[]
+  actions?: Array<{action: string, title: string, icon?: string}>
 }
 
 class PushNotificationService {
@@ -79,7 +79,7 @@ class PushNotificationService {
       // Subscribe to push notifications
       const subscription = await this.serviceWorkerRegistration!.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+        applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey) as BufferSource
       })
 
       // Send subscription to server

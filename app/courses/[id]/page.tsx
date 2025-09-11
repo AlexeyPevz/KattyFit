@@ -40,7 +40,7 @@ const courseDetails = {
   totalHours: "10 часов",
   students: 523,
   rating: 4.9,
-  reviews: 127,
+  reviewsCount: 127,
   level: "beginner",
   lastUpdated: "Декабрь 2023",
   
@@ -204,7 +204,7 @@ export default function CoursePage() {
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">{course.rating}</span>
-                    <span className="text-muted-foreground">({course.reviews} отзывов)</span>
+                    <span className="text-muted-foreground">({course.reviewsCount} отзывов)</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4 text-muted-foreground" />

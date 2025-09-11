@@ -47,7 +47,7 @@ class Analytics {
       event,
       properties,
       timestamp: new Date(),
-      userId: this.userId,
+      userId: this.userId || undefined,
       sessionId: this.sessionId
     }
 

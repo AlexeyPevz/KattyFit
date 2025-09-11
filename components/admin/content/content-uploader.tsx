@@ -22,7 +22,7 @@ const contentSchema = z.object({
   type: z.enum(["short", "lesson"]),
   title: z.string().min(1, "Введите название"),
   description: z.string().optional(),
-  enableTranslation: z.boolean().default(true),
+  enableTranslation: z.boolean(),
   targetLanguages: z.array(z.string()).min(1, "Выберите хотя бы один язык"),
 })
 

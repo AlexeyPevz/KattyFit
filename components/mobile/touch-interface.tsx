@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, Maximize } fr
 interface TouchButtonProps {
   children: React.ReactNode
   onClick?: () => void
-  variant?: "default" | "primary" | "secondary" | "ghost"
+  variant?: "default" | "primary" | "secondary" | "ghost" | "outline"
   size?: "sm" | "md" | "lg" | "xl"
   className?: string
   disabled?: boolean
@@ -39,6 +39,7 @@ export function TouchButton({
     primary: "bg-primary text-primary-foreground hover:bg-primary/90 yoga-gradient",
     secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
     ghost: "hover:bg-muted text-foreground",
+    outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
   }
 
   return (

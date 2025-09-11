@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 
-export function apiHandler(handler: (request: NextRequest) => Promise<NextResponse>) {
-  return async (request: NextRequest) => {
+export function apiHandler<T extends any[]>(handler: (request: NextRequest, ...args: T) => Promise<NextResponse>) {
+  return async (request: NextRequest, ...args: T) => {
     try {
-      return await handler(request)
+      return await handler(request, ...args)
     } catch (error) {
       console.error("API Error:", error)
       return NextResponse.json(

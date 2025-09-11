@@ -8,7 +8,7 @@ import { X, Eye, EyeOff, RefreshCw } from "lucide-react"
 import { useDemoData } from "@/hooks/use-demo-data"
 
 interface DemoDataBannerProps {
-  type: 'lessons' | 'users' | 'courses' | 'bookings'
+  type: 'lessons' | 'users' | 'courses' | 'bookings' | 'hasRealLessons' | 'hasRealUsers' | 'hasRealCourses' | 'hasRealBookings'
   children: React.ReactNode
   className?: string
 }
@@ -68,7 +68,7 @@ export function DemoDataBanner({ type, children, className = "" }: DemoDataBanne
   )
 }
 
-export function DemoDataIndicator({ type }: { type: 'lessons' | 'users' | 'courses' | 'bookings' }) {
+export function DemoDataIndicator({ type }: { type: 'lessons' | 'users' | 'courses' | 'bookings' | 'hasRealLessons' | 'hasRealUsers' | 'hasRealCourses' | 'hasRealBookings' }) {
   const { shouldShowDemo, isLoading } = useDemoData()
 
   if (isLoading || !shouldShowDemo(type)) {
