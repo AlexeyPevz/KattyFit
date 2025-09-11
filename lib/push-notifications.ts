@@ -1,6 +1,8 @@
 // Push Notifications Service
 // Handles Web Push API integration for browser notifications
 
+import { env } from './env'
+
 interface NotificationOptions {
   body?: string
   icon?: string
@@ -18,7 +20,7 @@ class PushNotificationService {
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null
 
   constructor() {
-    this.vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
+    this.vapidPublicKey = env.vapidPublicKey
   }
 
   // Check if notifications are supported

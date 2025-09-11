@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { env } from "@/lib/env"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.YANDEXGPT_API_KEY
+    const apiKey = env.yandexGptApiKey
     if (!apiKey) {
       return NextResponse.json(
         { error: "YandexGPT API ключ не настроен" },
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        modelUri: `gpt://${process.env.YANDEXGPT_FOLDER_ID}/yandexgpt/latest`,
+        modelUri: `gpt://${env.yandexGptFolderId}/yandexgpt/latest`,
         completionOptions: {
           stream: false,
           temperature: 0.6,

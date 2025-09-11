@@ -15,7 +15,8 @@ export const env = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL || '',
 
   // AI/Integrations
-  yandexGptApiKey: process.env.YANDEX_GPT_API_KEY || '',
+  yandexGptApiKey: process.env.YANDEXGPT_API_KEY || '',
+  yandexGptFolderId: process.env.YANDEXGPT_FOLDER_ID || '',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   elevenLabsApiKey: process.env.ELEVENLABS_API_KEY || '',
   contentStudioApiKey: process.env.CONTENTSTUDIO_API_KEY || '',
@@ -30,7 +31,11 @@ export const env = {
   hlsJwtSecret: process.env.HLS_JWT_SECRET || '',
 
   // Storage
-  storageBucket: process.env.SUPABASE_STORAGE_BUCKET || '',
+  storageBucket: process.env.SUPABASE_STORAGE_BUCKET || 'content',
+
+  // Push Notifications
+  vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
+  vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
 
   // Admin credentials
   adminUsername: process.env.ADMIN_USERNAME || '',
