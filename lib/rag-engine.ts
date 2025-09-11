@@ -1,14 +1,7 @@
 import { RAGContext, KnowledgeItem } from '@/types/api'
 import { AIServiceFactory } from './services/ai-service'
 import { DatabaseServiceFactory } from './services/database-service'
-import { AppError, ErrorCode } from '@/types/errors'
-
-// Получение API ключей из переменных окружения
-function getAIServiceKey(service: "yandexgpt" | "openai"): string | null {
-  if (service === "yandexgpt") return process.env.YANDEXGPT_API_KEY || null
-  if (service === "openai") return process.env.OPENAI_API_KEY || null
-  return null
-}
+import logger from './logger'
 
 // Поиск релевантной информации в базе знаний
 async function searchKnowledge(query: string): Promise<KnowledgeItem[]> {
@@ -29,145 +22,15 @@ async function searchKnowledge(query: string): Promise<KnowledgeItem[]> {
 
     return knowledge
   } catch (error) {
-    console.error('Error searching knowledge:', error)
+    // Логирование ошибки поиска в базе знаний
+    await logger.error('Knowledge search failed', {
+      query: query.substring(0, 100),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, error instanceof Error ? error : undefined)
     return []
   }
 }
 
-// Генерация ответа через YandexGPT
-async function generateYandexGPTResponse(context: RAGContext, knowledge: KnowledgeItem[]): Promise<string> {
-  const apiKey = await getAIServiceKey("yandexgpt")
-  if (!apiKey) {
-    throw new Error("YandexGPT API ключ не настроен")
-  }
-
-  // Формируем промпт с продающим уклоном
-  const systemPrompt = `Ты - профессиональный ассистент фитнес-тренера KattyFit с опытом продаж.
-
-ТВОИ ЗАДАЧИ:
-1. Отвечать на вопросы о растяжке, аэройоге и занятиях
-2. Мягко подводить к покупке курсов или записи на тренировку
-3. Подчеркивать уникальные преимущества занятий с Кати
-4. Создавать ощущение заботы и персонального подхода
-
-ПРИНЦИПЫ ОБЩЕНИЯ:
-- Дружелюбный, но профессиональный тон
-- Используй эмодзи для создания позитивной атмосферы 💪✨
-- Обращайся на "вы" к новым клиентам
-- Задавай уточняющие вопросы для персонализации
-
-ПРОДАЮЩИЕ ТРИГГЕРЫ:
-- При вопросе о цене - подчеркни ценность и результаты
-- При сомнениях - расскажи об успехах других учеников
-- При откладывании - создай ощущение ограниченности (места в группах, скидки)
-- Всегда предлагай пробное занятие со скидкой
-
-ВАЖНО:
-- Не будь навязчивым
-- Если клиент не готов - предложи подписаться на канал
-- При технических вопросах - переведи на преимущества`
-
-  const knowledgeContext = knowledge.map(item => 
-    `Q: ${item.question}\nA: ${item.answer}`
-  ).join("\n\n")
-
-  const userPrompt = `База знаний:
-${knowledgeContext}
-
-История диалога:
-${context.chatHistory?.map(m => `${m.type}: ${m.text}`).join("\n") || "Начало диалога"}
-
-Платформа: ${context.platform || "неизвестно"}
-Имя пользователя: ${context.userName || "Гость"}
-
-Вопрос пользователя: ${context.userMessage}
-
-Ответ:`
-
-  try {
-    const { smartFetch } = await import("@/lib/smart-proxy")
-    
-    const response = await smartFetch("https://llm.api.cloud.yandex.net/foundationModels/v1/completion", {
-      method: "POST",
-      headers: {
-        "Authorization": `Api-Key ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        modelUri: "gpt://b1g5og5o73gqkcbbhotr/yandexgpt-lite",
-        completionOptions: {
-          stream: false,
-          temperature: 0.7,
-          maxTokens: 500,
-        },
-        messages: [
-          { role: "system", text: systemPrompt },
-          { role: "user", text: userPrompt },
-        ],
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error("Ошибка YandexGPT API")
-    }
-
-    const data = await response.json()
-    return data.result.alternatives[0].message.text
-  } catch (error) {
-    console.error("Ошибка генерации YandexGPT:", error)
-    // Fallback на OpenAI или простые ответы
-    return generateFallbackResponse(context, knowledge)
-  }
-}
-
-// Генерация ответа через OpenAI (альтернатива)
-async function generateOpenAIResponse(context: RAGContext, knowledge: KnowledgeItem[]): Promise<string> {
-  const apiKey = await getAIServiceKey("openai")
-  if (!apiKey) {
-    throw new Error("OpenAI API ключ не настроен")
-  }
-
-  const systemPrompt = `You are a friendly fitness assistant for KattyFit.
-Answer questions about stretching, aerial yoga, and classes.
-Use the knowledge base when possible.
-Be friendly but professional.
-If unsure, suggest contacting the trainer directly.
-Answer in Russian.`
-
-  const knowledgeContext = knowledge.map(item => 
-    `Q: ${item.question}\nA: ${item.answer}`
-  ).join("\n\n")
-
-  try {
-    const { SmartAPI } = await import("@/lib/smart-proxy")
-    
-    const response = await SmartAPI.openaiRequest("/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Knowledge base:\n${knowledgeContext}\n\nUser question: ${context.userMessage}` },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error("Ошибка OpenAI API")
-    }
-
-    const data = await response.json()
-    return data.choices[0].message.content
-  } catch (error) {
-    console.error("Ошибка генерации OpenAI:", error)
-    return generateFallbackResponse(context, knowledge)
-  }
-}
 
 // Fallback ответы без AI
 function generateFallbackResponse(context: RAGContext, knowledge: KnowledgeItem[]): string {
@@ -217,42 +80,6 @@ function generateFallbackResponse(context: RAGContext, knowledge: KnowledgeItem[
   return "Спасибо за ваше сообщение! Я обязательно передам его Кате, и она свяжется с вами в ближайшее время. Если вопрос срочный, можете позвонить: +7 (999) 123-45-67"
 }
 
-// Circuit breaker для AI сервисов
-class CircuitBreaker {
-  private failures: Map<string, number> = new Map()
-  private lastFailure: Map<string, number> = new Map()
-  private readonly maxFailures = 3
-  private readonly resetTimeout = 60000 // 1 минута
-
-  isOpen(service: string): boolean {
-    const failures = this.failures.get(service) || 0
-    const lastFail = this.lastFailure.get(service) || 0
-    const now = Date.now()
-    
-    if (failures >= this.maxFailures && (now - lastFail) < this.resetTimeout) {
-      return true
-    }
-    
-    // Сбрасываем счетчик если прошло достаточно времени
-    if ((now - lastFail) >= this.resetTimeout) {
-      this.failures.set(service, 0)
-    }
-    
-    return false
-  }
-
-  recordFailure(service: string): void {
-    const failures = this.failures.get(service) || 0
-    this.failures.set(service, failures + 1)
-    this.lastFailure.set(service, Date.now())
-  }
-
-  recordSuccess(service: string): void {
-    this.failures.set(service, 0)
-  }
-}
-
-const circuitBreaker = new CircuitBreaker()
 
 // Главная функция генерации ответа
 export async function generateRAGResponse(context: RAGContext): Promise<string> {
@@ -277,56 +104,26 @@ export async function generateRAGResponse(context: RAGContext): Promise<string> 
         const response = await aiService.generateResponse(enrichedContext)
         return response
       } catch (error) {
-        console.warn(`${aiService.getServiceName()} failed, using fallback:`, error)
+        // Логирование ошибки AI сервиса
+        await logger.warn(`${aiService.getServiceName()} failed, using fallback`, {
+          service: aiService.getServiceName(),
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }, error instanceof Error ? error : undefined)
       }
     }
 
     // Используем fallback ответ
     return generateFallbackResponse(enrichedContext, knowledge)
   } catch (error) {
-    console.error("RAG engine error:", error)
+    // Критическая ошибка RAG engine
+    await logger.critical('RAG engine critical error', {
+      context: {
+        userMessage: context.userMessage.substring(0, 100),
+        platform: context.platform,
+        conversationId: context.conversationId
+      }
+    }, error instanceof Error ? error : undefined)
     return generateFallbackResponse(context, [])
   }
 }
 
-// Функция для загрузки примеров диалогов в базу знаний
-export async function loadDialogExamples(examples: Array<{ question: string, answer: string }>) {
-  const items = examples.map(example => ({
-    type: "dialog_example" as const,
-    question: example.question,
-    answer: example.answer,
-    is_active: true,
-  }))
-
-  const { error } = await supabase
-    .from("knowledge_base")
-    .insert(items)
-
-  if (error) {
-    console.error("Ошибка загрузки примеров:", error)
-    return false
-  }
-
-  return true
-}
-
-// Функция для загрузки FAQ
-export async function loadFAQ(faqs: Array<{ question: string, answer: string }>) {
-  const items = faqs.map(faq => ({
-    type: "faq" as const,
-    question: faq.question,
-    answer: faq.answer,
-    is_active: true,
-  }))
-
-  const { error } = await supabase
-    .from("knowledge_base")
-    .insert(items)
-
-  if (error) {
-    console.error("Ошибка загрузки FAQ:", error)
-    return false
-  }
-
-  return true
-}
