@@ -37,7 +37,7 @@
 
 Создайте файл `.env.local` с необходимыми переменными:
 
-```bash
+\`\`\`bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -61,21 +61,21 @@ VK_API_TOKEN=your_vk_token
 
 # Push notifications
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_key
-```
+\`\`\`
 
 ### 2. База данных
 
 Выполните SQL скрипт для создания таблицы настроек:
 
-```sql
+\`\`\`sql
 -- Выполните содержимое файла docs/settings-schema.sql
-```
+\`\`\`
 
 ### 3. Запуск
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 ## 📋 Функционал админки
 

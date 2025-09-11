@@ -12,14 +12,14 @@
 
 **Скопируйте и вставьте следующие переменные:**
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_secure_password_123
 NEXT_PUBLIC_ADMIN_USERNAME=admin
-```
+\`\`\`
 
 ### 3. Настройте Supabase (обязательно)
 
@@ -34,49 +34,49 @@ NEXT_PUBLIC_ADMIN_USERNAME=admin
    - Service role key: `Settings` → `API` → `service_role key`
 
 3. **Выполните SQL схему:**
-   ```sql
+   \`\`\`sql
    -- Скопируйте содержимое файла docs/complete-database-schema.sql
    -- Выполните в Supabase SQL Editor
-   ```
+   \`\`\`
 
 ### 4. Добавьте опциональные переменные (для полного функционала)
 
 **YandexGPT (для чата с AI):**
-```env
+\`\`\`env
 YANDEXGPT_API_KEY=your_yandex_gpt_api_key
-```
+\`\`\`
 
 **CloudPayments (для платежей):**
-```env
+\`\`\`env
 NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=pk_your_public_id
 CLOUDPAYMENTS_SECRET=your_secret_key
-```
+\`\`\`
 
 **Telegram интеграция:**
-```env
+\`\`\`env
 TELEGRAM_BOT_TOKEN=your_bot_token
-```
+\`\`\`
 
 **VK интеграция:**
-```env
+\`\`\`env
 VK_API_TOKEN=your_vk_token
-```
+\`\`\`
 
 **OpenAI (альтернатива YandexGPT):**
-```env
+\`\`\`env
 OPENAI_API_KEY=sk-your_openai_key
-```
+\`\`\`
 
 **ElevenLabs (озвучка):**
-```env
+\`\`\`env
 ELEVENLABS_API_KEY=your_elevenlabs_key
-```
+\`\`\`
 
 **Push уведомления:**
-```env
+\`\`\`env
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
-```
+\`\`\`
 
 ### 5. Проверьте настройки
 
@@ -109,14 +109,14 @@ VAPID_PRIVATE_KEY=your_vapid_private_key
 
 Если хотите быстро протестировать проект, используйте только эти переменные:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://demo.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=demo_key
 SUPABASE_SERVICE_ROLE_KEY=demo_service_key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
 NEXT_PUBLIC_ADMIN_USERNAME=admin
-```
+\`\`\`
 
 ⚠️ **Внимание:** Используйте реальные Supabase ключи для продакшена!
 
@@ -132,15 +132,15 @@ NEXT_PUBLIC_ADMIN_USERNAME=admin
 ### 9. Готовые наборы переменных
 
 **Для разработки:**
-```env
+\`\`\`env
 # Минимум для работы
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=dev123
 NEXT_PUBLIC_ADMIN_USERNAME=admin
-```
+\`\`\`
 
 **Для тестирования:**
-```env
+\`\`\`env
 # Добавьте Supabase + админ
 NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
@@ -148,13 +148,13 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_key
 ADMIN_USERNAME=test
 ADMIN_PASSWORD=test123
 NEXT_PUBLIC_ADMIN_USERNAME=test
-```
+\`\`\`
 
 **Для продакшена:**
-```env
+\`\`\`env
 # Все переменные с реальными ключами
 # (полный список см. выше)
-```
+\`\`\`
 
 ---
 

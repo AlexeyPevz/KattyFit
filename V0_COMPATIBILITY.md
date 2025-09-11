@@ -46,16 +46,16 @@
 Добавьте следующие переменные в настройки проекта v0:
 
 **Обязательные:**
-```
+\`\`\`
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_secure_password
-```
+\`\`\`
 
 **Опциональные (для полного функционала):**
-```
+\`\`\`
 YANDEXGPT_API_KEY=your_yandex_gpt_key
 NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID=your_cloudpayments_public_id
 CLOUDPAYMENTS_SECRET=your_cloudpayments_secret
@@ -67,7 +67,7 @@ CONTENTSTUDIO_API_KEY=your_contentstudio_key
 META_WEBHOOK_TOKEN=your_meta_webhook_token
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
-```
+\`\`\`
 
 ### 2. База данных Supabase
 1. Создайте проект в Supabase
@@ -76,7 +76,7 @@ VAPID_PRIVATE_KEY=your_vapid_private_key
 4. Обновите переменные окружения
 
 ### 3. Деплой команды
-```bash
+\`\`\`bash
 # Установка зависимостей
 npm install
 
@@ -88,7 +88,7 @@ npm run build
 
 # Запуск в продакшене
 npm start
-```
+\`\`\`
 
 ## 🔍 Особенности для v0
 
@@ -111,12 +111,12 @@ npm start
 ## 🛠️ Решение проблем
 
 ### Если сборка не работает:
-```bash
+\`\`\`bash
 # Очистите кеш
 rm -rf .next node_modules
 npm install
 npm run build
-```
+\`\`\`
 
 ### Если API не работает:
 1. Проверьте переменные окружения
@@ -131,7 +131,7 @@ npm run build
 ## 📊 Тестирование совместимости
 
 ### Локальное тестирование
-```bash
+\`\`\`bash
 # Тест без переменных окружения
 npm run build
 
@@ -139,7 +139,7 @@ npm run build
 echo "ADMIN_USERNAME=admin" > .env.local
 echo "ADMIN_PASSWORD=password" >> .env.local
 npm run dev
-```
+\`\`\`
 
 ### Проверка в v0 Preview
 1. Все страницы должны загружаться

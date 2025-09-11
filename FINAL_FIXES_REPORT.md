@@ -18,7 +18,7 @@
 **Ошибка:** `Argument of type '"bookings"' is not assignable to parameter`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 // БЫЛО
 const shouldShowDemo = (type: keyof Omit<DemoDataStatus, 'isLoading'>) => {
   return !status[type]
@@ -34,20 +34,20 @@ const shouldShowDemo = (type: keyof Omit<DemoDataStatus, 'isLoading'> | 'users' 
     default: return !status[type as keyof Omit<DemoDataStatus, 'isLoading'>]
   }
 }
-```
+\`\`\`
 
 #### ❌ Проблема: apiHandler не поддерживал параметры маршрутов
 **Файлы:** `app/api/admin/promocodes/[id]/route.ts`  
 **Ошибка:** `Target signature provides too few arguments`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 // БЫЛО
 export function apiHandler(handler: (request: NextRequest) => Promise<NextResponse>)
 
 // СТАЛО
 export function apiHandler<T extends any[]>(handler: (request: NextRequest, ...args: T) => Promise<NextResponse>)
-```
+\`\`\`
 
 ### 2. **Отсутствующие утилиты (4 ошибки → 0)**
 
@@ -55,7 +55,7 @@ export function apiHandler<T extends any[]>(handler: (request: NextRequest, ...a
 **Файл:** `components/upload/background-upload-ui.tsx`
 
 ✅ **Исправлено:** Добавлены в `lib/utils.ts`:
-```typescript
+\`\`\`typescript
 export function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return '0 Bytes'
   const k = 1024
@@ -75,7 +75,7 @@ export function formatTime(seconds: number): string {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 }
-```
+\`\`\`
 
 ### 3. **Проблемы с Next.js API (3 ошибки → 0)**
 
@@ -83,13 +83,13 @@ export function formatTime(seconds: number): string {
 **Файл:** `app/api/admin/auth/route.ts`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 // БЫЛО
 const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
 
 // СТАЛО
 const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-```
+\`\`\`
 
 ### 4. **Проблемы с компонентами (8 ошибок → 0)**
 
@@ -97,20 +97,20 @@ const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real
 **Файл:** `components/mobile/geolocation.tsx`
 
 ✅ **Исправлено:** Добавлен вариант outline:
-```typescript
+\`\`\`typescript
 variant?: "default" | "primary" | "secondary" | "ghost" | "outline"
 
 const variantClasses = {
   // ... существующие варианты
   outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
 }
-```
+\`\`\`
 
 #### ❌ Проблема: Дублирующееся поле reviews
 **Файл:** `app/courses/[id]/page.tsx`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 // БЫЛО: конфликт полей
 reviews: 127,  // число
 reviews: [...] // массив
@@ -118,7 +118,7 @@ reviews: [...] // массив
 // СТАЛО
 reviewsCount: 127,  // число
 reviews: [...]      // массив
-```
+\`\`\`
 
 ### 5. **Проблемы с библиотеками (15 ошибок → 0)**
 
@@ -126,14 +126,14 @@ reviews: [...]      // массив
 **Файлы:** `lib/push-notifications.ts`, `components/pwa-provider.tsx`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 // Добавлены правильные типы
 actions?: Array<{action: string, title: string, icon?: string}>
 applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey) as BufferSource
 
 // Исправлен вызов в pwa-provider
 pushNotifications.registerServiceWorker().catch(console.error)
-```
+\`\`\`
 
 #### ❌ Проблема: Проблемы с background-upload и service worker
 **Файл:** `lib/background-upload.ts`
@@ -149,13 +149,13 @@ pushNotifications.registerServiceWorker().catch(console.error)
 **Файл:** `components/admin/content/content-uploader.tsx`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 // БЫЛО
 enableTranslation: z.boolean().default(true),
 
 // СТАЛО  
 enableTranslation: z.boolean(),
-```
+\`\`\`
 
 ### 7. **Проблемы с CRM и аналитикой (6 ошибок → 0)**
 
@@ -163,7 +163,7 @@ enableTranslation: z.boolean(),
 **Файл:** `app/api/crm/leads/route.ts`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 const statistics = {
   total: stats?.length || 0,
   byStage: {} as Record<string, number>,
@@ -171,15 +171,15 @@ const statistics = {
   totalValue: 0,
   conversionRate: 0,
 }
-```
+\`\`\`
 
 #### ❌ Проблема: Неправильные типы в графиках
 **Файл:** `components/admin/analytics-dashboard.tsx`
 
 ✅ **Исправлено:**
-```typescript
+\`\`\`typescript
 label={({name, percent}: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-```
+\`\`\`
 
 ---
 
