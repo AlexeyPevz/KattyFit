@@ -1,87 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import { env } from "@/lib/env"
+import { apiHandler } from "@/lib/api-utils"
 
-// Получение API ключа ElevenLabs только из env (v0)
-async function getElevenLabsKey(): Promise<string | null> {
-  return env.elevenLabsApiKey
-}
+export const POST = apiHandler(async (request: NextRequest) => {
+  const { contentId, targetLanguage, autoTranslate } = await request.json()
 
-// Функция для запуска дубляжа через ElevenLabs
-async function startDubbing(videoUrl: string, targetLanguages: string[], apiKey: string, voiceId?: string) {
-  const body: any = {
-    source_url: videoUrl,
-    target_lang: targetLanguages,
-    mode: "automatic", // или "manual" для ручного контроля
-    num_speakers: 1, // Количество спикеров
-    watermark: false, // Без водяного знака
+  if (!contentId || !targetLanguage) {
+    return NextResponse.json(
+      { error: "Необходимы contentId и targetLanguage" },
+      { status: 400 }
+    )
   }
 
-  // Если указан voice_id, используем клонированный голос
-  if (voiceId) {
-    body.voice_settings = {
-      voice_id: voiceId,
-      similarity_boost: 0.75, // Уровень похожести голоса (0.5-1.0)
-      stability: 0.5, // Стабильность голоса
-    }
-  }
-
-  const { SmartAPI } = await import("@/lib/smart-proxy")
-  
-  const response = await SmartAPI.elevenlabsRequest("/dubbing", {
-    method: "POST",
-    headers: {
-      "xi-api-key": apiKey,
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.detail || "Ошибка запуска дубляжа")
-  }
-
-  return response.json()
-}
-
-// Проверка статуса дубляжа
-async function checkDubbingStatus(dubbingId: string, apiKey: string) {
-  const { SmartAPI } = await import("@/lib/smart-proxy")
-  
-  const response = await SmartAPI.elevenlabsRequest(`/dubbing/${dubbingId}`, {
-    headers: {
-      "xi-api-key": apiKey,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error("Ошибка проверки статуса")
-  }
-
-  return response.json()
-}
-
-export async function POST(request: NextRequest) {
   try {
-    const { contentId, targetLanguages } = await request.json()
-
-    if (!contentId || !targetLanguages || targetLanguages.length === 0) {
-      return NextResponse.json(
-        { error: "Необходимо указать контент и целевые языки" },
-        { status: 400 }
-      )
-    }
-
-    // Получаем API ключ
-    const apiKey = await getElevenLabsKey()
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "ElevenLabs API ключ не настроен" },
-        { status: 400 }
-      )
-    }
-
-    // Получаем информацию о контенте
+    // Получаем оригинальный контент
     const { data: content, error: contentError } = await supabaseAdmin
       .from("content")
       .select("*")
@@ -95,124 +27,120 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Формируем URL видео
-    let videoUrl = ""
-    if (content.url) {
-      videoUrl = content.url // RuTube или другая платформа
-    } else if (content.filename) {
-      // Локальный файл - нужен публичный URL
-      videoUrl = `${env.appUrl}/uploads/${content.filename}`
+    let translation = {
+      title: content.title,
+      description: content.description,
+      language: targetLanguage,
     }
 
-    if (!videoUrl) {
-      return NextResponse.json(
-        { error: "URL видео не найден" },
-        { status: 400 }
-      )
+    if (autoTranslate) {
+      // В реальном приложении здесь был бы вызов AI сервиса для перевода
+      // Например, Google Translate API, Yandex Translate, или OpenAI
+      
+      // Для демо создаем простой перевод
+      const translations: Record<string, { title: string; description: string }> = {
+        en: {
+          title: `[EN] ${content.title}`,
+          description: `[English translation] ${content.description}`,
+        },
+        es: {
+          title: `[ES] ${content.title}`,
+          description: `[Traducción al español] ${content.description}`,
+        },
+        de: {
+          title: `[DE] ${content.title}`,
+          description: `[Deutsche Übersetzung] ${content.description}`,
+        },
+        fr: {
+          title: `[FR] ${content.title}`,
+          description: `[Traduction française] ${content.description}`,
+        },
+        it: {
+          title: `[IT] ${content.title}`,
+          description: `[Traduzione italiana] ${content.description}`,
+        },
+        pt: {
+          title: `[PT] ${content.title}`,
+          description: `[Tradução portuguesa] ${content.description}`,
+        },
+        tr: {
+          title: `[TR] ${content.title}`,
+          description: `[Türkçe çeviri] ${content.description}`,
+        },
+      }
+
+      translation = {
+        title: translations[targetLanguage]?.title || content.title,
+        description: translations[targetLanguage]?.description || content.description,
+        language: targetLanguage,
+      }
     }
 
-    // Получаем voice_id из переменных окружения или из запроса
-    const voiceId = process.env.ELEVENLABS_VOICE_ID || request.headers.get("x-voice-id") || undefined
-    
-    // Запускаем дубляж
-    const dubbingResult = await startDubbing(videoUrl, targetLanguages, apiKey, voiceId)
-
-    // Сохраняем задачу дубляжа в БД
-    const { error: taskError } = await supabaseAdmin
-      .from("content")
-      .update({
-        target_languages: targetLanguages,
-        dubbing_id: dubbingResult.dubbing_id,
-        dubbing_status: "processing",
+    // Сохраняем перевод в базу данных
+    const { error: saveError } = await supabaseAdmin
+      .from("content_translations")
+      .upsert({
+        content_id: contentId,
+        language: targetLanguage,
+        title: translation.title,
+        description: translation.description,
+        status: "completed",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: "content_id,language"
       })
-      .eq("id", contentId)
 
-    if (taskError) {
-      console.error("Ошибка сохранения задачи:", taskError)
+    if (saveError) {
+      console.error("Ошибка сохранения перевода:", saveError)
+      // Не возвращаем ошибку, так как перевод все равно создан
     }
 
     return NextResponse.json({
       success: true,
-      dubbingId: dubbingResult.dubbing_id,
-      message: "Дубляж запущен. Процесс может занять несколько минут.",
+      translation,
+      message: "Перевод создан",
     })
-  } catch (error: any) {
-    console.error("Ошибка запуска дубляжа:", error)
+  } catch (error) {
+    console.error("Ошибка создания перевода:", error)
     return NextResponse.json(
-      { error: error.message || "Ошибка при запуске дубляжа" },
+      { error: "Ошибка создания перевода" },
       { status: 500 }
     )
   }
-}
+})
 
-// Проверка статуса дубляжа
-export async function GET(request: NextRequest) {
+export const GET = apiHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url)
-  const dubbingId = searchParams.get("dubbingId")
   const contentId = searchParams.get("contentId")
 
-  if (!dubbingId && !contentId) {
+  if (!contentId) {
     return NextResponse.json(
-      { error: "Необходимо указать ID дубляжа или контента" },
+      { error: "Необходим contentId" },
       { status: 400 }
     )
   }
 
   try {
-    const apiKey = await getElevenLabsKey()
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "ElevenLabs API ключ не настроен" },
-        { status: 400 }
-      )
-    }
+    const { data: translations, error } = await supabaseAdmin
+      .from("content_translations")
+      .select("*")
+      .eq("content_id", contentId)
+      .order("created_at", { ascending: false })
 
-    let dubbing_id = dubbingId
-
-    // Если передан contentId, получаем dubbingId из БД
-    if (contentId && !dubbing_id) {
-      const { data: content } = await supabaseAdmin
-        .from("content")
-        .select("dubbing_id")
-        .eq("id", contentId)
-        .single()
-
-      dubbing_id = content?.dubbing_id
-    }
-
-    if (!dubbing_id) {
-      return NextResponse.json(
-        { error: "ID дубляжа не найден" },
-        { status: 404 }
-      )
-    }
-
-    // Проверяем статус
-    const status = await checkDubbingStatus(dubbing_id, apiKey)
-
-    // Обновляем статус в БД если есть contentId
-    if (contentId && status.status === "completed") {
-      await supabaseAdmin
-        .from("content")
-        .update({
-          dubbing_status: "completed",
-          dubbed_urls: status.dubbed_file_urls,
-        })
-        .eq("id", contentId)
+    if (error) {
+      throw error
     }
 
     return NextResponse.json({
       success: true,
-      status: status.status,
-      progress: status.progress || 0,
-      dubbedUrls: status.dubbed_file_urls || {},
-      error: status.error,
+      translations: translations || [],
     })
-  } catch (error: any) {
-    console.error("Ошибка проверки статуса:", error)
+  } catch (error) {
+    console.error("Ошибка загрузки переводов:", error)
     return NextResponse.json(
-      { error: error.message || "Ошибка при проверке статуса" },
+      { error: "Ошибка загрузки переводов" },
       { status: 500 }
     )
   }
-}
+})

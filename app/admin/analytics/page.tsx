@@ -27,6 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DemoDataBanner, DemoDataIndicator } from "@/components/admin/demo-data-banner"
+import { useDemoData } from "@/hooks/use-demo-data"
 
 interface StatCard {
   title: string
@@ -37,6 +39,7 @@ interface StatCard {
 }
 
 export default function AnalyticsPage() {
+  const { shouldShowDemo } = useDemoData()
   const [period, setPeriod] = useState("month")
   const [loading, setLoading] = useState(false)
 
@@ -44,30 +47,30 @@ export default function AnalyticsPage() {
   const statsCards: StatCard[] = [
     {
       title: "Общий доход",
-      value: "₽245,320",
-      change: "+12.5%",
-      changeType: "positive",
+      value: shouldShowDemo('bookings') ? "₽245,320" : "₽0",
+      change: shouldShowDemo('bookings') ? "+12.5%" : "0%",
+      changeType: shouldShowDemo('bookings') ? "positive" : "neutral",
       icon: DollarSign
     },
     {
       title: "Активные клиенты",
-      value: 234,
-      change: "+5.2%", 
-      changeType: "positive",
+      value: shouldShowDemo('users') ? 234 : 0,
+      change: shouldShowDemo('users') ? "+5.2%" : "0%", 
+      changeType: shouldShowDemo('users') ? "positive" : "neutral",
       icon: Users
     },
     {
       title: "Проведено тренировок",
-      value: 467,
-      change: "+18.3%",
-      changeType: "positive",
+      value: shouldShowDemo('bookings') ? 467 : 0,
+      change: shouldShowDemo('bookings') ? "+18.3%" : "0%",
+      changeType: shouldShowDemo('bookings') ? "positive" : "neutral",
       icon: Activity
     },
     {
       title: "Средний чек",
-      value: "₽3,250",
-      change: "-2.1%",
-      changeType: "negative",
+      value: shouldShowDemo('bookings') ? "₽3,250" : "₽0",
+      change: shouldShowDemo('bookings') ? "-2.1%" : "0%",
+      changeType: shouldShowDemo('bookings') ? "negative" : "neutral",
       icon: TrendingUp
     }
   ]
@@ -138,36 +141,41 @@ export default function AnalyticsPage() {
 
         <div className="container px-4 py-8 space-y-6">
           {/* Основные метрики */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {statsCards.map((stat, index) => (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        {stat.title}
-                      </p>
-                      <p className="text-2xl font-bold">{stat.value}</p>
-                      <div className="flex items-center mt-2">
-                        <Badge 
-                          variant={stat.changeType === "positive" ? "default" : "destructive"}
-                          className={stat.changeType === "positive" ? "bg-green-500" : ""}
-                        >
-                          {stat.change}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          vs прошлый период
-                        </span>
+          <DemoDataBanner type="bookings">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {statsCards.map((stat, index) => (
+                <Card key={index}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            {stat.title}
+                          </p>
+                          {shouldShowDemo('bookings') && <DemoDataIndicator type="bookings" />}
+                        </div>
+                        <p className="text-2xl font-bold">{stat.value}</p>
+                        <div className="flex items-center mt-2">
+                          <Badge 
+                            variant={stat.changeType === "positive" ? "default" : stat.changeType === "negative" ? "destructive" : "secondary"}
+                            className={stat.changeType === "positive" ? "bg-green-500" : stat.changeType === "negative" ? "bg-red-500" : ""}
+                          >
+                            {stat.change}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            vs прошлый период
+                          </span>
+                        </div>
+                      </div>
+                      <div className={`p-3 rounded-full bg-primary/10`}>
+                        <stat.icon className="h-6 w-6 text-primary" />
                       </div>
                     </div>
-                    <div className={`p-3 rounded-full bg-primary/10`}>
-                      <stat.icon className="h-6 w-6 text-primary" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </DemoDataBanner>
 
           {/* Детальная аналитика */}
           <Tabs defaultValue="revenue" className="space-y-4">

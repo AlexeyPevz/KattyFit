@@ -1,158 +1,210 @@
-// Управление push-уведомлениями
-export class PushNotificationManager {
-  private static instance: PushNotificationManager
-  private registration: ServiceWorkerRegistration | null = null
+// Push Notifications Service
+// Handles Web Push API integration for browser notifications
 
-  static getInstance(): PushNotificationManager {
-    if (!PushNotificationManager.instance) {
-      PushNotificationManager.instance = new PushNotificationManager()
-    }
-    return PushNotificationManager.instance
+interface NotificationOptions {
+  body?: string
+  icon?: string
+  badge?: string
+  tag?: string
+  requireInteraction?: boolean
+  silent?: boolean
+  timestamp?: number
+  data?: any
+  actions?: NotificationAction[]
+}
+
+class PushNotificationService {
+  private vapidPublicKey: string
+  private serviceWorkerRegistration: ServiceWorkerRegistration | null = null
+
+  constructor() {
+    this.vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
   }
 
-  async init() {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      try {
-        this.registration = await navigator.serviceWorker.ready
-        console.log('Push уведомления готовы к работе')
-      } catch (error) {
-        console.error('Ошибка инициализации push уведомлений:', error)
-      }
-    }
+  // Check if notifications are supported
+  isSupported(): boolean {
+    return 'Notification' in window && 'serviceWorker' in navigator
   }
 
-  async requestPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
-      console.log('Браузер не поддерживает уведомления')
-      return false
-    }
-
-    if (Notification.permission === 'granted') {
-      return true
-    }
-
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission()
-      return permission === 'granted'
-    }
-
-    return false
+  // Check current permission status
+  getPermissionStatus(): NotificationPermission {
+    return Notification.permission
   }
 
-  async subscribe(): Promise<PushSubscription | null> {
-    if (!this.registration) {
-      await this.init()
+  // Request notification permission
+  async requestPermission(): Promise<NotificationPermission> {
+    if (!this.isSupported()) {
+      throw new Error('Notifications are not supported in this browser')
     }
 
-    const permission = await this.requestPermission()
-    if (!permission || !this.registration) {
-      return null
+    return await Notification.requestPermission()
+  }
+
+  // Register service worker
+  async registerServiceWorker(): Promise<ServiceWorkerRegistration> {
+    if (!('serviceWorker' in navigator)) {
+      throw new Error('Service Worker is not supported')
     }
 
     try {
-      // Конвертируем VAPID публичный ключ
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-      if (!vapidPublicKey) {
-        throw new Error('VAPID публичный ключ не настроен')
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      this.serviceWorkerRegistration = registration
+      return registration
+    } catch (error) {
+      console.error('Service Worker registration failed:', error)
+      throw error
+    }
+  }
+
+  // Subscribe to push notifications
+  async subscribe(): Promise<PushSubscription | null> {
+    try {
+      // Check if already subscribed
+      const existingSubscription = await this.getSubscription()
+      if (existingSubscription) {
+        return existingSubscription
       }
 
-      const convertedVapidKey = this.urlBase64ToUint8Array(vapidPublicKey)
+      // Register service worker if not already registered
+      if (!this.serviceWorkerRegistration) {
+        await this.registerServiceWorker()
+      }
 
-      const subscription = await this.registration.pushManager.subscribe({
+      // Request permission
+      const permission = await this.requestPermission()
+      if (permission !== 'granted') {
+        throw new Error('Notification permission denied')
+      }
+
+      // Subscribe to push notifications
+      const subscription = await this.serviceWorkerRegistration!.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey
+        applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
       })
 
-      // Сохраняем подписку на сервере
-      await this.saveSubscription(subscription)
+      // Send subscription to server
+      await this.sendSubscriptionToServer(subscription)
 
       return subscription
     } catch (error) {
-      console.error('Ошибка подписки на push уведомления:', error)
+      console.error('Push subscription failed:', error)
       return null
     }
   }
 
+  // Unsubscribe from push notifications
   async unsubscribe(): Promise<boolean> {
-    if (!this.registration) {
-      return false
-    }
-
     try {
-      const subscription = await this.registration.pushManager.getSubscription()
-      if (subscription) {
-        await subscription.unsubscribe()
-        await this.removeSubscription(subscription)
-        return true
+      const subscription = await this.getSubscription()
+      if (!subscription) {
+        return true // Already unsubscribed
       }
-      return false
+
+      const success = await subscription.unsubscribe()
+      if (success) {
+        // Notify server about unsubscription
+        await this.sendUnsubscriptionToServer(subscription)
+      }
+
+      return success
     } catch (error) {
-      console.error('Ошибка отписки от push уведомлений:', error)
+      console.error('Push unsubscription failed:', error)
       return false
     }
   }
 
+  // Get current subscription
   async getSubscription(): Promise<PushSubscription | null> {
-    if (!this.registration) {
-      await this.init()
-    }
+    try {
+      if (!this.serviceWorkerRegistration) {
+        await this.registerServiceWorker()
+      }
 
-    if (!this.registration) {
+      return await this.serviceWorkerRegistration!.pushManager.getSubscription()
+    } catch (error) {
+      console.error('Failed to get push subscription:', error)
       return null
     }
-
-    return await this.registration.pushManager.getSubscription()
   }
 
+  // Show local notification
+  async showLocalNotification(title: string, options: NotificationOptions = {}): Promise<void> {
+    if (!this.isSupported()) {
+      throw new Error('Notifications are not supported')
+    }
+
+    if (Notification.permission !== 'granted') {
+      throw new Error('Notification permission not granted')
+    }
+
+    const notification = new Notification(title, {
+      icon: options.icon || '/icon-192x192.png',
+      badge: options.badge || '/badge-72x72.png',
+      ...options
+    })
+
+    // Auto-close after 5 seconds if not requiring interaction
+    if (!options.requireInteraction) {
+      setTimeout(() => {
+        notification.close()
+      }, 5000)
+    }
+
+    return new Promise((resolve) => {
+      notification.onclose = () => resolve()
+    })
+  }
+
+  // Send subscription to server
+  private async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+    try {
+      await fetch('/api/notifications/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subscription: subscription.toJSON()
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send subscription to server:', error)
+    }
+  }
+
+  // Send unsubscription to server
+  private async sendUnsubscriptionToServer(subscription: PushSubscription): Promise<void> {
+    try {
+      await fetch('/api/notifications/unsubscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint: subscription.endpoint
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send unsubscription to server:', error)
+    }
+  }
+
+  // Convert VAPID key to Uint8Array
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - base64String.length % 4) % 4)
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/')
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+
     const rawData = window.atob(base64)
     const outputArray = new Uint8Array(rawData.length)
 
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i)
     }
-
     return outputArray
-  }
-
-  private async saveSubscription(subscription: PushSubscription): Promise<void> {
-    const response = await fetch('/api/notifications/subscribe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(subscription),
-    })
-
-    if (!response.ok) {
-      throw new Error('Не удалось сохранить подписку на сервере')
-    }
-  }
-
-  private async removeSubscription(subscription: PushSubscription): Promise<void> {
-    await fetch('/api/notifications/unsubscribe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ endpoint: subscription.endpoint }),
-    })
-  }
-
-  // Локальное уведомление (для тестирования)
-  async showLocalNotification(title: string, options?: NotificationOptions): Promise<void> {
-    const permission = await this.requestPermission()
-    if (permission && this.registration) {
-      await this.registration.showNotification(title, {
-        icon: '/icon-192x192.png',
-        badge: '/badge.png',
-        vibrate: [100, 50, 100],
-        ...options,
-      })
-    }
   }
 }
 
-export const pushNotifications = PushNotificationManager.getInstance()
+// Export singleton instance
+export const pushNotifications = new PushNotificationService()
