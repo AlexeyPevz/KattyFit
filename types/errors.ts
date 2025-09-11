@@ -229,7 +229,7 @@ export interface FieldError {
   field: string
   message: string
   code: string
-  value?: any
+  value?: unknown
 }
 
 export interface ErrorContext {
@@ -240,7 +240,7 @@ export interface ErrorContext {
   ipAddress?: string
   url?: string
   method?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface ErrorReport {
@@ -268,7 +268,7 @@ export interface ErrorNotifier {
 
 // ===== УТИЛИТЫ ДЛЯ ОШИБОК =====
 
-export function isAppError(error: any): error is AppError {
+export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError
 }
 

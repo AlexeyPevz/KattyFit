@@ -3,7 +3,7 @@
 
 // ===== БАЗОВЫЕ ТИПЫ =====
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -22,7 +22,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 export interface ApiError {
   code: string
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   timestamp: string
 }
 
@@ -61,9 +61,9 @@ export interface ChatMessage {
   id: string
   text: string
   timestamp: Date
-  sender: 'user' | 'assistant'
+  sender: 'user' | 'assistant' | 'system'
   platform: 'web' | 'telegram' | 'vk' | 'whatsapp'
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface RAGContext {

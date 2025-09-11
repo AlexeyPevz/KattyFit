@@ -21,6 +21,7 @@ import {
   Play,
   Pause
 } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface ContentTranslationManagerProps {
   contentId: string
@@ -108,7 +109,7 @@ export function ContentTranslationManager({ contentId, contentTitle, onClose }: 
         }, 500)
       }
     } catch (error) {
-      console.error("Ошибка перевода:", error)
+      logger.error("Ошибка перевода", { error: error instanceof Error ? error.message : String(error) })
       setTranslating(false)
     }
   }

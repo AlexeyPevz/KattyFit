@@ -1,5 +1,37 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { z } from "zod"
+import { ValidationError } from "@/types/errors"
+
+// ===== ZOD СХЕМЫ ВАЛИДАЦИИ =====
+
+const VideoUploadSchema = z.object({
+  file: z.instanceof(File, { message: 'File is required' }),
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less')
+    .transform(title => title.trim()),
+  description: z.string()
+    .max(1000, 'Description must be 1000 characters or less')
+    .optional()
+    .transform(desc => desc?.trim() || ''),
+  courseId: z.string().uuid('Invalid course ID format').optional(),
+  lessonId: z.string().uuid('Invalid lesson ID format').optional(),
+}).refine((data) => {
+  // Проверка размера файла (макс 5GB)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024
+  return data.file.size <= MAX_FILE_SIZE
+}, {
+  message: 'File size must be 5GB or less',
+  path: ['file']
+}).refine((data) => {
+  // Проверка типа файла
+  const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo']
+  return allowedTypes.includes(data.file.type)
+}, {
+  message: 'Unsupported video format',
+  path: ['file']
+})
 
 // Загрузка видео на VK
 async function uploadToVK(
@@ -186,35 +218,34 @@ export async function POST(request: NextRequest) {
     const courseId = formData.get("courseId") as string
     const lessonId = formData.get("lessonId") as string
 
-    if (!file || !title) {
-      return NextResponse.json(
-        { error: "Файл и название обязательны" },
-        { status: 400 }
-      )
+    // Подготавливаем данные для валидации
+    const uploadData = {
+      file,
+      title,
+      description,
+      courseId,
+      lessonId,
     }
 
-    // Проверяем размер файла (макс 5GB)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "Размер файла превышает 5GB" },
-        { status: 413 }
-      )
+    // Валидация с помощью Zod
+    const validationResult = VideoUploadSchema.safeParse(uploadData)
+    
+    if (!validationResult.success) {
+      const fieldErrors = validationResult.error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        code: err.code || 'VALIDATION_ERROR'
+      }))
+      
+      throw new ValidationError('Validation failed', fieldErrors)
     }
 
-    // Проверяем тип файла
-    const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo']
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Неподдерживаемый формат видео" },
-        { status: 415 }
-      )
-    }
+    const { file: validatedFile, title: validatedTitle, description: validatedDescription, courseId: validatedCourseId, lessonId: validatedLessonId } = validationResult.data
 
     // Загружаем параллельно на обе платформы с детальной обработкой ошибок
     const [vkResult, youtubeResult] = await Promise.allSettled([
-      uploadToVK(file, title, description, true),
-      uploadToYouTube(file, title, description, true)
+      uploadToVK(validatedFile, validatedTitle, validatedDescription, true),
+      uploadToYouTube(validatedFile, validatedTitle, validatedDescription, true)
     ])
 
     const vkData = vkResult.status === "fulfilled" ? vkResult.value : null
@@ -247,10 +278,10 @@ export async function POST(request: NextRequest) {
     const { data: videoRecord, error: dbError } = await supabaseAdmin
       .from("videos")
       .insert({
-        title,
-        description,
-        course_id: courseId,
-        lesson_id: lessonId,
+        title: validatedTitle,
+        description: validatedDescription,
+        course_id: validatedCourseId,
+        lesson_id: validatedLessonId,
         vk_video_id: vkData?.videoId,
         vk_url: vkData?.url,
         vk_embed_url: vkData?.embedUrl,

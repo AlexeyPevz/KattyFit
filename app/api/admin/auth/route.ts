@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server"
 import { AdminCredentials, AuthSession, User } from "@/types/api"
 import { AppError, AuthenticationError, ValidationError, ErrorCode, ErrorSeverity } from "@/types/errors"
 import { withErrorHandler } from "@/lib/error-handler"
+import { z } from "zod"
+
+// ===== ZOD СХЕМЫ ВАЛИДАЦИИ =====
+
+const AdminLoginSchema = z.object({
+  username: z.string()
+    .min(1, 'Username is required')
+    .max(50, 'Username must be 50 characters or less')
+    .transform(username => username.trim()),
+  password: z.string()
+    .min(1, 'Password is required')
+    .max(100, 'Password must be 100 characters or less'),
+})
 
 // Simple in-memory rate limiting (in production use Redis or similar)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -25,15 +38,21 @@ function checkRateLimit(ip: string): boolean {
 
 async function handleAdminLogin(request: NextRequest): Promise<NextResponse> {
   const body = await request.json()
-  const { username, password }: AdminCredentials = body
-
-  // Валидация входных данных
-  if (!username || !password) {
-    throw new ValidationError('Username and password are required', [
-      { field: 'username', message: 'Username is required', code: 'REQUIRED' },
-      { field: 'password', message: 'Password is required', code: 'REQUIRED' }
-    ])
+  
+  // Валидация с помощью Zod
+  const validationResult = AdminLoginSchema.safeParse(body)
+  
+  if (!validationResult.success) {
+    const fieldErrors = validationResult.error.errors.map(err => ({
+      field: err.path.join('.'),
+      message: err.message,
+      code: err.code || 'VALIDATION_ERROR'
+    }))
+    
+    throw new ValidationError('Validation failed', fieldErrors)
   }
+
+  const { username, password } = validationResult.data
 
   // Проверка rate limit
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
@@ -47,7 +66,7 @@ async function handleAdminLogin(request: NextRequest): Promise<NextResponse> {
   }
 
   // Очистка и валидация входных данных
-  const cleanUsername = username.trim()
+  const cleanUsername = username
   const cleanPassword = password.trim()
 
   if (cleanUsername.length < 3 || cleanPassword.length < 6) {

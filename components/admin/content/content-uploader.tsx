@@ -17,6 +17,7 @@ import { Upload, Link, Video, FileVideo, Loader2, Check, AlertCircle } from "luc
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import logger from "@/lib/logger"
 
 const contentSchema = z.object({
   type: z.enum(["short", "lesson"]),
@@ -96,7 +97,7 @@ export function ContentUploader() {
         }
 
         const data = await response.json()
-        console.log("Контент загружен:", data)
+        logger.info("Контент загружен", { data })
         
         // Симуляция прогресса
         const interval = setInterval(() => {
@@ -135,7 +136,7 @@ export function ContentUploader() {
         }
 
         const data = await response.json()
-        console.log("Ссылка обработана:", data)
+        logger.info("Ссылка обработана", { data })
         
         setUploadProgress(100)
         setTimeout(() => {
@@ -147,7 +148,7 @@ export function ContentUploader() {
         }, 1000)
       }
     } catch (error) {
-      console.error("Ошибка:", error)
+      logger.error("Ошибка", { error: error instanceof Error ? error.message : String(error) })
       setUploading(false)
       setUploadProgress(0)
     }

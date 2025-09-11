@@ -178,15 +178,17 @@ export default function BookingPage() {
                   <CardTitle>2. Выберите дату и время</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <CalendarBooking
-                    trainingType={selectedTraining}
-                    onSlotSelect={(date, time) => {
-                      setSelectedDate(date)
-                      setSelectedTime(time)
-                    }}
-                    selectedDate={selectedDate}
-                    selectedTime={selectedTime}
-                  />
+                  {selectedTraining && (
+                    <CalendarBooking
+                      trainingType={selectedTraining}
+                      onSlotSelect={(date, time) => {
+                        setSelectedDate(date)
+                        setSelectedTime(time)
+                      }}
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </div>

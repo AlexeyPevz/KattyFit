@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, X, Send, Bot } from "lucide-react"
 import { cn } from "@/lib/utils"
+import logger from "@/lib/logger"
 
 interface Message {
   id: string
@@ -105,7 +106,7 @@ export function ChatWidget() {
         setIsLoading(false)
       }, 1000)
     } catch (error) {
-      console.error('Ошибка отправки сообщения:', error)
+      logger.error('Ошибка отправки сообщения', { error: error instanceof Error ? error.message : String(error) })
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Извините, произошла ошибка. Пожалуйста, попробуйте позже.",

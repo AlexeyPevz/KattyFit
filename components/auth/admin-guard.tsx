@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { env } from "@/lib/env"
+import logger from "@/lib/logger"
 
 interface AdminGuardProps {
   children: React.ReactNode
@@ -25,7 +26,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
         const sessionData = localStorage.getItem("admin_session")
 
         if (!sessionData) {
-          console.log("AdminGuard: No session data found")
+          logger.debug("AdminGuard: No session data found")
           setIsAuthenticated(false)
           setIsLoading(false)
           return
@@ -36,7 +37,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
         // Check if session is expired
         if (now > session.expiresAt) {
-          console.log("AdminGuard: Session expired")
+          logger.debug("AdminGuard: Session expired")
           localStorage.removeItem("admin_session")
           setIsAuthenticated(false)
           setIsLoading(false)
@@ -45,21 +46,21 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
         // Check if username matches expected admin username
         const expectedUser = process.env.ADMIN_USERNAME
-        console.log("AdminGuard auth check:", {
+        logger.debug("AdminGuard auth check", {
           sessionUsername: session.username,
           expectedUser: expectedUser,
           match: session.username === expectedUser
         })
         
         if (session.username === expectedUser) {
-          console.log("AdminGuard: Authentication successful")
+          logger.debug("AdminGuard: Authentication successful")
           setIsAuthenticated(true)
         } else {
-          console.log("AdminGuard: Username mismatch")
+          logger.debug("AdminGuard: Username mismatch")
           setIsAuthenticated(false)
         }
       } catch (error) {
-        console.error("Auth check error:", error)
+        logger.error("Auth check error", { error: error instanceof Error ? error.message : String(error) })
         localStorage.removeItem("admin_session")
         setIsAuthenticated(false)
       }
@@ -103,7 +104,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   if (!isAuthenticated) {
     // Only redirect if we're not already on the auth page
     if (pathname !== "/admin/auth") {
-      console.log("AdminGuard: Redirecting to auth page from", pathname)
+      logger.debug("AdminGuard: Redirecting to auth page from", { pathname })
       // Use window.location for more reliable redirect
       setTimeout(() => {
         window.location.href = "/admin/auth"

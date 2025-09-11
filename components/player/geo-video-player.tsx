@@ -240,7 +240,7 @@ function VideoProgressTracker({
   onComplete,
   duration
 }: {
-  onProgress?: (progress: any) => void
+  onProgress?: (progress: { currentTime: number, duration: number, percentage: number }) => void
   onComplete?: () => void
   duration: number
 }) {

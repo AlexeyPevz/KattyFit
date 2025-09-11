@@ -21,6 +21,7 @@ import {
   Briefcase,
   ExternalLink
 } from "lucide-react"
+import logger from "@/lib/logger"
 import {
   Table,
   TableBody,
@@ -109,7 +110,7 @@ export function ContentPublisher() {
           setContentItems(data.content)
         }
       } catch (e) {
-        console.error('Ошибка загрузки контента:', e)
+        logger.error('Ошибка загрузки контента', { error: e instanceof Error ? e.message : String(e) })
       }
     }
     loadContent()
@@ -126,7 +127,7 @@ export function ContentPublisher() {
         setPublishStatus(data.publications)
       }
     } catch (error) {
-      console.error("Ошибка загрузки статуса публикаций:", error)
+      logger.error("Ошибка загрузки статуса публикаций", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -190,7 +191,7 @@ export function ContentPublisher() {
 
         const csData = await contentStudioResponse.json()
         if (!csData.success) {
-          console.error("ContentStudio error:", csData.error)
+          logger.error("ContentStudio error", { error: csData.error })
         }
       }
 
@@ -211,7 +212,7 @@ export function ContentPublisher() {
 
         const data = await response.json()
         if (!data.success) {
-          console.error("Local publish error:", data.error)
+          logger.error("Local publish error", { error: data.error })
         }
       }
 
@@ -220,7 +221,7 @@ export function ContentPublisher() {
       // Очищаем выбор
       setSelectedPlatforms([])
     } catch (error) {
-      console.error("Ошибка публикации:", error)
+      logger.error("Ошибка публикации", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setPublishing(false)
     }

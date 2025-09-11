@@ -4,6 +4,7 @@
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import logger from '@/lib/logger'
 
 interface OptimizedImageProps {
   src: string
@@ -37,7 +38,7 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
   // Валидация alt-текста для доступности
   if (!alt || alt.trim().length === 0) {
-    console.warn('OptimizedImage: alt-текст не может быть пустым для доступности')
+    logger.warn('OptimizedImage: alt-текст не может быть пустым для доступности')
   }
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
