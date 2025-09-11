@@ -1,47 +1,37 @@
-import { supabase } from "./supabase"
-import { env } from "@/lib/env"
+import { RAGContext, KnowledgeItem } from '@/types/api'
+import { AIServiceFactory } from './services/ai-service'
+import { DatabaseServiceFactory } from './services/database-service'
+import { AppError, ErrorCode } from '@/types/errors'
 
-interface RAGContext {
-  userMessage: string
-  chatHistory?: any[]
-  platform?: string
-  userName?: string
-  userContext?: any
-}
-
-interface KnowledgeItem {
-  type: "faq" | "dialog_example" | "course_info" | "pricing"
-  question?: string
-  answer?: string
-  context?: any
-}
-
-// Получение API ключей ТОЛЬКО из env (v0)
-async function getAIServiceKey(service: "yandexgpt" | "openai"): Promise<string | null> {
-  if (service === "yandexgpt") return env.yandexGptApiKey
-  if (service === "openai") return env.openaiApiKey
+// Получение API ключей из переменных окружения
+function getAIServiceKey(service: "yandexgpt" | "openai"): string | null {
+  if (service === "yandexgpt") return process.env.YANDEXGPT_API_KEY || null
+  if (service === "openai") return process.env.OPENAI_API_KEY || null
   return null
 }
 
 // Поиск релевантной информации в базе знаний
 async function searchKnowledge(query: string): Promise<KnowledgeItem[]> {
-  // Защита от SQL injection
-  const sanitizedQuery = query.replace(/[%_]/g, '\\$&')
-  
-  // Простой текстовый поиск (в идеале использовать векторный поиск)
-  const { data, error } = await supabase
-    .from("knowledge_base")
-    .select("*")
-    .eq("is_active", true)
-    .or(`question.ilike.%${sanitizedQuery}%,answer.ilike.%${sanitizedQuery}%`)
-    .limit(5)
+  try {
+    const database = DatabaseServiceFactory.createFromEnv()
+    
+    // Защита от SQL injection
+    const sanitizedQuery = query.replace(/[%_]/g, '\\$&')
+    
+    const knowledge = await database.executeQuery<KnowledgeItem>(
+      `SELECT * FROM knowledge_base 
+       WHERE (question ILIKE $1 OR answer ILIKE $1) 
+       AND is_active = true 
+       ORDER BY created_at DESC 
+       LIMIT 5`,
+      [`%${sanitizedQuery}%`]
+    )
 
-  if (error) {
-    console.error("Ошибка поиска в базе знаний:", error)
+    return knowledge
+  } catch (error) {
+    console.error('Error searching knowledge:', error)
     return []
   }
-
-  return data || []
 }
 
 // Генерация ответа через YandexGPT
@@ -267,39 +257,34 @@ const circuitBreaker = new CircuitBreaker()
 // Главная функция генерации ответа
 export async function generateRAGResponse(context: RAGContext): Promise<string> {
   try {
-    // Ищем релевантную информацию в базе знаний
+    // Получаем знания из базы
     const knowledge = await searchKnowledge(context.userMessage)
+    
+    // Обновляем контекст с найденными знаниями
+    const enrichedContext: RAGContext = {
+      ...context,
+      userContext: {
+        ...context.userContext,
+        knowledge,
+      },
+    }
 
-    // Пробуем YandexGPT с circuit breaker
-    const yandexKey = await getAIServiceKey("yandexgpt")
-    if (yandexKey && !circuitBreaker.isOpen("yandexgpt")) {
+    // Пытаемся использовать доступный AI сервис
+    const aiService = await AIServiceFactory.createAvailableService()
+    
+    if (aiService.getServiceName() !== 'Fallback') {
       try {
-        const response = await generateYandexGPTResponse(context, knowledge)
-        circuitBreaker.recordSuccess("yandexgpt")
+        const response = await aiService.generateResponse(enrichedContext)
         return response
       } catch (error) {
-        circuitBreaker.recordFailure("yandexgpt")
-        console.warn("YandexGPT failed, trying fallback:", error)
+        console.warn(`${aiService.getServiceName()} failed, using fallback:`, error)
       }
     }
 
-    // Пробуем OpenAI с circuit breaker
-    const openaiKey = await getAIServiceKey("openai")
-    if (openaiKey && !circuitBreaker.isOpen("openai")) {
-      try {
-        const response = await generateOpenAIResponse(context, knowledge)
-        circuitBreaker.recordSuccess("openai")
-        return response
-      } catch (error) {
-        circuitBreaker.recordFailure("openai")
-        console.warn("OpenAI failed, using fallback:", error)
-      }
-    }
-
-    // Используем fallback
-    return generateFallbackResponse(context, knowledge)
+    // Используем fallback ответ
+    return generateFallbackResponse(enrichedContext, knowledge)
   } catch (error) {
-    console.error("Ошибка RAG движка:", error)
+    console.error("RAG engine error:", error)
     return generateFallbackResponse(context, [])
   }
 }
