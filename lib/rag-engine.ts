@@ -227,22 +227,73 @@ function generateFallbackResponse(context: RAGContext, knowledge: KnowledgeItem[
   return "Спасибо за ваше сообщение! Я обязательно передам его Кате, и она свяжется с вами в ближайшее время. Если вопрос срочный, можете позвонить: +7 (999) 123-45-67"
 }
 
+// Circuit breaker для AI сервисов
+class CircuitBreaker {
+  private failures: Map<string, number> = new Map()
+  private lastFailure: Map<string, number> = new Map()
+  private readonly maxFailures = 3
+  private readonly resetTimeout = 60000 // 1 минута
+
+  isOpen(service: string): boolean {
+    const failures = this.failures.get(service) || 0
+    const lastFail = this.lastFailure.get(service) || 0
+    const now = Date.now()
+    
+    if (failures >= this.maxFailures && (now - lastFail) < this.resetTimeout) {
+      return true
+    }
+    
+    // Сбрасываем счетчик если прошло достаточно времени
+    if ((now - lastFail) >= this.resetTimeout) {
+      this.failures.set(service, 0)
+    }
+    
+    return false
+  }
+
+  recordFailure(service: string): void {
+    const failures = this.failures.get(service) || 0
+    this.failures.set(service, failures + 1)
+    this.lastFailure.set(service, Date.now())
+  }
+
+  recordSuccess(service: string): void {
+    this.failures.set(service, 0)
+  }
+}
+
+const circuitBreaker = new CircuitBreaker()
+
 // Главная функция генерации ответа
 export async function generateRAGResponse(context: RAGContext): Promise<string> {
   try {
     // Ищем релевантную информацию в базе знаний
     const knowledge = await searchKnowledge(context.userMessage)
 
-    // Пробуем YandexGPT
+    // Пробуем YandexGPT с circuit breaker
     const yandexKey = await getAIServiceKey("yandexgpt")
-    if (yandexKey) {
-      return await generateYandexGPTResponse(context, knowledge)
+    if (yandexKey && !circuitBreaker.isOpen("yandexgpt")) {
+      try {
+        const response = await generateYandexGPTResponse(context, knowledge)
+        circuitBreaker.recordSuccess("yandexgpt")
+        return response
+      } catch (error) {
+        circuitBreaker.recordFailure("yandexgpt")
+        console.warn("YandexGPT failed, trying fallback:", error)
+      }
     }
 
-    // Пробуем OpenAI
+    // Пробуем OpenAI с circuit breaker
     const openaiKey = await getAIServiceKey("openai")
-    if (openaiKey) {
-      return await generateOpenAIResponse(context, knowledge)
+    if (openaiKey && !circuitBreaker.isOpen("openai")) {
+      try {
+        const response = await generateOpenAIResponse(context, knowledge)
+        circuitBreaker.recordSuccess("openai")
+        return response
+      } catch (error) {
+        circuitBreaker.recordFailure("openai")
+        console.warn("OpenAI failed, using fallback:", error)
+      }
     }
 
     // Используем fallback

@@ -211,15 +211,24 @@ class ProxyManager {
 
     try {
       const startTime = Date.now()
+      const timeout = request.timeout || 30000 // 30 секунд по умолчанию
+      
+      // Создаем AbortController для timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeout)
       
       let response: Response
       
-      if (proxy.type === 'asocks') {
-        response = await this.asocksRequest(proxy, request)
-      } else if (proxy.type === 'beget') {
-        response = await this.begetRequest(proxy, request)
-      } else {
-        response = await this.customProxyRequest(proxy, request)
+      try {
+        if (proxy.type === 'asocks') {
+          response = await this.asocksRequest(proxy, request, controller.signal)
+        } else if (proxy.type === 'beget') {
+          response = await this.begetRequest(proxy, request, controller.signal)
+        } else {
+          response = await this.customProxyRequest(proxy, request, controller.signal)
+        }
+      } finally {
+        clearTimeout(timeoutId)
       }
 
       const responseTime = Date.now() - startTime
@@ -278,7 +287,7 @@ class ProxyManager {
   }
 
   // ASOCKS прокси запрос
-  async asocksRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async asocksRequest(proxy: ProxyConfig, request: ProxyRequest, signal?: AbortSignal): Promise<Response> {
     const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
     
     // Используем HttpsProxyAgent для Node.js
@@ -291,13 +300,14 @@ class ProxyManager {
       method: request.method,
       headers: request.headers,
       body: request.body,
+      signal,
       // @ts-ignore - Node.js fetch не поддерживает agent, но это работает в некоторых средах
       agent: proxyAgent
     } as any)
   }
 
   // Beget VPS прокси запрос
-  async begetRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async begetRequest(proxy: ProxyConfig, request: ProxyRequest, signal?: AbortSignal): Promise<Response> {
     const proxyUrl = `http://${proxy.host}:${proxy.port}`
     
     // Beget прокси работает как обычный HTTP прокси
@@ -313,13 +323,14 @@ class ProxyManager {
         'X-Original-URL': request.url
       },
       body: request.body,
+      signal,
       // @ts-ignore
       agent: proxyAgent
     } as any)
   }
 
   // Custom прокси запрос
-  async customProxyRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async customProxyRequest(proxy: ProxyConfig, request: ProxyRequest, signal?: AbortSignal): Promise<Response> {
     const proxyUrl = proxy.username && proxy.password 
       ? `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
       : `http://${proxy.host}:${proxy.port}`
@@ -332,6 +343,7 @@ class ProxyManager {
       method: request.method,
       headers: request.headers,
       body: request.body,
+      signal,
       // @ts-ignore
       agent: proxyAgent
     } as any)

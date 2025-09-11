@@ -6,12 +6,18 @@ export function requireEnv(name: string): string {
   return value
 }
 
-// Centralized access to env variables. Values may be empty in local build environments.
-// Runtime routes should validate presence when needed and return a helpful error if missing.
+// Centralized access to env variables with runtime validation
+// Critical variables are validated on access to prevent silent failures
 export const env = {
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  get supabaseUrl() {
+    return requireEnv('NEXT_PUBLIC_SUPABASE_URL')
+  },
+  get supabaseAnonKey() {
+    return requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  },
+  get supabaseServiceRoleKey() {
+    return requireEnv('SUPABASE_SERVICE_ROLE_KEY')
+  },
   appUrl: process.env.NEXT_PUBLIC_APP_URL || '',
 
   // AI/Integrations

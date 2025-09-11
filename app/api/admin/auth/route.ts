@@ -89,8 +89,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (cleanUsername === expectedUser && cleanPassword === expectedPass) {
-      // Generate session token for additional security
-      const sessionToken = Math.random().toString(36).substring(2) + Date.now().toString(36)
+      // Generate cryptographically secure session token
+      const crypto = await import('crypto')
+      const sessionToken = crypto.randomBytes(32).toString('hex')
       
       const res = NextResponse.json({ 
         success: true, 

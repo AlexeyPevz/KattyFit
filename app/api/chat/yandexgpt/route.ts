@@ -3,14 +3,27 @@ import { env } from "@/lib/env"
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationId } = await request.json()
+    const body = await request.json()
+    const { message, conversationId } = body
 
-    if (!message) {
+    // Валидация входных данных
+    if (!message || typeof message !== 'string') {
       return NextResponse.json(
-        { error: "Сообщение не может быть пустым" },
+        { error: "Сообщение не может быть пустым и должно быть строкой" },
         { status: 400 }
       )
     }
+
+    // Ограничение длины сообщения
+    if (message.length > 4000) {
+      return NextResponse.json(
+        { error: "Сообщение слишком длинное (максимум 4000 символов)" },
+        { status: 400 }
+      )
+    }
+
+    // Санитизация сообщения
+    const sanitizedMessage = message.trim().slice(0, 4000)
 
     const apiKey = env.yandexGptApiKey
     if (!apiKey) {
@@ -41,7 +54,7 @@ export async function POST(request: NextRequest) {
           },
           {
             role: "user",
-            text: message
+            text: sanitizedMessage
           }
         ]
       })

@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Загружаем параллельно на обе платформы
+    // Загружаем параллельно на обе платформы с детальной обработкой ошибок
     const [vkResult, youtubeResult] = await Promise.allSettled([
       uploadToVK(file, title, description, true),
       uploadToYouTube(file, title, description, true)
@@ -219,10 +219,26 @@ export async function POST(request: NextRequest) {
 
     const vkData = vkResult.status === "fulfilled" ? vkResult.value : null
     const youtubeData = youtubeResult.status === "fulfilled" ? youtubeResult.value : null
+    
+    // Логируем ошибки для диагностики
+    if (vkResult.status === "rejected") {
+      console.error("VK upload failed:", vkResult.reason)
+    }
+    if (youtubeResult.status === "rejected") {
+      console.error("YouTube upload failed:", youtubeResult.reason)
+    }
 
     if (!vkData && !youtubeData) {
+      const errors = {
+        vk: vkResult.status === "rejected" ? vkResult.reason?.message : "Unknown error",
+        youtube: youtubeResult.status === "rejected" ? youtubeResult.reason?.message : "Unknown error"
+      }
+      
       return NextResponse.json(
-        { error: "Не удалось загрузить видео ни на одну платформу" },
+        { 
+          error: "Не удалось загрузить видео ни на одну платформу",
+          details: errors
+        },
         { status: 500 }
       )
     }
