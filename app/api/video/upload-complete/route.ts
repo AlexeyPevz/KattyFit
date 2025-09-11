@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import { getUploadedChunks, cleanupUpload } from "../upload-chunk/route"
+import { getUploadedChunks, cleanupUpload } from "@/lib/upload-chunks"
 
 export async function POST(request: NextRequest) {
   try {

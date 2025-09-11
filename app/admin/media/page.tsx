@@ -37,6 +37,8 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { DemoDataBanner, DemoDataIndicator } from "@/components/admin/demo-data-banner"
+import { useDemoData } from "@/hooks/use-demo-data"
 
 interface MediaFile {
   id: string
@@ -102,6 +104,7 @@ const mockFiles: MediaFile[] = [
 ]
 
 export default function MediaManagerPage() {
+  const { shouldShowDemo } = useDemoData()
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [currentFolder, setCurrentFolder] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -122,7 +125,7 @@ export default function MediaManagerPage() {
     setSelectedFiles([])
   }
 
-  const filteredFiles = mockFiles.filter((file) => {
+  const filteredFiles = (shouldShowDemo('courses') ? mockFiles : []).filter((file) => {
     const matchesSearch =
       file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       file.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -153,7 +156,7 @@ export default function MediaManagerPage() {
     }
   }
 
-  const allTags = Array.from(new Set(mockFiles.flatMap((file) => file.tags)))
+  const allTags = Array.from(new Set((shouldShowDemo('courses') ? mockFiles : []).flatMap((file) => file.tags)))
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -268,7 +271,10 @@ export default function MediaManagerPage() {
                   className="w-full justify-start"
                   onClick={() => setCurrentFolder("all")}
                 >
-                  Все файлы ({mockFiles.length})
+                  <div className="flex items-center gap-2">
+                    Все файлы ({shouldShowDemo('courses') ? mockFiles.length : 0})
+                    {shouldShowDemo('courses') && <DemoDataIndicator type="courses" />}
+                  </div>
                 </Button>
                 {mockFolders.map((folder) => (
                   <Button
@@ -389,9 +395,10 @@ export default function MediaManagerPage() {
             </div>
 
             {/* File Grid/List */}
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredFiles.map((file, index) => (
+            <DemoDataBanner type="courses">
+              {viewMode === "grid" ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredFiles.map((file, index) => (
                   <motion.div
                     key={file.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -478,10 +485,10 @@ export default function MediaManagerPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
               <Card>
                 <CardContent className="p-0">
                   <div className="divide-y">
@@ -563,7 +570,8 @@ export default function MediaManagerPage() {
                   </div>
                 </CardContent>
               </Card>
-            )}
+              )}
+            </DemoDataBanner>
 
             {filteredFiles.length === 0 && (
               <Card>

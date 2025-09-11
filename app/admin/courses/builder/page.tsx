@@ -29,6 +29,8 @@ import {
   BookOpen,
 } from "lucide-react"
 import Image from "next/image"
+import { DemoDataBanner, DemoDataIndicator } from "@/components/admin/demo-data-banner"
+import { useDemoData } from "@/hooks/use-demo-data"
 
 interface CourseLesson {
   id: string
@@ -112,7 +114,13 @@ const initialCourse: Course = {
 }
 
 export default function CourseBuilderPage() {
-  const [course, setCourse] = useState<Course>(initialCourse)
+  const { shouldShowDemo } = useDemoData()
+  const [course, setCourse] = useState<Course>(shouldShowDemo('courses') ? initialCourse : {
+    ...initialCourse,
+    title: "Новый курс",
+    description: "Создайте свой первый курс",
+    modules: []
+  })
   const [activeTab, setActiveTab] = useState("content")
   const [selectedLesson, setSelectedLesson] = useState<CourseLesson | null>(null)
   const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false)

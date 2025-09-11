@@ -30,7 +30,10 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         .then((registration) => {
           console.log("SW registered: ", registration)
           // Инициализируем push-уведомления
-          pushNotifications.init()
+          // Инициализируем push-уведомления
+          if (pushNotifications && typeof pushNotifications.registerServiceWorker === 'function') {
+            pushNotifications.registerServiceWorker().catch(console.error)
+          }
         })
         .catch((registrationError) => {
           console.log("SW registration failed: ", registrationError)

@@ -22,10 +22,12 @@ export async function GET(request: NextRequest) {
     const apiKeysStatus = {
       elevenlabs: !!process.env.ELEVENLABS_API_KEY,
       openai: !!process.env.OPENAI_API_KEY,
+      yandexgpt: !!process.env.YANDEXGPT_API_KEY,
       vk: !!process.env.VK_API_TOKEN,
       telegram: !!process.env.TELEGRAM_BOT_TOKEN,
       tiktok: !!process.env.TIKTOK_API_KEY,
       contentstudio: !!process.env.CONTENTSTUDIO_API_KEY,
+      cloudpayments: !!(process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID && process.env.CLOUDPAYMENTS_SECRET),
     }
 
     // Объединяем данные
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
         requiresOAuth: true,
         requiresBusinessAccount: true,
         connected: integrations?.find(i => i.service === "tiktok")?.is_active || false,
-        hasApiKey: envStatus.tiktok,
+        hasApiKey: apiKeysStatus.tiktok,
       },
       {
         id: "elevenlabs",
@@ -84,6 +86,24 @@ export async function GET(request: NextRequest) {
         requiresOAuth: false,
         connected: apiKeysStatus.telegram,
         hasApiKey: apiKeysStatus.telegram,
+      },
+      {
+        id: "yandexgpt",
+        service: "yandexgpt",
+        name: "YandexGPT",
+        icon: "🤖",
+        requiresOAuth: false,
+        connected: apiKeysStatus.yandexgpt,
+        hasApiKey: apiKeysStatus.yandexgpt,
+      },
+      {
+        id: "cloudpayments",
+        service: "cloudpayments",
+        name: "CloudPayments",
+        icon: "💳",
+        requiresOAuth: false,
+        connected: apiKeysStatus.cloudpayments,
+        hasApiKey: apiKeysStatus.cloudpayments,
       },
     ]
 
@@ -159,6 +179,26 @@ export async function POST(request: NextRequest) {
           key_value: credentials.clientSecret,
           is_active: true,
         })
+      }
+
+      // Специальная обработка для CloudPayments
+      if (service === "cloudpayments") {
+        if (credentials.publicId) {
+          updates.push({
+            service,
+            key_name: "public_id",
+            key_value: credentials.publicId,
+            is_active: true,
+          })
+        }
+        if (credentials.secret) {
+          updates.push({
+            service,
+            key_name: "secret",
+            key_value: credentials.secret,
+            is_active: true,
+          })
+        }
       }
 
       for (const update of updates) {

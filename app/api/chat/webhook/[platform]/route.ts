@@ -215,10 +215,10 @@ async function generateChatResponse(message: UnifiedMessage) {
 // Основной обработчик webhook
 export async function POST(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
   try {
-    const platform = params.platform
+    const { platform } = await params
     const body = await request.json()
 
     // Проверяем, поддерживается ли платформа
@@ -271,9 +271,9 @@ export async function POST(
 // Обработчик GET для верификации webhook (требуется для некоторых платформ)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { platform: string } }
+  { params }: { params: Promise<{ platform: string }> }
 ) {
-  const platform = params.platform
+  const { platform } = await params
   const { searchParams } = new URL(request.url)
 
   switch (platform) {

@@ -3,53 +3,69 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
 
 // PATCH - обновить промокод
-export const PATCH = apiHandler(async (
+export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  const body = await request.json()
-  const { id } = params
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const body = await request.json()
+    const { id } = await params
   
-  const { data: promocode, error } = await supabaseAdmin
-    .from('promocodes')
-    .update({
-      ...body,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', id)
-    .select()
-    .single()
+    const { data: promocode, error } = await supabaseAdmin
+      .from('promocodes')
+      .update({
+        ...body,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+      
+    if (error) {
+      console.error('Error updating promocode:', error)
+      return NextResponse.json(
+        { error: 'Не удалось обновить промокод' },
+        { status: 500 }
+      )
+    }
     
-  if (error) {
-    console.error('Error updating promocode:', error)
+    return NextResponse.json({ promocode })
+  } catch (error: any) {
+    console.error("API Error:", error)
     return NextResponse.json(
-      { error: 'Не удалось обновить промокод' },
+      { error: "Внутренняя ошибка сервера" },
       { status: 500 }
     )
   }
-  
-  return NextResponse.json({ promocode })
-})
+}
 
 // DELETE - удалить промокод
-export const DELETE = apiHandler(async (
+export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  const { id } = params
-  
-  const { error } = await supabaseAdmin
-    .from('promocodes')
-    .delete()
-    .eq('id', id)
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
     
-  if (error) {
-    console.error('Error deleting promocode:', error)
+    const { error } = await supabaseAdmin
+      .from('promocodes')
+      .delete()
+      .eq('id', id)
+      
+    if (error) {
+      console.error('Error deleting promocode:', error)
+      return NextResponse.json(
+        { error: 'Не удалось удалить промокод' },
+        { status: 500 }
+      )
+    }
+    
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error("API Error:", error)
     return NextResponse.json(
-      { error: 'Не удалось удалить промокод' },
+      { error: "Внутренняя ошибка сервера" },
       { status: 500 }
     )
   }
-  
-  return NextResponse.json({ success: true })
-})
+}

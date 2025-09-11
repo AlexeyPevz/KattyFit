@@ -247,7 +247,7 @@ export function ContentList() {
                       {content.languages.length > 0 && (
                         <div className="flex items-center gap-1">
                           <Languages className="h-3 w-3 text-muted-foreground" />
-                          {content.languages.map((lang) => (
+                          {content.languages.map((lang: any) => (
                             <Badge key={lang} variant="secondary" className="px-1.5">
                               {lang.toUpperCase()}
                             </Badge>
@@ -258,7 +258,7 @@ export function ContentList() {
                       {/* Платформы */}
                       {content.platforms.length > 0 && (
                         <div className="flex items-center gap-1 ml-auto">
-                          {content.platforms.map((platform) => (
+                          {content.platforms.map((platform: any) => (
                             <Badge 
                               key={platform} 
                               variant="outline"

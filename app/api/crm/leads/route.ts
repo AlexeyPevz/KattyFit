@@ -193,8 +193,8 @@ export async function GET(request: NextRequest) {
 
     const statistics = {
       total: stats?.length || 0,
-      byStage: {},
-      bySource: {},
+      byStage: {} as Record<string, number>,
+      bySource: {} as Record<string, number>,
       totalValue: 0,
       conversionRate: 0,
     }

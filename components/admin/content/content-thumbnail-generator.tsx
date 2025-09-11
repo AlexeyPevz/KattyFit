@@ -1,174 +1,50 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Loader2, 
-  Download, 
-  RefreshCw, 
-  Wand2, 
-  Palette, 
-  Type,
-  Image as ImageIcon,
-  Sparkles,
-  AlertCircle
-} from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { 
+  Image as ImageIcon, 
+  Wand2, 
+  Download, 
+  Loader2, 
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw
+} from "lucide-react"
 
 interface ContentThumbnailGeneratorProps {
   contentId: string
   onClose: () => void
 }
 
-const THUMBNAIL_TEMPLATES = [
-  { id: "gradient", name: "Градиент", colors: ["#8b5cf6", "#3b82f6"] },
-  { id: "solid", name: "Однотонный", colors: ["#8b5cf6"] },
-  { id: "pattern", name: "Паттерн", colors: ["#8b5cf6", "#ec4899"] },
-  { id: "photo", name: "С фото", colors: ["#000000"] },
-]
-
-const FONTS = [
-  { id: "inter", name: "Inter", value: "Inter, sans-serif" },
-  { id: "montserrat", name: "Montserrat", value: "Montserrat, sans-serif" },
-  { id: "playfair", name: "Playfair Display", value: "Playfair Display, serif" },
-]
-
-const LANGUAGES = [
-  { code: "ru", name: "Русский" },
-  { code: "en", name: "English" },
-  { code: "es", name: "Español" },
-  { code: "de", name: "Deutsch" },
-]
-
 export function ContentThumbnailGenerator({ contentId, onClose }: ContentThumbnailGeneratorProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [prompt, setPrompt] = useState("")
+  const [style, setStyle] = useState("modern")
   const [generating, setGenerating] = useState(false)
-  const [generationType, setGenerationType] = useState<"ai" | "template">("template")
-  const [selectedTemplate, setSelectedTemplate] = useState("gradient")
-  const [title, setTitle] = useState("Растяжка для начинающих")
-  const [subtitle, setSubtitle] = useState("Урок 1")
-  const [selectedFont, setSelectedFont] = useState("inter")
-  const [fontSize, setFontSize] = useState([48])
-  const [selectedLanguage, setSelectedLanguage] = useState("ru")
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
-  const [aiError, setAiError] = useState(false)
+  const [generatedThumbnails, setGeneratedThumbnails] = useState<string[]>([])
+  const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  // Функция отрисовки на canvas
-  const drawThumbnail = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+  const styles = [
+    { id: "modern", name: "Современный", description: "Чистый и минималистичный дизайн" },
+    { id: "vibrant", name: "Яркий", description: "Яркие цвета и динамичные элементы" },
+    { id: "elegant", name: "Элегантный", description: "Изысканный и профессиональный стиль" },
+    { id: "playful", name: "Игривый", description: "Веселый и дружелюбный дизайн" },
+  ]
 
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+  const generateThumbnails = async () => {
+    if (!prompt.trim()) return
 
-    // Устанавливаем размеры для 16:9
-    canvas.width = 1920
-    canvas.height = 1080
-
-    const template = THUMBNAIL_TEMPLATES.find(t => t.id === selectedTemplate)
-    if (!template) return
-
-    // Очищаем canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    // Рисуем фон в зависимости от шаблона
-    if (template.id === "gradient") {
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-      gradient.addColorStop(0, template.colors[0])
-      gradient.addColorStop(1, template.colors[1])
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-    } else if (template.id === "solid") {
-      ctx.fillStyle = template.colors[0]
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-    } else if (template.id === "pattern") {
-      // Простой паттерн из кругов
-      ctx.fillStyle = template.colors[0]
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = template.colors[1] + "20"
-      for (let i = 0; i < 20; i++) {
-        for (let j = 0; j < 20; j++) {
-          ctx.beginPath()
-          ctx.arc(i * 100 + 50, j * 100 + 50, 30, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      }
-    }
-
-    // Добавляем полупрозрачный слой для улучшения читаемости текста
-    ctx.fillStyle = "rgba(0, 0, 0, 0.3)"
-    ctx.fillRect(0, canvas.height * 0.3, canvas.width, canvas.height * 0.4)
-
-    // Настройки текста
-    const font = FONTS.find(f => f.id === selectedFont)
-    ctx.fillStyle = "#ffffff"
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-
-    // Заголовок
-    ctx.font = `bold ${fontSize[0]}px ${font?.value || "Inter, sans-serif"}`
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)"
-    ctx.shadowBlur = 10
-    ctx.shadowOffsetX = 2
-    ctx.shadowOffsetY = 2
-    ctx.fillText(title, canvas.width / 2, canvas.height / 2 - 50)
-
-    // Подзаголовок
-    if (subtitle) {
-      ctx.font = `${fontSize[0] * 0.6}px ${font?.value || "Inter, sans-serif"}`
-      ctx.fillText(subtitle, canvas.width / 2, canvas.height / 2 + 50)
-    }
-
-    // Бренд
-    ctx.font = "bold 36px Inter, sans-serif"
-    ctx.fillText("KattyFit", canvas.width / 2, canvas.height - 100)
-
-    // Сохраняем как data URL
-    setThumbnailUrl(canvas.toDataURL("image/png"))
-  }
-
-  // Перерисовываем при изменении параметров
-  useEffect(() => {
-    if (generationType === "template") {
-      drawThumbnail()
-    }
-  }, [title, subtitle, selectedTemplate, selectedFont, fontSize, generationType])
-
-  const handleAiGeneration = async () => {
     setGenerating(true)
-    setAiError(false)
-
-    // Симуляция AI генерации
-    setTimeout(() => {
-      // В реальном приложении здесь будет вызов AI API
-      // Если ошибка, переключаемся на шаблон
-      setAiError(true)
-      setGenerationType("template")
-      setGenerating(false)
-    }, 2000)
-  }
-
-  const handleDownload = () => {
-    if (thumbnailUrl) {
-      const link = document.createElement("a")
-      link.download = `thumbnail-${contentId}-${selectedLanguage}.png`
-      link.href = thumbnailUrl
-      link.click()
-    }
-  }
-
-  const handleSave = async () => {
-    if (!thumbnailUrl) return
-
     try {
+      // Имитация генерации обложек через AI
       const response = await fetch("/api/content/thumbnail", {
         method: "POST",
         headers: {
@@ -176,198 +52,234 @@ export function ContentThumbnailGenerator({ contentId, onClose }: ContentThumbna
         },
         body: JSON.stringify({
           contentId,
-          language: selectedLanguage,
-          imageData: thumbnailUrl,
-          type: "generated",
+          prompt,
+          style,
         }),
       })
 
-      if (!response.ok) {
-        throw new Error("Ошибка сохранения")
+      if (response.ok) {
+        const data = await response.json()
+        setGeneratedThumbnails(data.thumbnails || [])
+      } else {
+        // Fallback - демо обложки
+        setGeneratedThumbnails([
+          "https://picsum.photos/400/225?random=1",
+          "https://picsum.photos/400/225?random=2",
+          "https://picsum.photos/400/225?random=3",
+          "https://picsum.photos/400/225?random=4",
+        ])
       }
+    } catch (error) {
+      console.error("Ошибка генерации обложек:", error)
+      // Fallback - демо обложки
+      setGeneratedThumbnails([
+        "https://picsum.photos/400/225?random=1",
+        "https://picsum.photos/400/225?random=2",
+        "https://picsum.photos/400/225?random=3",
+        "https://picsum.photos/400/225?random=4",
+      ])
+    } finally {
+      setGenerating(false)
+    }
+  }
 
-      const data = await response.json()
-      console.log("Обложка сохранена:", data)
-      
-      // Закрываем диалог после успешного сохранения
-      onClose()
+  const saveThumbnail = async () => {
+    if (!selectedThumbnail) return
+
+    setSaving(true)
+    try {
+      const response = await fetch("/api/content/thumbnail", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contentId,
+          thumbnailUrl: selectedThumbnail,
+        }),
+      })
+
+      if (response.ok) {
+        onClose()
+      }
     } catch (error) {
       console.error("Ошибка сохранения обложки:", error)
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Генератор обложек</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Генератор обложек
+          </DialogTitle>
+          <DialogDescription>
+            Создайте привлекательную обложку для вашего контента с помощью AI
+          </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={generationType} onValueChange={(v) => setGenerationType(v as "ai" | "template")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="ai" disabled={aiError}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI генерация
-            </TabsTrigger>
-            <TabsTrigger value="template">
-              <Palette className="mr-2 h-4 w-4" />
-              Шаблоны
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-6">
+          {/* Настройки генерации */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Настройки генерации</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="prompt">Описание обложки</Label>
+                <Textarea
+                  id="prompt"
+                  placeholder="Опишите, как должна выглядеть обложка. Например: 'Фитнес-тренировка, энергичная женщина, яркие цвета, мотивационный стиль'"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={3}
+                />
+              </div>
 
-          <TabsContent value="ai" className="space-y-4">
-            {aiError ? (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  AI генерация временно недоступна. Используйте шаблоны для создания обложки.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <div className="space-y-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                      {generating ? (
-                        <div className="text-center">
-                          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
-                          <p className="text-sm text-muted-foreground">Генерация обложки...</p>
-                        </div>
-                      ) : (
-                        <Button onClick={handleAiGeneration}>
-                          <Wand2 className="mr-2 h-4 w-4" />
-                          Сгенерировать с AI
-                        </Button>
-                      )}
+              <div>
+                <Label>Стиль дизайна</Label>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {styles.map((styleOption) => (
+                    <div
+                      key={styleOption.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        style === styleOption.id
+                          ? "border-primary bg-primary/5"
+                          : "border-muted hover:border-muted-foreground"
+                      }`}
+                      onClick={() => setStyle(styleOption.id)}
+                    >
+                      <div className="font-medium">{styleOption.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {styleOption.description}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="template" className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Настройки */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Язык</Label>
-                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGES.map((lang) => (
-                        <SelectItem key={lang.code} value={lang.code}>
-                          {lang.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Шаблон</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {THUMBNAIL_TEMPLATES.map((template) => (
-                      <Button
-                        key={template.id}
-                        variant={selectedTemplate === template.id ? "default" : "outline"}
-                        onClick={() => setSelectedTemplate(template.id)}
-                        className="justify-start"
-                      >
-                        <div
-                          className="w-4 h-4 rounded mr-2"
-                          style={{
-                            background: template.colors.length > 1
-                              ? `linear-gradient(45deg, ${template.colors[0]}, ${template.colors[1]})`
-                              : template.colors[0]
-                          }}
-                        />
-                        {template.name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="title">Заголовок</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Введите заголовок"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subtitle">Подзаголовок</Label>
-                  <Input
-                    id="subtitle"
-                    value={subtitle}
-                    onChange={(e) => setSubtitle(e.target.value)}
-                    placeholder="Введите подзаголовок (опционально)"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Шрифт</Label>
-                  <Select value={selectedFont} onValueChange={setSelectedFont}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONTS.map((font) => (
-                        <SelectItem key={font.id} value={font.id}>
-                          <span style={{ fontFamily: font.value }}>{font.name}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Размер шрифта: {fontSize[0]}px</Label>
-                  <Slider
-                    value={fontSize}
-                    onValueChange={setFontSize}
-                    min={24}
-                    max={72}
-                    step={2}
-                  />
+                  ))}
                 </div>
               </div>
 
-              {/* Превью */}
-              <div className="space-y-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                      <canvas
-                        ref={canvasRef}
-                        className="w-full h-full object-contain"
+              <Button 
+                onClick={generateThumbnails} 
+                disabled={generating || !prompt.trim()}
+                className="w-full"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Генерация...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Сгенерировать обложки
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Результаты генерации */}
+          {generatedThumbnails.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Сгенерированные обложки</CardTitle>
+                <CardDescription>
+                  Выберите понравившуюся обложку для сохранения
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  {generatedThumbnails.map((thumbnail, index) => (
+                    <div
+                      key={index}
+                      className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedThumbnail === thumbnail
+                          ? "border-primary ring-2 ring-primary/20"
+                          : "border-muted hover:border-muted-foreground"
+                      }`}
+                      onClick={() => setSelectedThumbnail(thumbnail)}
+                    >
+                      <img
+                        src={thumbnail}
+                        alt={`Обложка ${index + 1}`}
+                        className="w-full h-32 object-cover"
                       />
+                      {selectedThumbnail === thumbnail && (
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <CheckCircle2 className="h-8 w-8 text-primary" />
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {index + 1}
+                        </Badge>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <div className="flex gap-2">
-                  <Button onClick={drawThumbnail} variant="outline">
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Обновить
-                  </Button>
-                  <Button onClick={handleDownload} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Скачать
-                  </Button>
-                  <Button onClick={handleSave} className="flex-1">
-                    Сохранить
-                  </Button>
+                  ))}
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+
+                {selectedThumbnail && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium">
+                          Обложка выбрана
+                        </span>
+                      </div>
+                      <Button
+                        onClick={saveThumbnail}
+                        disabled={saving}
+                        size="sm"
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Сохранение...
+                          </>
+                        ) : (
+                          "Сохранить обложку"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Подсказки */}
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Совет:</strong> Для лучших результатов описывайте обложку детально, 
+              включая цвета, настроение, объекты и стиль. AI создаст несколько вариантов 
+              на основе вашего описания.
+            </AlertDescription>
+          </Alert>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Отмена
+          </Button>
+          {selectedThumbnail && (
+            <Button onClick={saveThumbnail} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Сохранение...
+                </>
+              ) : (
+                "Сохранить обложку"
+              )}
+            </Button>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   )

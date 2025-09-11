@@ -110,6 +110,26 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
     setupGuide: "https://core.telegram.org/bots",
   },
   {
+    id: "yandexgpt",
+    name: "YandexGPT",
+    icon: "🤖",
+    color: "#FF6B35",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://yandex.cloud/ru/docs/foundation-model/concepts/quickstart",
+  },
+  {
+    id: "cloudpayments",
+    name: "CloudPayments",
+    icon: "💳",
+    color: "#00D4AA",
+    connected: false,
+    requiresOAuth: false,
+    apiKeyRequired: true,
+    setupGuide: "https://cloudpayments.ru/Docs/Api",
+  },
+  {
     id: "proxy",
     name: "Прокси",
     icon: "🌐",
@@ -376,6 +396,69 @@ export default function IntegrationsPage() {
                           </div>
                         )}
 
+                        {integration.id === "cloudpayments" && (
+                          <>
+                            <div className="space-y-2">
+                              <Label htmlFor="cloudpayments-public-id">Public ID</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  id="cloudpayments-public-id"
+                                  type={showSecrets["cloudpayments-public"] ? "text" : "password"}
+                                  placeholder="Введите Public ID"
+                                  value={credentials.cloudpayments?.publicId || ""}
+                                  onChange={(e) => setCredentials(prev => ({
+                                    ...prev,
+                                    cloudpayments: {
+                                      ...prev.cloudpayments,
+                                      publicId: e.target.value
+                                    }
+                                  }))}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => toggleShowSecret("cloudpayments-public")}
+                                >
+                                  {showSecrets["cloudpayments-public"] ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="cloudpayments-secret">Secret Key</Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  id="cloudpayments-secret"
+                                  type={showSecrets["cloudpayments-secret"] ? "text" : "password"}
+                                  placeholder="Введите Secret Key"
+                                  value={credentials.cloudpayments?.secret || ""}
+                                  onChange={(e) => setCredentials(prev => ({
+                                    ...prev,
+                                    cloudpayments: {
+                                      ...prev.cloudpayments,
+                                      secret: e.target.value
+                                    }
+                                  }))}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => toggleShowSecret("cloudpayments-secret")}
+                                >
+                                  {showSecrets["cloudpayments-secret"] ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
                         {integration.requiresOAuth && (
                           <Alert>
                             <Info className="h-4 w-4" />
@@ -399,7 +482,8 @@ export default function IntegrationsPage() {
                               saving === integration.id ||
                               (integration.clientIdRequired && !credentials[integration.id]?.clientId) ||
                               (integration.clientSecretRequired && !credentials[integration.id]?.clientSecret) ||
-                              (integration.apiKeyRequired && !credentials[integration.id]?.apiKey)
+                              (integration.apiKeyRequired && !credentials[integration.id]?.apiKey) ||
+                              (integration.id === "cloudpayments" && (!credentials.cloudpayments?.publicId || !credentials.cloudpayments?.secret))
                             }
                           >
                             {saving === integration.id ? (

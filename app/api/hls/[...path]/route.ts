@@ -20,7 +20,8 @@ function verifyJwt(token: string, secret: string): { sub: string; courseId: stri
 }
 
 // Hardened proxy: require signed token and restrict upstream hosts via allowlist
-export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+  const { path } = await params
   const url = new URL(request.url)
   const token = url.searchParams.get('token') || ''
   const upstream = url.searchParams.get('upstream') // full upstream URL to m3u8/ts

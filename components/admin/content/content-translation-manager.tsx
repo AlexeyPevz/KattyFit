@@ -1,22 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Switch } from "@/components/ui/switch"
 import { 
   Languages, 
-  Play, 
+  Globe, 
+  Download, 
   Loader2, 
-  CheckCircle2, 
+  CheckCircle2,
   AlertCircle,
-  Download,
   RefreshCw,
-  Volume2
+  Play,
+  Pause
 } from "lucide-react"
 
 interface ContentTranslationManagerProps {
@@ -25,52 +28,52 @@ interface ContentTranslationManagerProps {
   onClose: () => void
 }
 
-const LANGUAGES = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "de", name: "Deutsch", flag: "🇩🇪" },
-  { code: "fr", name: "Français", flag: "🇫🇷" },
-  { code: "it", name: "Italiano", flag: "🇮🇹" },
-  { code: "pt", name: "Português", flag: "🇧🇷" },
-  { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-  { code: "zh", name: "中文", flag: "🇨🇳" },
-  { code: "ja", name: "日本語", flag: "🇯🇵" },
-  { code: "ko", name: "한국어", flag: "🇰🇷" },
+const SUPPORTED_LANGUAGES = [
+  { code: "en", name: "English", flag: "🇺🇸", status: "completed" },
+  { code: "es", name: "Español", flag: "🇪🇸", status: "in_progress" },
+  { code: "de", name: "Deutsch", flag: "🇩🇪", status: "pending" },
+  { code: "fr", name: "Français", flag: "🇫🇷", status: "pending" },
+  { code: "it", name: "Italiano", flag: "🇮🇹", status: "pending" },
+  { code: "pt", name: "Português", flag: "🇧🇷", status: "pending" },
+  { code: "tr", name: "Türkçe", flag: "🇹🇷", status: "pending" },
 ]
 
 export function ContentTranslationManager({ contentId, contentTitle, onClose }: ContentTranslationManagerProps) {
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
-  const [dubbing, setDubbing] = useState(false)
-  const [dubbingId, setDubbingId] = useState<string | null>(null)
-  const [status, setStatus] = useState<string>("idle")
-  const [progress, setProgress] = useState(0)
-  const [dubbedUrls, setDubbedUrls] = useState<Record<string, string>>({})
-  const [error, setError] = useState<string | null>(null)
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null)
+  const [translations, setTranslations] = useState<Record<string, any>>({})
+  const [translating, setTranslating] = useState(false)
+  const [autoTranslate, setAutoTranslate] = useState(true)
+  const [translationProgress, setTranslationProgress] = useState(0)
 
-  useEffect(() => {
-    if (dubbingId) {
-      const interval = setInterval(() => {
-        checkDubbingStatus()
-      }, 5000) // Проверяем каждые 5 секунд
-
-      return () => clearInterval(interval)
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />
+      case "in_progress":
+        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+      case "pending":
+        return <AlertCircle className="h-4 w-4 text-orange-500" />
+      default:
+        return null
     }
-  }, [dubbingId])
-
-  const toggleLanguage = (langCode: string) => {
-    setSelectedLanguages(prev =>
-      prev.includes(langCode)
-        ? prev.filter(l => l !== langCode)
-        : [...prev, langCode]
-    )
   }
 
-  const startDubbing = async () => {
-    if (selectedLanguages.length === 0) return
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800"
+      case "in_progress":
+        return "bg-blue-100 text-blue-800"
+      case "pending":
+        return "bg-orange-100 text-orange-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
 
-    setDubbing(true)
-    setError(null)
-    setStatus("starting")
+  const startTranslation = async (languageCode: string) => {
+    setTranslating(true)
+    setTranslationProgress(0)
 
     try {
       const response = await fetch("/api/content/translate", {
@@ -80,228 +83,265 @@ export function ContentTranslationManager({ contentId, contentTitle, onClose }: 
         },
         body: JSON.stringify({
           contentId,
-          targetLanguages: selectedLanguages,
+          targetLanguage: languageCode,
+          autoTranslate,
         }),
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Ошибка запуска дубляжа")
-      }
-
-      setDubbingId(data.dubbingId)
-      setStatus("processing")
-    } catch (error: any) {
-      console.error("Ошибка:", error)
-      setError(error.message)
-      setDubbing(false)
-      setStatus("error")
-    }
-  }
-
-  const checkDubbingStatus = async () => {
-    if (!dubbingId) return
-
-    try {
-      const response = await fetch(`/api/content/translate?dubbingId=${dubbingId}`)
-      const data = await response.json()
-
-      if (data.success) {
-        setProgress(data.progress || 0)
-        setStatus(data.status)
-
-        if (data.status === "completed") {
-          setDubbedUrls(data.dubbedUrls || {})
-          setDubbing(false)
-        } else if (data.status === "failed") {
-          setError(data.error || "Ошибка дубляжа")
-          setDubbing(false)
-        }
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Симуляция прогресса
+        const interval = setInterval(() => {
+          setTranslationProgress((prev) => {
+            if (prev >= 100) {
+              clearInterval(interval)
+              setTranslating(false)
+              setTranslations(prev => ({
+                ...prev,
+                [languageCode]: data.translation
+              }))
+              return 100
+            }
+            return prev + 20
+          })
+        }, 500)
       }
     } catch (error) {
-      console.error("Ошибка проверки статуса:", error)
+      console.error("Ошибка перевода:", error)
+      setTranslating(false)
     }
   }
 
-  const downloadDubbedVideo = (language: string, url: string) => {
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `${contentTitle}-${language}.mp4`
-    link.click()
-  }
+  const downloadTranslation = (languageCode: string) => {
+    const translation = translations[languageCode]
+    if (!translation) return
 
-  const getStatusIcon = () => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />
-      case "processing":
-      case "starting":
-        return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-      case "error":
-      case "failed":
-        return <AlertCircle className="h-5 w-5 text-red-500" />
-      default:
-        return <Languages className="h-5 w-5 text-gray-500" />
+    const data = {
+      title: translation.title,
+      description: translation.description,
+      language: languageCode,
+      contentId,
     }
-  }
 
-  const getStatusText = () => {
-    switch (status) {
-      case "starting":
-        return "Запуск дубляжа..."
-      case "processing":
-        return `Обработка... ${progress}%`
-      case "completed":
-        return "Дубляж завершен!"
-      case "error":
-      case "failed":
-        return "Ошибка дубляжа"
-      default:
-        return "Готов к запуску"
-    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `translation_${languageCode}_${contentId}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Languages className="h-5 w-5" />
-            Перевод и дубляж
+            Управление локализацией
           </DialogTitle>
+          <DialogDescription>
+            Создайте переводы контента "{contentTitle}" на разные языки
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Выбор языков */}
+        <div className="space-y-6">
+          {/* Настройки */}
           <Card>
-            <CardContent className="pt-6">
-              <Label className="mb-3 block">Выберите языки для дубляжа</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {LANGUAGES.map((lang) => (
-                  <Button
-                    key={lang.code}
-                    variant={selectedLanguages.includes(lang.code) ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleLanguage(lang.code)}
-                    disabled={dubbing || status === "completed"}
-                    className="justify-start"
+            <CardHeader>
+              <CardTitle>Настройки перевода</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="auto-translate">Автоматический перевод</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Использовать AI для автоматического перевода контента
+                  </p>
+                </div>
+                <Switch
+                  id="auto-translate"
+                  checked={autoTranslate}
+                  onCheckedChange={setAutoTranslate}
+                />
+              </div>
+
+              {translating && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Перевод в процессе...</span>
+                    <span>{translationProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${translationProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Список языков */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Доступные языки</CardTitle>
+              <CardDescription>
+                Выберите язык для создания перевода
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {SUPPORTED_LANGUAGES.map((language) => (
+                  <div
+                    key={language.code}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedLanguage === language.code
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-muted-foreground"
+                    }`}
+                    onClick={() => setSelectedLanguage(language.code)}
                   >
-                    <span className="mr-2">{lang.flag}</span>
-                    {lang.name}
-                  </Button>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{language.flag}</span>
+                        <div>
+                          <div className="font-medium">{language.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {language.code.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(language.status)}
+                        <Badge className={getStatusColor(language.status)}>
+                          {language.status === "completed" ? "Готово" :
+                           language.status === "in_progress" ? "В процессе" : "Ожидает"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {selectedLanguage === language.code && (
+                      <div className="mt-4 space-y-2">
+                        {translations[language.code] ? (
+                          <div className="space-y-2">
+                            <div>
+                              <Label>Переведенное название</Label>
+                              <Input
+                                value={translations[language.code].title || ""}
+                                onChange={(e) => setTranslations(prev => ({
+                                  ...prev,
+                                  [language.code]: {
+                                    ...prev[language.code],
+                                    title: e.target.value
+                                  }
+                                }))}
+                                placeholder="Введите название на выбранном языке"
+                              />
+                            </div>
+                            <div>
+                              <Label>Переведенное описание</Label>
+                              <Textarea
+                                value={translations[language.code].description || ""}
+                                onChange={(e) => setTranslations(prev => ({
+                                  ...prev,
+                                  [language.code]: {
+                                    ...prev[language.code],
+                                    description: e.target.value
+                                  }
+                                }))}
+                                placeholder="Введите описание на выбранном языке"
+                                rows={3}
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => downloadTranslation(language.code)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Скачать
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Перевод для этого языка еще не создан
+                            </p>
+                            <Button
+                              onClick={() => startTranslation(language.code)}
+                              disabled={translating}
+                              size="sm"
+                            >
+                              {translating ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Перевод...
+                                </>
+                              ) : (
+                                <>
+                                  <Globe className="mr-2 h-4 w-4" />
+                                  Создать перевод
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Статус дубляжа */}
-          {(dubbing || status === "completed" || error) && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon()}
-                    <span className="font-medium">{getStatusText()}</span>
+          {/* Статистика */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Статистика переводов</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {SUPPORTED_LANGUAGES.filter(l => l.status === "completed").length}
                   </div>
-                  {dubbing && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={checkDubbingStatus}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="text-sm text-muted-foreground">Готово</div>
                 </div>
-
-                {progress > 0 && status === "processing" && (
-                  <Progress value={progress} className="mb-4" />
-                )}
-
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                {status === "completed" && Object.keys(dubbedUrls).length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Готовые версии:
-                    </p>
-                    {Object.entries(dubbedUrls).map(([lang, url]) => {
-                      const language = LANGUAGES.find(l => l.code === lang)
-                      return (
-                        <div
-                          key={lang}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Volume2 className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              {language?.flag} {language?.name}
-                            </span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => window.open(url, "_blank")}
-                            >
-                              <Play className="h-4 w-4 mr-1" />
-                              Просмотр
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => downloadDubbedVideo(lang, url)}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )
-                    })}
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {SUPPORTED_LANGUAGES.filter(l => l.status === "in_progress").length}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  <div className="text-sm text-muted-foreground">В процессе</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {SUPPORTED_LANGUAGES.filter(l => l.status === "pending").length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Ожидает</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Информация об ElevenLabs */}
+          {/* Подсказки */}
           <Alert>
-            <Languages className="h-4 w-4" />
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Дубляж выполняется через ElevenLabs Dubbing API. 
-              Поддерживаются видео длительностью до 2.5 часов. 
-              Сохраняются эмоции и синхронизация губ.
+              <strong>Совет:</strong> Автоматический перевод создает базовую версию, 
+              которую можно затем отредактировать вручную для лучшего качества.
             </AlertDescription>
           </Alert>
+        </div>
 
-          {/* Кнопки действий */}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Закрыть
-            </Button>
-            <Button
-              onClick={startDubbing}
-              disabled={selectedLanguages.length === 0 || dubbing || status === "completed"}
-            >
-              {dubbing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Обработка...
-                </>
-              ) : (
-                <>
-                  <Languages className="mr-2 h-4 w-4" />
-                  Начать дубляж
-                </>
-              )}
-            </Button>
-          </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Закрыть
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

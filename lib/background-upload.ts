@@ -95,6 +95,18 @@ export class BackgroundUploadManager {
     }
   }
 
+  // Обновление статуса чанка
+  private updateChunkStatus(uploadId: string, chunkIndex: number) {
+    const task = this.tasks.get(uploadId)
+    if (!task) return
+
+    const chunk = task.chunks.find(c => c.index === chunkIndex)
+    if (chunk) {
+      chunk.uploaded = true
+      this.updateProgress(uploadId, task.chunks.filter(c => c.uploaded).length / task.chunks.length * 100)
+    }
+  }
+
   // Обработка сообщений от Service Worker
   private handleWorkerMessage(event: MessageEvent) {
     const { type, uploadId, progress, error } = event.data
@@ -110,7 +122,7 @@ export class BackgroundUploadManager {
         this.handleError(uploadId, error)
         break
       case 'chunk-uploaded':
-        this.markChunkUploaded(uploadId, event.data.chunkIndex)
+        this.updateChunkStatus(uploadId, event.data.chunkIndex)
         break
     }
   }
@@ -181,7 +193,9 @@ export class BackgroundUploadManager {
     if (this.worker && 'BackgroundSync' in window) {
       // Регистрируем фоновую синхронизацию
       const registration = await navigator.serviceWorker.ready
-      await registration.sync.register(`upload-${uploadId}`)
+      if ('sync' in registration) {
+        await (registration as any).sync.register(`upload-${uploadId}`)
+      }
       
       // Отправляем данные в Service Worker
       this.worker.postMessage({
@@ -497,7 +511,7 @@ export class BackgroundUploadManager {
               chunks: savedTask.chunks || []
             }
             
-            this.tasks.set(uploadId, task)
+            this.tasks.set(uploadId, task!)
           } else {
             console.error('Файл не найден в кеше:', uploadId)
             return

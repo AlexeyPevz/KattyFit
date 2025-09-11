@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
                   .from("publications")
                   .update({
                     status: "published",
-                    url: result.url,
+                    url: result?.url || '',
                     published_at: new Date().toISOString(),
                   })
                   .eq("id", publication.id)

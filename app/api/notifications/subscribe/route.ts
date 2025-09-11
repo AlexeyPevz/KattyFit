@@ -1,75 +1,46 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import { cookies } from "next/headers"
+import { apiHandler } from "@/lib/api-utils"
 
-export async function POST(request: NextRequest) {
+export const POST = apiHandler(async (request: NextRequest) => {
   try {
-    const subscription = await request.json()
-    
-    // Получаем ID пользователя из сессии
-    const cookieStore = cookies()
-    const sessionCookie = cookieStore.get("admin_session")
-    
-    let userId = null
-    let userType = "guest"
-    
-    if (sessionCookie) {
-      try {
-        const session = JSON.parse(sessionCookie.value)
-        userId = session.userId || session.username
-        userType = "admin"
-      } catch (e) {
-        console.error("Ошибка парсинга сессии:", e)
-      }
+    const { subscription } = await request.json()
+
+    if (!subscription) {
+      return NextResponse.json(
+        { error: "Subscription data is required" },
+        { status: 400 }
+      )
     }
 
-    // Проверяем, существует ли уже такая подписка
-    const { data: existing } = await supabaseAdmin
+    // Save subscription to database
+    const { error } = await supabaseAdmin
       .from("push_subscriptions")
-      .select("id")
-      .eq("endpoint", subscription.endpoint)
-      .single()
+      .upsert({
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+        user_agent: request.headers.get("user-agent") || "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: "endpoint"
+      })
 
-    if (existing) {
-      // Обновляем существующую подписку
-      await supabaseAdmin
-        .from("push_subscriptions")
-        .update({
-          user_id: userId,
-          user_type: userType,
-          subscription_data: subscription,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", existing.id)
-    } else {
-      // Создаем новую подписку
-      await supabaseAdmin
-        .from("push_subscriptions")
-        .insert({
-          user_id: userId,
-          user_type: userType,
-          endpoint: subscription.endpoint,
-          subscription_data: subscription,
-          platform: detectPlatform(request.headers.get("user-agent") || ""),
-          is_active: true
-        })
+    if (error) {
+      console.error("Error saving subscription:", error)
+      return NextResponse.json(
+        { error: "Failed to save subscription" },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Ошибка сохранения подписки:", error)
+    console.error("Subscription error:", error)
     return NextResponse.json(
-      { error: "Не удалось сохранить подписку" },
+      { error: "Failed to process subscription" },
       { status: 500 }
     )
   }
-}
-
-function detectPlatform(userAgent: string): string {
-  if (/android/i.test(userAgent)) return "android"
-  if (/iphone|ipad|ipod/i.test(userAgent)) return "ios"
-  if (/windows/i.test(userAgent)) return "windows"
-  if (/mac/i.test(userAgent)) return "macos"
-  if (/linux/i.test(userAgent)) return "linux"
-  return "unknown"
-}
+})

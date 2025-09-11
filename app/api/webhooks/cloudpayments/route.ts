@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
-import crypto from "crypto"
+import { createHmac } from "crypto"
 
 // Проверка подписи CloudPayments
 function verifySignature(body: string, signature: string): boolean {
@@ -10,8 +10,7 @@ function verifySignature(body: string, signature: string): boolean {
     return false
   }
   
-  const hash = crypto
-    .createHmac('sha256', env.cloudPaymentsSecret)
+  const hash = createHmac('sha256', env.cloudPaymentsSecret)
     .update(body)
     .digest('base64')
   

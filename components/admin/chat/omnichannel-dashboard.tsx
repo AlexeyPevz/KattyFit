@@ -138,7 +138,7 @@ export function OmnichannelDashboard() {
     return matchesSearch && matchesPlatform && matchesStatus
   })
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!messageInput.trim() || !selectedChat) return
 
     const newMessage: Message = {
@@ -151,14 +151,64 @@ export function OmnichannelDashboard() {
     }
 
     setMessages([...messages, newMessage])
+    const currentMessage = messageInput
     setMessageInput("")
 
     // Обновляем последнее сообщение в чате
     setChats(chats.map(chat => 
       chat.id === selectedChat.id 
-        ? { ...chat, lastMessage: messageInput, lastMessageTime: "Сейчас", unreadCount: 0 }
+        ? { ...chat, lastMessage: currentMessage, lastMessageTime: "Сейчас", unreadCount: 0 }
         : chat
     ))
+
+    // Отправляем запрос к YandexGPT для получения AI ответа
+    try {
+      const response = await fetch('/api/chat/yandexgpt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentMessage,
+          conversationId: selectedChat.id,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Добавляем AI ответ
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.response,
+          type: "incoming",
+          timestamp: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+          platform: "ai",
+        }
+
+        setMessages(prev => [...prev, aiMessage])
+        
+        // Обновляем последнее сообщение в чате с AI ответом
+        setChats(prev => prev.map(chat => 
+          chat.id === selectedChat.id 
+            ? { ...chat, lastMessage: `AI: ${data.response.substring(0, 50)}...`, lastMessageTime: "Сейчас" }
+            : chat
+        ))
+      }
+    } catch (error) {
+      console.error('Ошибка при получении AI ответа:', error)
+      
+      // Добавляем сообщение об ошибке
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Извините, AI-ассистент временно недоступен. Попробуйте позже.",
+        type: "incoming",
+        timestamp: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        platform: "system",
+      }
+
+      setMessages(prev => [...prev, errorMessage])
+    }
   }
 
   const getStatusIcon = (status: string) => {
@@ -361,9 +411,17 @@ export function OmnichannelDashboard() {
                     className={`max-w-[70%] rounded-lg px-4 py-2 ${
                       message.type === "outgoing"
                         ? "bg-primary text-primary-foreground"
+                        : message.platform === "ai"
+                        ? "bg-blue-50 border border-blue-200"
                         : "bg-muted"
                     }`}
                   >
+                    {message.platform === "ai" && (
+                      <div className="flex items-center gap-1 mb-1">
+                        <Bot className="h-3 w-3 text-blue-600" />
+                        <span className="text-xs text-blue-600 font-medium">AI-ассистент</span>
+                      </div>
+                    )}
                     <p className="text-sm">{message.text}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs opacity-70">
