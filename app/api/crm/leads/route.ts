@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
+import logger from "@/lib/logger"
 
 // Функция для расчета Lead Score
 function calculateLeadScore(lead: any): number {
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
       isNew: true,
     })
   } catch (error: any) {
-    console.error("Error creating lead:", error)
+    logger.error("Error creating lead", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка создания лида" },
       { status: 500 }
@@ -221,7 +222,7 @@ export async function GET(request: NextRequest) {
       statistics,
     })
   } catch (error: any) {
-    console.error("Error fetching leads:", error)
+    logger.error("Error fetching leads", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка получения лидов" },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error("HLS stream error:", error)
+    logger.error("HLS stream error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки видео" },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 export const POST = apiHandler(async (request: NextRequest) => {
   const { events } = await request.json()
@@ -25,12 +26,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
       .insert(analyticsEvents)
       
     if (error) {
-      console.error('Analytics insert error:', error)
+      logger.error('Analytics insert error', { error: error instanceof Error ? error.message : String(error) })
       // Не возвращаем ошибку клиенту - аналитика не должна ломать UX
     }
   } catch (error) {
     // Игнорируем ошибки аналитики
-    console.error('Analytics error:', error)
+    logger.error('Analytics error', { error: error instanceof Error ? error.message : String(error) })
   }
   
   // Агрегируем метрики в реальном времени

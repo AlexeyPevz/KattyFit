@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { generateRAGResponse } from "@/lib/rag-engine"
+import logger from "@/lib/logger"
 
 // Интерфейс для унифицированного сообщения
 interface UnifiedMessage {
@@ -262,7 +263,7 @@ export async function POST(
     // Платформы ожидают быстрый ответ
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Webhook error:", error)
+    logger.error("Webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

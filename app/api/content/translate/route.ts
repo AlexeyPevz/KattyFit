@@ -138,7 +138,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
       translations: translations || [],
     })
   } catch (error) {
-    console.error("Ошибка загрузки переводов:", error)
+    logger.error("Ошибка загрузки переводов", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки переводов" },
       { status: 500 }

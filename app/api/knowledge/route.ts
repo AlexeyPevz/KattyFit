@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       items: data || []
     })
   } catch (error) {
-    console.error("Ошибка загрузки базы знаний:", error)
+    logger.error("Ошибка загрузки базы знаний", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки базы знаний" },
       { status: 500 }
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       item: data
     })
   } catch (error) {
-    console.error("Ошибка создания элемента:", error)
+    logger.error("Ошибка создания элемента", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка создания элемента" },
       { status: 500 }
@@ -115,7 +116,7 @@ export async function PUT(request: NextRequest) {
       item: data
     })
   } catch (error) {
-    console.error("Ошибка обновления элемента:", error)
+    logger.error("Ошибка обновления элемента", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка обновления элемента" },
       { status: 500 }
@@ -146,7 +147,7 @@ export async function DELETE(request: NextRequest) {
       success: true
     })
   } catch (error) {
-    console.error("Ошибка удаления элемента:", error)
+    logger.error("Ошибка удаления элемента", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка удаления элемента" },
       { status: 500 }

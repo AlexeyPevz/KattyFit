@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
       ...envStatus, // Добавляем статус окружения
     })
   } catch (error) {
-    console.error("Ошибка загрузки интеграций:", error)
+    logger.error("Ошибка загрузки интеграций", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки интеграций" },
       { status: 500 }
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest) {
       message: `Интеграция ${service} успешно настроена`,
     })
   } catch (error) {
-    console.error("Ошибка сохранения интеграции:", error)
+    logger.error("Ошибка сохранения интеграции", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка сохранения интеграции" },
       { status: 500 }

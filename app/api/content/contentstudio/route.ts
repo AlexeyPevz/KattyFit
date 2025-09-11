@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
+import logger from "@/lib/logger"
 
 // Получение API ключа ContentStudio только из env (v0)
 async function getContentStudioKey(): Promise<string | null> {
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
       data: result,
     })
   } catch (error: any) {
-    console.error("ContentStudio API error:", error)
+    logger.error("ContentStudio API error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка ContentStudio API" },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 interface PublishRequest {
   contentId: string
@@ -239,7 +240,7 @@ export async function POST(request: NextRequest) {
         : "Публикация успешно запланирована",
     })
   } catch (error) {
-    console.error("Ошибка планирования публикации:", error)
+    logger.error("Ошибка планирования публикации", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка при планировании публикации" },
       { status: 500 }
@@ -273,7 +274,7 @@ export async function GET(request: NextRequest) {
       publications: publications || [],
     })
   } catch (error) {
-    console.error("Ошибка загрузки публикаций:", error)
+    logger.error("Ошибка загрузки публикаций", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки публикаций" },
       { status: 500 }
