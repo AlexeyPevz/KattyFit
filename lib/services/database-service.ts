@@ -2,6 +2,7 @@
 // Инверсия зависимостей для тестируемости
 
 import { AppError, ErrorCode } from '@/types/errors'
+import logger from '../logger'
 
 // ===== ИНТЕРФЕЙСЫ =====
 
@@ -91,7 +92,10 @@ abstract class BaseDatabaseService implements DatabaseService {
     try {
       // Простая реализация без Supabase
       // В реальном приложении здесь будет вызов Supabase
-      console.log('Executing query:', query, params)
+      await logger.debug('Executing database query', {
+        query: query.substring(0, 100),
+        paramCount: params?.length || 0
+      })
       return []
     } catch (error) {
       if (error instanceof AppError) {
@@ -197,97 +201,123 @@ abstract class BaseDatabaseService implements DatabaseService {
 export class SimpleDatabaseService extends BaseDatabaseService {
   // Пользователи
   async getUserById(id: string): Promise<any> {
-    console.log('Getting user by id:', id)
+    await logger.debug('Getting user by id', { id })
     return { id, name: 'Test User', email: 'test@example.com' }
   }
 
   async createUser(user: any): Promise<any> {
-    console.log('Creating user:', user)
+    await logger.debug('Creating user', { 
+      userFields: Object.keys(user)
+    })
     return { id: 'new-user-id', ...user }
   }
 
   async updateUser(id: string, updates: any): Promise<any> {
-    console.log('Updating user:', id, updates)
+    await logger.debug('Updating user', { 
+      id, 
+      updateFields: Object.keys(updates)
+    })
     return { id, ...updates }
   }
 
   async deleteUser(id: string): Promise<void> {
-    console.log('Deleting user:', id)
+    await logger.debug('Deleting user', { id })
   }
 
   // Курсы
   async getCourses(options?: QueryOptions): Promise<any[]> {
-    console.log('Getting courses:', options)
+    await logger.debug('Getting courses', { 
+      options: options ? Object.keys(options) : 'none'
+    })
     return []
   }
 
   async getCourseById(id: string): Promise<any> {
-    console.log('Getting course by id:', id)
+    await logger.debug('Getting course by id', { id })
     return { id, title: 'Test Course' }
   }
 
   async createCourse(course: any): Promise<any> {
-    console.log('Creating course:', course)
+    await logger.debug('Creating course', { 
+      courseFields: Object.keys(course)
+    })
     return { id: 'new-course-id', ...course }
   }
 
   async updateCourse(id: string, updates: any): Promise<any> {
-    console.log('Updating course:', id, updates)
+    await logger.debug('Updating course', { 
+      id, 
+      updateFields: Object.keys(updates)
+    })
     return { id, ...updates }
   }
 
   async deleteCourse(id: string): Promise<void> {
-    console.log('Deleting course:', id)
+    await logger.debug('Deleting course', { id })
   }
 
   // Лиды
   async getLeads(options?: QueryOptions): Promise<any[]> {
-    console.log('Getting leads:', options)
+    await logger.debug('Getting leads', { 
+      options: options ? Object.keys(options) : 'none'
+    })
     return []
   }
 
   async getLeadById(id: string): Promise<any> {
-    console.log('Getting lead by id:', id)
+    await logger.debug('Getting lead by id', { id })
     return { id, name: 'Test Lead' }
   }
 
   async createLead(lead: any): Promise<any> {
-    console.log('Creating lead:', lead)
+    await logger.debug('Creating lead', { 
+      leadFields: Object.keys(lead)
+    })
     return { id: 'new-lead-id', ...lead }
   }
 
   async updateLead(id: string, updates: any): Promise<any> {
-    console.log('Updating lead:', id, updates)
+    await logger.debug('Updating lead', { 
+      id, 
+      updateFields: Object.keys(updates)
+    })
     return { id, ...updates }
   }
 
   async deleteLead(id: string): Promise<void> {
-    console.log('Deleting lead:', id)
+    await logger.debug('Deleting lead', { id })
   }
 
   // Бронирования
   async getBookings(options?: QueryOptions): Promise<any[]> {
-    console.log('Getting bookings:', options)
+    await logger.debug('Getting bookings', { 
+      options: options ? Object.keys(options) : 'none'
+    })
     return []
   }
 
   async getBookingById(id: string): Promise<any> {
-    console.log('Getting booking by id:', id)
+    await logger.debug('Getting booking by id', { id })
     return { id, date: '2024-01-01' }
   }
 
   async createBooking(booking: any): Promise<any> {
-    console.log('Creating booking:', booking)
+    await logger.debug('Creating booking', { 
+      bookingFields: Object.keys(booking)
+    })
     return { id: 'new-booking-id', ...booking }
   }
 
   async updateBooking(id: string, updates: any): Promise<any> {
-    console.log('Updating booking:', id, updates)
+    await logger.debug('Updating booking', { 
+      id, 
+      updateFields: Object.keys(updates)
+    })
     return { id, ...updates }
   }
 
   async deleteBooking(id: string): Promise<void> {
-    console.log('Deleting booking:', id)
+    await logger.debug('Deleting booking', { id })
   }
 }
 
