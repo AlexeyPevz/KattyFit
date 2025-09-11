@@ -42,12 +42,12 @@ export default function CourseCheckoutPage() {
     setCourse(courseData)
   }, [courseId])
 
-  const handlePaymentSuccess = async (transaction: any) => {
+  const handlePaymentSuccess = async (transaction: Record<string, unknown>) => {
     logger.info("Payment successful", { transaction })
     // Здесь можно добавить дополнительную логику после успешной оплаты
   }
 
-  const handlePaymentFail = (reason: any) => {
+  const handlePaymentFail = (reason: string) => {
     logger.error("Payment failed", { reason })
   }
 

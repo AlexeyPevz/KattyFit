@@ -41,7 +41,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 })
 
 // Обновление метрик в реальном времени
-async function updateRealtimeMetrics(events: any[]) {
+async function updateRealtimeMetrics(events: Array<Record<string, unknown>>) {
   const today = new Date().toISOString().split('T')[0]
   
   for (const event of events) {

@@ -4,7 +4,7 @@ import crypto from "crypto"
 import logger from "@/lib/logger"
 
 // Функция для проверки подписи CloudPayments
-function checkCloudPaymentsSignature(data: any, signature: string): boolean {
+function checkCloudPaymentsSignature(data: Record<string, unknown>, signature: string): boolean {
   const secret = process.env.CLOUDPAYMENTS_SECRET || ""
   const message = Object.keys(data)
     .sort()
@@ -187,7 +187,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-async function handleRefund(data: any) {
+async function handleRefund(data: Record<string, unknown>) {
   // Обновляем статус покупки
   await supabaseAdmin
     .from("purchases")

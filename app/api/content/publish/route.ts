@@ -36,7 +36,7 @@ async function getApiKey(service: string): Promise<string | null> {
 }
 
 // Публикация в VK
-async function publishToVK(content: any, language: string) {
+async function publishToVK(content: Record<string, unknown>, language: string) {
   const vkToken = await getApiKey("vk")
   if (!vkToken) {
     throw new Error("VK API token не настроен")
@@ -59,7 +59,7 @@ async function publishToVK(content: any, language: string) {
 }
 
 // Публикация в Telegram
-async function publishToTelegram(content: any, language: string) {
+async function publishToTelegram(content: Record<string, unknown>, language: string) {
   const telegramToken = await getApiKey("telegram")
   const telegramChatId = await getApiKey("telegram_chat_id")
   
@@ -82,7 +82,7 @@ async function publishToTelegram(content: any, language: string) {
 }
 
 // Публикация в YouTube (требует OAuth)
-async function publishToYouTube(content: any, language: string) {
+async function publishToYouTube(content: Record<string, unknown>, language: string) {
   const { data: integration } = await supabaseAdmin
     .from("integrations")
     .select("config")
@@ -112,7 +112,7 @@ const PLATFORM_CONFIG = {
   },
   rutube: {
     name: "RuTube",
-    publisher: async (content: any) => ({
+    publisher: async (content: Record<string, unknown>) => ({
       success: true,
       url: content.url, // Уже опубликовано на RuTube
     }),
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const publishTasks: any[] = []
+    const publishTasks: Array<{ platform: string; task: Promise<unknown> }> = []
     const errors: string[] = []
 
     // Создаем задачи публикации для каждой платформы и языка
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
                   .eq("id", publication.id)
               })
           }
-        } catch (error: any) {
+        } catch (error: Error | unknown) {
           errors.push(`${platform}: ${error.message}`)
         }
       }

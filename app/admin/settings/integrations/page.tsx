@@ -162,7 +162,7 @@ export default function IntegrationsPage() {
         // Обновляем статус подключения
         const updated = DEFAULT_INTEGRATIONS.map(integration => ({
           ...integration,
-          connected: data.services.find((s: any) => s.service === integration.id)?.connected || false
+          connected: data.services.find((s: Record<string, unknown>) => s.service === integration.id)?.connected || false
         }))
         setIntegrations(updated)
       }

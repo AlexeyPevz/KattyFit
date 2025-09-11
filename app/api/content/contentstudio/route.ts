@@ -9,7 +9,7 @@ async function getContentStudioKey(): Promise<string | null> {
 }
 
 // Генерация обложек через ContentStudio AI
-async function generateThumbnails(apiKey: string, params: any) {
+async function generateThumbnails(apiKey: string, params: Record<string, unknown>) {
   const { SmartAPI } = await import("@/lib/smart-proxy")
   
   const response = await SmartAPI.contentstudioRequest("/ai/thumbnails", {
@@ -36,7 +36,7 @@ async function generateThumbnails(apiKey: string, params: any) {
 }
 
 // Публикация через ContentStudio
-async function publishContent(apiKey: string, params: any) {
+async function publishContent(apiKey: string, params: Record<string, unknown>) {
   const { SmartAPI } = await import("@/lib/smart-proxy")
   
   const response = await SmartAPI.contentstudioRequest("/posts", {
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: result,
     })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("ContentStudio API error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка ContentStudio API" },

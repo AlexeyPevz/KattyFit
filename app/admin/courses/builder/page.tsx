@@ -41,7 +41,7 @@ interface CourseLesson {
   content: {
     videoUrl?: string
     textContent?: string
-    quizQuestions?: any[]
+    quizQuestions?: Array<Record<string, unknown>>
     assignmentText?: string
   }
   isPreview: boolean
@@ -322,7 +322,7 @@ export default function CourseBuilderPage() {
                   <Label htmlFor="course-level">Уровень сложности</Label>
                   <Select
                     value={course.level}
-                    onValueChange={(value: any) => setCourse((prev) => ({ ...prev, level: value }))}
+                    onValueChange={(value: string) => setCourse((prev) => ({ ...prev, level: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -759,7 +759,7 @@ export default function CourseBuilderPage() {
                   <Label htmlFor="lesson-type">Тип урока</Label>
                   <Select
                     value={selectedLesson.type}
-                    onValueChange={(value: any) => setSelectedLesson({ ...selectedLesson, type: value })}
+                    onValueChange={(value: string) => setSelectedLesson({ ...selectedLesson, type: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />

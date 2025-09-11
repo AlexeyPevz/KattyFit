@@ -47,7 +47,7 @@ interface KnowledgeItem {
   type: "faq" | "dialog_example" | "course_info" | "pricing"
   question?: string
   answer?: string
-  context?: any
+  context?: Record<string, unknown>
   is_active: boolean
   created_at: string
 }

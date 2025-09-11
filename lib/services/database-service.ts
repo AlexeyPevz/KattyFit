@@ -28,29 +28,29 @@ export interface DatabaseService {
   deleteUser(id: string): Promise<void>
 
   // Курсы
-  getCourses(options?: QueryOptions): Promise<any[]>
-  getCourseById(id: string): Promise<any>
-  createCourse(course: any): Promise<any>
-  updateCourse(id: string, updates: any): Promise<any>
+  getCourses(options?: QueryOptions): Promise<Record<string, unknown>[]>
+  getCourseById(id: string): Promise<Record<string, unknown> | null>
+  createCourse(course: Record<string, unknown>): Promise<Record<string, unknown>>
+  updateCourse(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   deleteCourse(id: string): Promise<void>
 
   // Лиды
-  getLeads(options?: QueryOptions): Promise<any[]>
-  getLeadById(id: string): Promise<any>
-  createLead(lead: any): Promise<any>
-  updateLead(id: string, updates: any): Promise<any>
+  getLeads(options?: QueryOptions): Promise<Record<string, unknown>[]>
+  getLeadById(id: string): Promise<Record<string, unknown> | null>
+  createLead(lead: Record<string, unknown>): Promise<Record<string, unknown>>
+  updateLead(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   deleteLead(id: string): Promise<void>
 
   // Бронирования
-  getBookings(options?: QueryOptions): Promise<any[]>
-  getBookingById(id: string): Promise<any>
-  createBooking(booking: any): Promise<any>
-  updateBooking(id: string, updates: any): Promise<any>
+  getBookings(options?: QueryOptions): Promise<Record<string, unknown>[]>
+  getBookingById(id: string): Promise<Record<string, unknown> | null>
+  createBooking(booking: Record<string, unknown>): Promise<Record<string, unknown>>
+  updateBooking(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   deleteBooking(id: string): Promise<void>
 
   // Общие методы
-  executeQuery<T>(query: string, params?: any[]): Promise<T[]>
-  executeTransaction(operations: (() => Promise<any>)[]): Promise<any[]>
+  executeQuery<T>(query: string, params?: unknown[]): Promise<T[]>
+  executeTransaction(operations: (() => Promise<unknown>)[]): Promise<unknown[]>
   healthCheck(): Promise<boolean>
 }
 
@@ -65,30 +65,30 @@ abstract class BaseDatabaseService implements DatabaseService {
 
   // Абстрактные методы для конкретных реализаций
   abstract getUserById(id: string): Promise<any>
-  abstract createUser(user: any): Promise<any>
-  abstract updateUser(id: string, updates: any): Promise<any>
+  abstract createUser(user: Record<string, unknown>): Promise<Record<string, unknown>>
+  abstract updateUser(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract deleteUser(id: string): Promise<void>
 
-  abstract getCourses(options?: QueryOptions): Promise<any[]>
-  abstract getCourseById(id: string): Promise<any>
-  abstract createCourse(course: any): Promise<any>
-  abstract updateCourse(id: string, updates: any): Promise<any>
+  abstract getCourses(options?: QueryOptions): Promise<Record<string, unknown>[]>
+  abstract getCourseById(id: string): Promise<Record<string, unknown> | null>
+  abstract createCourse(course: Record<string, unknown>): Promise<Record<string, unknown>>
+  abstract updateCourse(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract deleteCourse(id: string): Promise<void>
 
-  abstract getLeads(options?: QueryOptions): Promise<any[]>
-  abstract getLeadById(id: string): Promise<any>
-  abstract createLead(lead: any): Promise<any>
-  abstract updateLead(id: string, updates: any): Promise<any>
+  abstract getLeads(options?: QueryOptions): Promise<Record<string, unknown>[]>
+  abstract getLeadById(id: string): Promise<Record<string, unknown> | null>
+  abstract createLead(lead: Record<string, unknown>): Promise<Record<string, unknown>>
+  abstract updateLead(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract deleteLead(id: string): Promise<void>
 
-  abstract getBookings(options?: QueryOptions): Promise<any[]>
-  abstract getBookingById(id: string): Promise<any>
-  abstract createBooking(booking: any): Promise<any>
-  abstract updateBooking(id: string, updates: any): Promise<any>
+  abstract getBookings(options?: QueryOptions): Promise<Record<string, unknown>[]>
+  abstract getBookingById(id: string): Promise<Record<string, unknown> | null>
+  abstract createBooking(booking: Record<string, unknown>): Promise<Record<string, unknown>>
+  abstract updateBooking(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract deleteBooking(id: string): Promise<void>
 
   // Общие методы
-  async executeQuery<T>(query: string, params?: any[]): Promise<T[]> {
+  async executeQuery<T>(query: string, params?: unknown[]): Promise<T[]> {
     try {
       // Простая реализация без Supabase
       // В реальном приложении здесь будет вызов Supabase
@@ -111,8 +111,8 @@ abstract class BaseDatabaseService implements DatabaseService {
     }
   }
 
-  async executeTransaction(operations: (() => Promise<any>)[]): Promise<any[]> {
-    const results: any[] = []
+  async executeTransaction(operations: (() => Promise<unknown>)[]): Promise<unknown[]> {
+    const results: unknown[] = []
     
     try {
       for (const operation of operations) {
@@ -142,7 +142,7 @@ abstract class BaseDatabaseService implements DatabaseService {
   }
 
   // Защищенные методы для работы с базой данных
-  protected async handleDatabaseError(error: any, operation: string): Promise<never> {
+  protected async handleDatabaseError(error: Error | unknown, operation: string): Promise<never> {
     if (error?.code === '23505') {
       throw new AppError(
         `Duplicate entry in ${operation}`,
@@ -172,10 +172,10 @@ abstract class BaseDatabaseService implements DatabaseService {
     )
   }
 
-  protected buildQueryOptions(options?: QueryOptions): any {
+  protected buildQueryOptions(options?: QueryOptions): Record<string, unknown> {
     if (!options) return {}
 
-    const queryOptions: any = {}
+    const queryOptions: Record<string, unknown> = {}
 
     if (options.limit) {
       queryOptions.limit = options.limit
@@ -205,14 +205,14 @@ export class SimpleDatabaseService extends BaseDatabaseService {
     return { id, name: 'Test User', email: 'test@example.com' }
   }
 
-  async createUser(user: any): Promise<any> {
+  async createUser(user: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating user', { 
       userFields: Object.keys(user)
     })
     return { id: 'new-user-id', ...user }
   }
 
-  async updateUser(id: string, updates: any): Promise<any> {
+  async updateUser(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Updating user', { 
       id, 
       updateFields: Object.keys(updates)
@@ -237,14 +237,14 @@ export class SimpleDatabaseService extends BaseDatabaseService {
     return { id, title: 'Test Course' }
   }
 
-  async createCourse(course: any): Promise<any> {
+  async createCourse(course: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating course', { 
       courseFields: Object.keys(course)
     })
     return { id: 'new-course-id', ...course }
   }
 
-  async updateCourse(id: string, updates: any): Promise<any> {
+  async updateCourse(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Updating course', { 
       id, 
       updateFields: Object.keys(updates)
@@ -269,14 +269,14 @@ export class SimpleDatabaseService extends BaseDatabaseService {
     return { id, name: 'Test Lead' }
   }
 
-  async createLead(lead: any): Promise<any> {
+  async createLead(lead: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating lead', { 
       leadFields: Object.keys(lead)
     })
     return { id: 'new-lead-id', ...lead }
   }
 
-  async updateLead(id: string, updates: any): Promise<any> {
+  async updateLead(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Updating lead', { 
       id, 
       updateFields: Object.keys(updates)
@@ -301,14 +301,14 @@ export class SimpleDatabaseService extends BaseDatabaseService {
     return { id, date: '2024-01-01' }
   }
 
-  async createBooking(booking: any): Promise<any> {
+  async createBooking(booking: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating booking', { 
       bookingFields: Object.keys(booking)
     })
     return { id: 'new-booking-id', ...booking }
   }
 
-  async updateBooking(id: string, updates: any): Promise<any> {
+  async updateBooking(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Updating booking', { 
       id, 
       updateFields: Object.keys(updates)

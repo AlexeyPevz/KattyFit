@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleCheck(data: any) {
+async function handleCheck(data: Record<string, unknown>) {
   try {
     const { Amount, Email, Data: customData } = data
     
@@ -108,7 +108,7 @@ async function handleCheck(data: any) {
   }
 }
 
-async function handlePayment(data: any) {
+async function handlePayment(data: Record<string, unknown>) {
   try {
     const { 
       TransactionId, 
@@ -194,7 +194,7 @@ async function handlePayment(data: any) {
   }
 }
 
-async function handleFailedPayment(data: any) {
+async function handleFailedPayment(data: Record<string, unknown>) {
   try {
     const { TransactionId, Reason, ReasonCode } = data
     
@@ -216,7 +216,7 @@ async function handleFailedPayment(data: any) {
   }
 }
 
-async function handleRefund(data: any) {
+async function handleRefund(data: Record<string, unknown>) {
   try {
     const { TransactionId, Amount, OriginalTransactionId } = data
     

@@ -31,7 +31,7 @@ export async function PATCH(
     }
     
     return NextResponse.json({ promocode })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("API Error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера" },
@@ -62,7 +62,7 @@ export async function DELETE(
     }
     
     return NextResponse.json({ success: true })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("API Error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера" },

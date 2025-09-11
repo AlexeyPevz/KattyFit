@@ -11,12 +11,12 @@ interface UnifiedMessage {
   platform: string
   chatId?: string
   messageId?: string
-  attachments?: any[]
+  attachments?: Array<Record<string, unknown>>
 }
 
 // Парсеры для разных платформ
 const platformParsers = {
-  telegram: (body: any): UnifiedMessage => ({
+  telegram: (body: Record<string, unknown>): UnifiedMessage => ({
     userId: body.message?.from?.id?.toString() || body.callback_query?.from?.id?.toString(),
     userName: body.message?.from?.first_name || body.callback_query?.from?.first_name,
     text: body.message?.text || body.callback_query?.data || "",
@@ -25,7 +25,7 @@ const platformParsers = {
     messageId: body.message?.message_id?.toString(),
   }),
 
-  vk: (body: any): UnifiedMessage => {
+  vk: (body: Record<string, unknown>): UnifiedMessage => {
     const message = body.object?.message || body.object
     return {
       userId: message.from_id?.toString(),
@@ -36,7 +36,7 @@ const platformParsers = {
     }
   },
 
-  instagram: (body: any): UnifiedMessage => {
+  instagram: (body: Record<string, unknown>): UnifiedMessage => {
     const messaging = body.entry?.[0]?.messaging?.[0]
     return {
       userId: messaging?.sender?.id,
@@ -46,7 +46,7 @@ const platformParsers = {
     }
   },
 
-  whatsapp: (body: any): UnifiedMessage => {
+  whatsapp: (body: Record<string, unknown>): UnifiedMessage => {
     const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]
     return {
       userId: message?.from,
@@ -57,7 +57,7 @@ const platformParsers = {
     }
   },
 
-  web: (body: any): UnifiedMessage => ({
+  web: (body: Record<string, unknown>): UnifiedMessage => ({
     userId: body.message?.from?.id?.toString(),
     userName: body.message?.from?.first_name || "Пользователь сайта",
     text: body.message?.text || "",
@@ -68,7 +68,7 @@ const platformParsers = {
 }
 
 // Функция для отправки сообщений
-async function sendMessage(platform: string, userId: string, text: string, extras?: any) {
+async function sendMessage(platform: string, userId: string, text: string, extras?: Record<string, unknown>) {
   const apiKeys = await getApiKeysForPlatform(platform)
   
   switch (platform) {
@@ -131,7 +131,7 @@ async function getApiKeysForPlatform(platform: string) {
 }
 
 // Отправка в Telegram
-async function sendTelegramMessage(token: string, chatId: string, text: string, extras?: any) {
+async function sendTelegramMessage(token: string, chatId: string, text: string, extras?: Record<string, unknown>) {
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -147,7 +147,7 @@ async function sendTelegramMessage(token: string, chatId: string, text: string, 
 }
 
 // Отправка в VK
-async function sendVKMessage(token: string, userId: string, text: string, extras?: any) {
+async function sendVKMessage(token: string, userId: string, text: string, extras?: Record<string, unknown>) {
   const params = new URLSearchParams({
     access_token: token,
     user_id: userId,
@@ -162,14 +162,14 @@ async function sendVKMessage(token: string, userId: string, text: string, extras
 }
 
 // Отправка в Instagram (через ContentStudio или Meta API)
-async function sendInstagramMessage(keys: any, userId: string, text: string, extras?: any) {
+async function sendInstagramMessage(keys: Record<string, unknown>, userId: string, text: string, extras?: Record<string, unknown>) {
   // Здесь будет интеграция с Instagram Messaging API
   // Пока возвращаем заглушку
   return { success: true, platform: "instagram", message: "Not implemented yet" }
 }
 
 // Отправка в WhatsApp
-async function sendWhatsAppMessage(keys: any, to: string, text: string, extras?: any) {
+async function sendWhatsAppMessage(keys: Record<string, unknown>, to: string, text: string, extras?: Record<string, unknown>) {
   const response = await fetch(
     `https://graph.facebook.com/v17.0/${keys.phone_number_id}/messages`,
     {

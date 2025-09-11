@@ -227,7 +227,7 @@ export class YandexGPTService extends BaseAIService {
   }
 
   private buildUserPrompt(context: RAGContext): string {
-    const knowledgeContext = context.userContext?.knowledge?.map((item: any) => 
+    const knowledgeContext = context.userContext?.knowledge?.map((item: Record<string, unknown>) => 
       `Q: ${item.question}\nA: ${item.answer}`
     ).join('\n\n') || ''
 
@@ -316,7 +316,7 @@ Answer in Russian.`
   }
 
   private buildUserPrompt(context: RAGContext): string {
-    const knowledgeContext = context.userContext?.knowledge?.map((item: any) => 
+    const knowledgeContext = context.userContext?.knowledge?.map((item: Record<string, unknown>) => 
       `Q: ${item.question}\nA: ${item.answer}`
     ).join('\n\n') || ''
 

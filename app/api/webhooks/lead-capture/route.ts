@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const source = request.headers.get("x-source") || "website"
 
-    let leadData: any = {}
+    let leadData: Record<string, unknown> = {}
 
     // Обработка данных в зависимости от источника
     switch (source) {
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       leadId: result.lead.id,
       isNew: result.isNew,
     })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("Lead capture webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка обработки лида" },

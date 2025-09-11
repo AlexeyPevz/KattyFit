@@ -153,7 +153,7 @@ export default function PlayerPage() {
     logger.info("Lesson completed", { lessonId: currentLesson.id })
   }
 
-  const handleLessonSelect = (lesson: any) => {
+  const handleLessonSelect = (lesson: Record<string, unknown>) => {
     // Снимаем флаг current со всех уроков
     const updatedCourse = { ...course }
     updatedCourse.modules.forEach(module => {

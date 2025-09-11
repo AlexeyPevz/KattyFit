@@ -150,7 +150,7 @@ export default function SettingsPage() {
     }
   }
 
-  const updateSetting = (section: keyof Settings, key: string, value: any) => {
+  const updateSetting = (section: keyof Settings, key: string, value: unknown) => {
     setSettings(prev => ({
       ...prev,
       [section]: {

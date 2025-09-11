@@ -26,7 +26,7 @@ export default function BookingCheckoutPage() {
     }
   }, [router])
 
-  const handlePaymentSuccess = async (transaction: any) => {
+  const handlePaymentSuccess = async (transaction: Record<string, unknown>) => {
     logger.info("Booking payment successful", { transaction })
     // Очищаем данные бронирования
     localStorage.removeItem("bookingData")
@@ -34,7 +34,7 @@ export default function BookingCheckoutPage() {
     router.push("/booking/success")
   }
 
-  const handlePaymentFail = (reason: any) => {
+  const handlePaymentFail = (reason: string) => {
     logger.error("Booking payment failed", { reason })
   }
 

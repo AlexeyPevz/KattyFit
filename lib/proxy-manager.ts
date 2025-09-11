@@ -24,13 +24,13 @@ export interface ProxyRequest {
   url: string
   method: string
   headers?: Record<string, string>
-  body?: any
+  body?: string | FormData | Record<string, unknown>
   timeout?: number
 }
 
 export interface ProxyResponse {
   success: boolean
-  data?: any
+  data?: unknown
   error?: string
   proxyUsed?: string
   responseTime?: number

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       message: `Чанк ${chunkIndex + 1}/${totalChunks} загружен`
     })
 
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("Ошибка загрузки чанка", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки чанка" },
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       status: progress === 100 ? "completed" : "uploading"
     })
 
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("Ошибка получения прогресса", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка получения прогресса" },

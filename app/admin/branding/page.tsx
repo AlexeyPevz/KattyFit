@@ -106,7 +106,7 @@ export default function BrandingPage() {
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop")
   const [activeTab, setActiveTab] = useState("logo")
 
-  const updateSettings = (section: keyof BrandingSettings, key: string, value: any) => {
+  const updateSettings = (section: keyof BrandingSettings, key: string, value: unknown) => {
     setSettings((prev) => ({
       ...prev,
       [section]: {

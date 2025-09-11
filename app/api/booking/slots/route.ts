@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 async function generateSlots(
   startDate: string, 
   endDate: string, 
-  schedule: any,
+  schedule: Record<string, unknown>,
   trainerId: string
 ) {
   const slots: Record<string, string[]> = {}

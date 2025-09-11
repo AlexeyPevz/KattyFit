@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase"
 import logger from "@/lib/logger"
 
 // Функция для расчета Lead Score
-function calculateLeadScore(lead: any): number {
+function calculateLeadScore(lead: Record<string, unknown>): number {
   let score = 50 // Базовый score
 
   // Источник
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
       lead: newLead,
       isNew: true,
     })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("Error creating lead", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка создания лида" },
@@ -221,7 +221,7 @@ export async function GET(request: NextRequest) {
       total: count || 0,
       statistics,
     })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     logger.error("Error fetching leads", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка получения лидов" },
@@ -244,7 +244,7 @@ export async function PATCH(request: NextRequest) {
       .single()
     if (error) throw error
     return NextResponse.json({ success: true, lead: data })
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     return NextResponse.json({ error: error.message || "Update failed" }, { status: 500 })
   }
 }
