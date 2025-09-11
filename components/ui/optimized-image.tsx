@@ -35,6 +35,10 @@ export function OptimizedImage({
   style,
   ...props
 }: OptimizedImageProps) {
+  // Валидация alt-текста для доступности
+  if (!alt || alt.trim().length === 0) {
+    console.warn('OptimizedImage: alt-текст не может быть пустым для доступности')
+  }
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -92,6 +96,8 @@ export function OptimizedImage({
           height: fill ? '100%' : height,
           ...style,
         }}
+        role="img"
+        aria-label={`Ошибка загрузки изображения: ${alt}`}
       >
         <span className="text-sm">Ошибка загрузки</span>
       </div>

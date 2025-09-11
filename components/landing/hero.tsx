@@ -24,7 +24,7 @@ export function Hero() {
               
               <h1 className="hero-title">
                 Достигни гибкости своей мечты с{" "}
-                <span className="bg-gradient-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-violet-700 to-pink-700 bg-clip-text text-transparent">
                   KattyFit
                 </span>
               </h1>
@@ -36,32 +36,44 @@ export function Hero() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 py-4">
+            <dl className="grid grid-cols-3 gap-4 py-4">
               <div className="text-center space-y-1">
-                <p className="text-3xl font-bold">1000+</p>
-                <p className="text-sm text-muted-foreground">Учеников</p>
+                <dt className="sr-only">Количество учеников</dt>
+                <dd className="text-3xl font-bold">1000+</dd>
+                <dd className="text-sm text-muted-foreground">Учеников</dd>
               </div>
               <div className="text-center space-y-1">
-                <p className="text-3xl font-bold">50+</p>
-                <p className="text-sm text-muted-foreground">Курсов</p>
+                <dt className="sr-only">Количество курсов</dt>
+                <dd className="text-3xl font-bold">50+</dd>
+                <dd className="text-sm text-muted-foreground">Курсов</dd>
               </div>
               <div className="text-center space-y-1">
-                <p className="text-3xl font-bold">4.9</p>
-                <p className="text-sm text-muted-foreground">Рейтинг</p>
+                <dt className="sr-only">Рейтинг курсов</dt>
+                <dd className="text-3xl font-bold">4.9</dd>
+                <dd className="text-sm text-muted-foreground">Рейтинг</dd>
               </div>
-            </div>
+            </dl>
 
             {/* CTA buttons - оптимизированы для LCP */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="hero-cta gap-2" asChild>
+              <Button 
+                size="lg" 
+                className="hero-cta gap-2 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-600" 
+                asChild
+              >
                 <Link href="#courses">
-                  <Play className="h-4 w-4" />
+                  <Play className="h-4 w-4" aria-hidden="true" />
                   Начать заниматься
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="hero-cta gap-2" asChild>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="hero-cta gap-2 focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2" 
+                asChild
+              >
                 <Link href="/booking">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
                   Записаться на тренировку
                 </Link>
               </Button>
@@ -70,14 +82,15 @@ export function Hero() {
             {/* Trust badges */}
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
+                <Users className="h-4 w-4" aria-hidden="true" />
                 <span>Занимаются онлайн</span>
               </div>
-              <div className="flex -space-x-2">
+              <div className="flex -space-x-2" role="img" aria-label="Аватары учеников">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
                     className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-400 to-pink-400 border-2 border-background"
+                    aria-hidden="true"
                   />
                 ))}
                 <div className="h-8 px-2 rounded-full bg-muted border-2 border-background flex items-center">
@@ -95,7 +108,7 @@ export function Hero() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center space-y-4">
                     <div className="h-32 w-32 mx-auto rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                      <Play className="h-12 w-12 text-white" />
+                      <Play className="h-12 w-12 text-white" aria-hidden="true" />
                     </div>
                     <p className="text-white font-medium">Смотреть видео о курсах</p>
                   </div>

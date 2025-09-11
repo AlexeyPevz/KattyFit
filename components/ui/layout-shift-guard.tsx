@@ -74,9 +74,16 @@ export function LayoutShiftGuard({
       ref={containerRef}
       className={cn('layout-shift-guard', className)}
       style={style}
+      role={loading ? "status" : undefined}
+      aria-live={loading ? "polite" : undefined}
     >
       {loading && !isStable ? (
-        fallback || <div className="loading-placeholder w-full h-full" />
+        fallback || (
+          <div 
+            className="loading-placeholder w-full h-full" 
+            aria-label="Загрузка контента"
+          />
+        )
       ) : (
         children
       )}

@@ -225,17 +225,19 @@ export function CourseGrid() {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Поиск курсов..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
+                aria-label="Поиск курсов"
+                role="searchbox"
               />
             </div>
             
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]" aria-label="Выберите категорию курсов">
                 <SelectValue placeholder="Категория" />
               </SelectTrigger>
               <SelectContent>
@@ -248,7 +250,7 @@ export function CourseGrid() {
             </Select>
 
             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]" aria-label="Выберите уровень сложности">
                 <SelectValue placeholder="Уровень" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +263,7 @@ export function CourseGrid() {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]" aria-label="Выберите способ сортировки">
                 <SelectValue placeholder="Сортировка" />
               </SelectTrigger>
               <SelectContent>
@@ -284,12 +286,12 @@ export function CourseGrid() {
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-200 to-pink-200 dark:from-violet-800 dark:to-pink-800" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="h-8 w-8 text-white ml-1" />
+                      <Play className="h-8 w-8 text-white ml-1" aria-hidden="true" />
                     </div>
                   </div>
                   {course.isNew && (
                     <Badge className="absolute top-4 left-4 gap-1" variant="secondary">
-                      <Sparkles className="h-3 w-3" />
+                      <Sparkles className="h-3 w-3" aria-hidden="true" />
                       Новинка
                     </Badge>
                   )}
@@ -307,8 +309,8 @@ export function CourseGrid() {
                     {getLevelLabel(course.level)}
                   </Badge>
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{course.rating}</span>
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
+                    <span className="text-sm font-medium" aria-label={`Рейтинг ${course.rating} из 5`}>{course.rating}</span>
                   </div>
                 </div>
                 
@@ -322,11 +324,11 @@ export function CourseGrid() {
                 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-4 w-4" aria-hidden="true" />
                     <span>{course.duration}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
+                    <Users className="h-4 w-4" aria-hidden="true" />
                     <span>{course.students}</span>
                   </div>
                 </div>
@@ -351,8 +353,12 @@ export function CourseGrid() {
                     Подробнее
                   </Link>
                 </Button>
-                <Button variant="outline" size="icon">
-                  <ShoppingCart className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  aria-label={`Добавить курс "${course.title}" в корзину`}
+                >
+                  <ShoppingCart className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </CardFooter>
             </Card>
