@@ -5,20 +5,20 @@
 ### 1. Проверьте консоль браузера
 Откройте Developer Tools (F12) и перейдите на вкладку Console. При попытке входа вы должны увидеть:
 
-```
+\`\`\`
 Attempting admin login with: {username: "ваш_логин", password: "***"}
 API response: {status: 200, data: {success: true, username: "ваш_логин", message: "Успешная аутентификация"}}
 Admin auth successful: {username: "ваш_логин", sessionData: {...}, redirectUrl: "/admin"}
 Redirecting to: /admin
 AdminGuard auth check: {sessionUsername: "ваш_логин", expectedUser: "ваш_логин", match: true}
 AdminGuard: Authentication successful
-```
+\`\`\`
 
 ### 2. Проверьте переменные окружения
 Запустите тест:
-```bash
+\`\`\`bash
 node test-admin-auth.js
-```
+\`\`\`
 
 ### 3. Данные для входа:
 Используйте данные, заданные в переменных окружения v0:
@@ -41,18 +41,18 @@ node test-admin-auth.js
 
 ### 5. Проверка localStorage
 В консоли браузера выполните:
-```javascript
+\`\`\`javascript
 console.log(localStorage.getItem("admin_session"))
-```
+\`\`\`
 
 Должно вернуть объект с username и expiresAt.
 
 ### 6. Принудительная очистка сессии
 Если нужно сбросить сессию:
-```javascript
+\`\`\`javascript
 localStorage.removeItem("admin_session")
 location.reload()
-```
+\`\`\`
 
 ## Изменения в коде:
 
