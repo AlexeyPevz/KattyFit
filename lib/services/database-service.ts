@@ -17,14 +17,14 @@ export interface QueryOptions {
   offset?: number
   orderBy?: string
   ascending?: boolean
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
 }
 
 export interface DatabaseService {
   // Пользователи
-  getUserById(id: string): Promise<any>
-  createUser(user: any): Promise<any>
-  updateUser(id: string, updates: any): Promise<any>
+  getUserById(id: string): Promise<Record<string, unknown> | null>
+  createUser(user: Record<string, unknown>): Promise<Record<string, unknown>>
+  updateUser(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   deleteUser(id: string): Promise<void>
 
   // Курсы

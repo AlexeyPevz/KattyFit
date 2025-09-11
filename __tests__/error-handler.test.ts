@@ -20,7 +20,7 @@ describe('Error Handler', () => {
         throw new Error('Test error')
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -29,7 +29,7 @@ describe('Error Handler', () => {
         throw new Error('Async test error')
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -38,7 +38,7 @@ describe('Error Handler', () => {
         throw new AppError('Test app error', 'VALIDATION_ERROR', 400, 'medium')
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -47,7 +47,7 @@ describe('Error Handler', () => {
         throw new ValidationError('Test validation error')
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -56,7 +56,7 @@ describe('Error Handler', () => {
         throw new AuthenticationError('Test auth error')
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -65,7 +65,7 @@ describe('Error Handler', () => {
         throw null
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -74,7 +74,7 @@ describe('Error Handler', () => {
         throw undefined
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -83,7 +83,7 @@ describe('Error Handler', () => {
         throw 'String error'
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -92,7 +92,7 @@ describe('Error Handler', () => {
         throw 42
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -101,19 +101,19 @@ describe('Error Handler', () => {
         throw { message: 'Object error', code: 'TEST' }
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
     it('should handle circular reference errors', async () => {
-      const circularError: any = { message: 'Circular error' }
+      const circularError: { message: string; circular?: unknown } = { message: 'Circular error' }
       circularError.self = circularError
       
       const handler = withErrorHandler(() => {
         throw circularError
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -123,7 +123,7 @@ describe('Error Handler', () => {
         throw new Error(longMessage)
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -133,7 +133,7 @@ describe('Error Handler', () => {
         throw new Error(specialMessage)
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -143,7 +143,7 @@ describe('Error Handler', () => {
         throw new Error(unicodeMessage)
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -170,7 +170,7 @@ describe('Error Handler', () => {
         throw error
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
 
@@ -186,7 +186,7 @@ describe('Error Handler', () => {
         throw deepError
       })
       
-      const result = await handler({} as any)
+      const result = await handler({} as Request)
       expect(result).toBeDefined()
     })
   })
@@ -268,7 +268,7 @@ describe('Error Handler', () => {
     })
 
     it('should handle client-side circular reference errors', async () => {
-      const circularError: any = { message: 'Client circular error' }
+      const circularError: { message: string; circular?: unknown } = { message: 'Client circular error' }
       circularError.self = circularError
       
       const handler = withClientErrorHandler(async () => {

@@ -130,7 +130,7 @@ export class BackgroundUploadManager {
   }
 
   // Создание новой задачи загрузки
-  async createUploadTask(file: File, metadata: any): Promise<string> {
+  async createUploadTask(file: File, metadata: Record<string, unknown>): Promise<string> {
     const uploadId = this.generateUploadId()
     
     // Разбиваем файл на чанки
@@ -347,7 +347,7 @@ export class BackgroundUploadManager {
     }
   }
 
-  private async handleError(uploadId: string, error: any) {
+  private async handleError(uploadId: string, error: Error | unknown) {
     const task = this.tasks.get(uploadId)
     if (task) {
       task.status = 'failed'
@@ -377,7 +377,7 @@ export class BackgroundUploadManager {
     }
   }
 
-  private notifyError(uploadId: string, error: any) {
+  private notifyError(uploadId: string, error: Error | unknown) {
     window.dispatchEvent(new CustomEvent('upload-error', {
       detail: { uploadId, error }
     }))

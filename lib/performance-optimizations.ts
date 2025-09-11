@@ -5,7 +5,7 @@ import { useCallback, useMemo, useRef, useEffect, useState } from 'react'
 import logger from './logger'
 
 // Дебаунс для оптимизации частых вызовов
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
@@ -23,7 +23,7 @@ export function useDebounce<T extends (...args: any[]) => any>(
 }
 
 // Троттлинг для ограничения частоты вызовов
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
@@ -146,7 +146,7 @@ export function useOptimizedForm<T extends Record<string, any>>(
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Дебаунс для валидации
-  const debouncedValidate = useDebounce((field: keyof T, value: any) => {
+  const debouncedValidate = useDebounce((field: keyof T, value: unknown) => {
     // Простая валидация
     if (typeof value === 'string' && value.trim() === '') {
       setErrors(prev => ({ ...prev, [field]: 'Поле обязательно для заполнения' }))
@@ -159,7 +159,7 @@ export function useOptimizedForm<T extends Record<string, any>>(
     }
   }, 300)
   
-  const handleChange = useCallback((field: keyof T, value: any) => {
+  const handleChange = useCallback((field: keyof T, value: unknown) => {
     setValues(prev => ({ ...prev, [field]: value }))
     debouncedValidate(field, value)
   }, [debouncedValidate])

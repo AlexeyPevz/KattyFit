@@ -44,7 +44,7 @@ export class ErrorHandler {
   }
 
   // Обработка ошибок в API routes
-  async handleApiError(error: unknown, request: any): Promise<any> {
+  async handleApiError(error: unknown, request: Request): Promise<Response> {
     const appError = this.normalizeError(error)
     const context = this.extractContext(request)
     
@@ -108,7 +108,7 @@ export class ErrorHandler {
   }
 
   // Извлечение контекста из запроса
-  private extractContext(request: any): Record<string, any> {
+  private extractContext(request: Request): Record<string, unknown> {
     return {
       url: request.url,
       method: request.method,
@@ -119,7 +119,7 @@ export class ErrorHandler {
   }
 
   // Получение IP адреса клиента
-  private getClientIP(request: any): string {
+  private getClientIP(request: Request): string {
     const forwarded = request.headers.get('x-forwarded-for')
     const realIP = request.headers.get('x-real-ip')
     
@@ -141,7 +141,7 @@ export class ErrorHandler {
   }
 
   // Создание ответа об ошибке
-  private createErrorResponse(error: AppError, context: Record<string, any>): any {
+  private createErrorResponse(error: AppError, context: Record<string, unknown>): Response {
     const statusCode = error.statusCode
     const message = this.sanitizeMessage(error.message)
     
@@ -245,7 +245,7 @@ class ErrorLogger {
     }
   }
 
-  private async sendToExternalLogger(logEntry: any): Promise<void> {
+  private async sendToExternalLogger(logEntry: Record<string, unknown>): Promise<void> {
     try {
       // Здесь можно интегрировать с внешним сервисом логирования
       // Например, Sentry, LogRocket, или собственный сервис

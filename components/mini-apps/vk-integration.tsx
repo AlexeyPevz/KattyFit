@@ -8,12 +8,21 @@ import { User, Share2, Heart, MessageCircle } from "lucide-react"
 import logger from "@/lib/logger"
 
 // VK Bridge types
+interface VKBridgeEvent {
+  type: string
+  data?: unknown
+}
+
+interface VKBridgeParams {
+  [key: string]: unknown
+}
+
 declare global {
   interface Window {
     vkBridge?: {
-      send: (method: string, params?: any) => Promise<any>
-      subscribe: (callback: (e: any) => void) => void
-      unsubscribe: (callback: (e: any) => void) => void
+      send: (method: string, params?: VKBridgeParams) => Promise<unknown>
+      subscribe: (callback: (e: VKBridgeEvent) => void) => void
+      unsubscribe: (callback: (e: VKBridgeEvent) => void) => void
       isWebView: () => boolean
       isStandalone: () => boolean
       isEmbedded: () => boolean

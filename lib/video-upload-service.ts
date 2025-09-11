@@ -94,7 +94,7 @@ export class VideoUploadService {
   private async uploadToPlatform(
     platform: string,
     file: File,
-    metadata: any
+    metadata: Record<string, unknown>
   ): Promise<UploadResult> {
     switch (platform) {
       case 'vk':
@@ -108,7 +108,7 @@ export class VideoUploadService {
     }
   }
 
-  private async uploadToVK(file: File, metadata: any): Promise<UploadResult> {
+  private async uploadToVK(file: File, metadata: Record<string, unknown>): Promise<UploadResult> {
     // Реализация загрузки на VK
     // Используем прямой API без прокси
     const vkToken = process.env.VK_API_TOKEN
@@ -129,7 +129,7 @@ export class VideoUploadService {
     }
   }
 
-  private async uploadToYouTube(file: File, metadata: any): Promise<UploadResult> {
+  private async uploadToYouTube(file: File, metadata: Record<string, unknown>): Promise<UploadResult> {
     // Если есть прокси, используем его
     if (this.config.useProxy && this.config.proxyUrl) {
       const response = await fetch(`${this.config.proxyUrl}/youtube/upload`, {
@@ -156,7 +156,7 @@ export class VideoUploadService {
     }
   }
 
-  private async uploadToRuTube(file: File, metadata: any): Promise<UploadResult> {
+  private async uploadToRuTube(file: File, metadata: Record<string, unknown>): Promise<UploadResult> {
     // RuTube как альтернатива для России
     const rutubeToken = process.env.RUTUBE_API_TOKEN
 
@@ -175,7 +175,7 @@ export class VideoUploadService {
     }
   }
 
-  private createFormData(file: File, metadata: any): FormData {
+  private createFormData(file: File, metadata: Record<string, unknown>): FormData {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('title', metadata.title)

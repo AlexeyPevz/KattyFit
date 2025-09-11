@@ -12,7 +12,7 @@ interface NotificationOptions {
   requireInteraction?: boolean
   silent?: boolean
   timestamp?: number
-  data?: any
+  data?: Record<string, unknown>
   actions?: Array<{action: string, title: string, icon?: string}>
 }
 

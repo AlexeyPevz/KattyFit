@@ -85,7 +85,7 @@ describe('RAG Engine', () => {
     })
 
     it('should handle knowledge items with missing fields', () => {
-      const incompleteKnowledge: any[] = [
+      const incompleteKnowledge: Array<{ question: string; answer: string; type: string }> = [
         { id: '1', question: 'test' }, // missing answer
         { id: '2', answer: 'test' }, // missing question
         { id: '3' }, // missing both

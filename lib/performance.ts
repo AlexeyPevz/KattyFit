@@ -1,7 +1,7 @@
 // Утилиты для оптимизации производительности
 
 // Debounce функция для оптимизации частых вызовов
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -14,7 +14,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // Throttle функция для ограничения частоты вызовов
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -30,7 +30,7 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 // Мемоизация для кеширования результатов функций
-export function memoize<T extends (...args: any[]) => any>(
+export function memoize<T extends (...args: unknown[]) => unknown>(
   func: T,
   getKey?: (...args: Parameters<T>) => string
 ): T {
@@ -110,7 +110,7 @@ export function optimizeAnimations() {
   
   // Отключаем анимации при низком заряде батареи
   if ('getBattery' in navigator) {
-    (navigator as any).getBattery().then((battery: any) => {
+    (navigator as { getBattery?: () => Promise<BatteryManager> }).getBattery?.().then((battery: BatteryManager) => {
       if (battery.level < 0.2) {
         document.documentElement.classList.add('low-battery')
       }
@@ -119,7 +119,7 @@ export function optimizeAnimations() {
 }
 
 // Кеширование API запросов
-const apiCache = new Map<string, { data: any; timestamp: number }>()
+const apiCache = new Map<string, { data: unknown; timestamp: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5 минут
 
 export async function cachedFetch(url: string, options?: RequestInit) {

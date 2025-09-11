@@ -77,7 +77,7 @@ export interface RAGContext {
 
 export interface UserContext {
   userId?: string
-  preferences?: Record<string, any>
+  preferences?: Record<string, unknown>
   location?: GeoLocation
   deviceInfo?: DeviceInfo
   knowledge?: KnowledgeItem[]
@@ -103,7 +103,7 @@ export interface KnowledgeItem {
   type: 'faq' | 'dialog_example' | 'course_info' | 'pricing'
   question: string
   answer: string
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -213,7 +213,7 @@ export interface Lead {
   value: number
   tags: string[]
   notes: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   score: number
   lastContact?: string
   createdAt: string
@@ -226,7 +226,7 @@ export interface LeadActivity {
   type: 'created' | 'contact' | 'email' | 'call' | 'meeting' | 'note'
   description: string
   source?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   createdAt: string
 }
 
@@ -241,7 +241,7 @@ export interface Payment {
   status: 'pending' | 'completed' | 'failed' | 'refunded'
   paymentMethod: string
   description?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   paidAt?: string
   createdAt: string
 }
@@ -305,7 +305,7 @@ export interface Integration {
   requiresBusinessAccount?: boolean
   connected: boolean
   hasApiKey: boolean
-  config?: Record<string, any>
+  config?: Record<string, unknown>
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -343,13 +343,13 @@ export interface ProxyRequest {
   url: string
   method: string
   headers?: Record<string, string>
-  body?: any
+  body?: string | FormData | Record<string, unknown>
   timeout?: number
 }
 
 export interface ProxyResponse {
   success: boolean
-  data?: any
+  data?: unknown
   error?: string
   proxyUsed?: string
   responseTime?: number
@@ -384,7 +384,7 @@ export interface AppSettings {
 export interface AnalyticsEvent {
   id: string
   eventType: string
-  eventData: Record<string, any>
+  eventData: Record<string, unknown>
   userId?: string
   sessionId?: string
   platform: string
