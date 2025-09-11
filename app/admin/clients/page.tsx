@@ -35,6 +35,8 @@ import {
   Send,
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { DemoDataBanner, DemoDataIndicator } from "@/components/admin/demo-data-banner"
+import { useDemoData } from "@/hooks/use-demo-data"
 
 interface Client {
   id: string
@@ -105,7 +107,8 @@ const mockClients: Client[] = [
 ]
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>(mockClients)
+  const { shouldShowDemo } = useDemoData()
+  const [clients, setClients] = useState<Client[]>(shouldShowDemo('users') ? mockClients : [])
   const [selectedClients, setSelectedClients] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -231,55 +234,60 @@ export default function ClientsPage() {
 
       <main className="container px-4 py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Всего клиентов</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+        <DemoDataBanner type="users">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-muted-foreground">Всего клиентов</p>
+                      {shouldShowDemo('users') && <DemoDataIndicator type="users" />}
+                    </div>
+                    <p className="text-2xl font-bold">{stats.total}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <Users className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Активные</p>
-                  <p className="text-2xl font-bold">{stats.active}</p>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Активные</p>
+                    <p className="text-2xl font-bold">{stats.active}</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-green-600" />
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">На пробном</p>
-                  <p className="text-2xl font-bold">{stats.trial}</p>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">На пробном</p>
+                    <p className="text-2xl font-bold">{stats.trial}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-blue-600" />
                 </div>
-                <Calendar className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Общий доход</p>
-                  <p className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} ₽</p>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Общий доход</p>
+                    <p className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} ₽</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-purple-600" />
                 </div>
-                <DollarSign className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        </DemoDataBanner>
 
         <Card>
           <CardHeader>
