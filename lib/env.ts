@@ -1,7 +1,12 @@
 export function requireEnv(name: string): string {
   const value = process.env[name]
   if (!value || value.length === 0) {
-    throw new Error(`Missing required environment variable: ${name}`)
+    // В v0 переменные могут быть не установлены во время билда
+    if (typeof window === 'undefined') {
+      throw new Error(`Missing required environment variable: ${name}. Please configure it in v0 Environment Variables.`)
+    }
+    // На клиенте возвращаем пустую строку для graceful degradation
+    return ''
   }
   return value
 }
