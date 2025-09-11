@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 export const POST = apiHandler(async (request: NextRequest) => {
   const { contentId, prompt, style } = await request.json()
@@ -31,7 +32,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       style,
     })
   } catch (error) {
-    console.error("Ошибка генерации обложек:", error)
+    logger.error("Ошибка генерации обложек", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка генерации обложек" },
       { status: 500 }
@@ -65,7 +66,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
       message: "Обложка сохранена",
     })
   } catch (error) {
-    console.error("Ошибка сохранения обложки:", error)
+    logger.error("Ошибка сохранения обложки", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка сохранения обложки" },
       { status: 500 }

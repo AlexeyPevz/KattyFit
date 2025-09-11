@@ -249,9 +249,9 @@ class ErrorLogger {
     try {
       // Здесь можно интегрировать с внешним сервисом логирования
       // Например, Sentry, LogRocket, или собственный сервис
-      console.log('Would send to external logger:', logEntry)
+      logger.debug('Would send to external logger', { logEntry })
     } catch (error) {
-      console.error('Failed to send log to external service:', error)
+      logger.error('Failed to send log to external service', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 }
@@ -264,7 +264,7 @@ class ErrorNotifier {
       // Отправляем уведомление администраторам
       await this.sendAdminNotification(error, context)
     } catch (notificationError) {
-      console.error('Failed to send error notification:', notificationError)
+      logger.error('Failed to send error notification', { error: notificationError instanceof Error ? notificationError.message : String(notificationError) })
     }
   }
 
@@ -280,7 +280,7 @@ class ErrorNotifier {
 
     // Здесь можно интегрировать с сервисом уведомлений
     // Например, Slack, Discord, Email, или Telegram
-    console.log('Would send admin notification:', notification)
+    logger.info('Would send admin notification', { notification })
   }
 }
 

@@ -68,19 +68,19 @@ class Logger {
     
     switch (entry.level) {
       case LogLevel.DEBUG:
-        console.debug(formattedMessage)
+        console.debug(formattedMessage) // Keep console for actual output
         break
       case LogLevel.INFO:
-        console.info(formattedMessage)
+        console.info(formattedMessage) // Keep console for actual output
         break
       case LogLevel.WARN:
-        console.warn(formattedMessage)
+        console.warn(formattedMessage) // Keep console for actual output
         break
       case LogLevel.ERROR:
-        console.error(formattedMessage)
+        console.error(formattedMessage) // Keep console for actual output
         break
       case LogLevel.CRITICAL:
-        console.error(`🚨 CRITICAL: ${formattedMessage}`)
+        console.error(`🚨 CRITICAL: ${formattedMessage}`) // Keep console for actual output
         break
     }
   }
@@ -98,7 +98,7 @@ class Logger {
       })
     } catch (error) {
       // Fallback to console if remote logging fails
-      console.error('Failed to log to remote endpoint:', error)
+      console.error('Failed to log to remote endpoint:', error) // Keep console for actual output
     }
   }
 
@@ -115,7 +115,7 @@ class Logger {
       
       localStorage.setItem('app-logs', JSON.stringify(this.localLogs))
     } catch (error) {
-      console.error('Failed to log to localStorage:', error)
+      console.error('Failed to log to localStorage:', error) // Keep console for actual output
     }
   }
 

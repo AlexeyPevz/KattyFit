@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import crypto from "crypto"
+import logger from "@/lib/logger"
 
 // Функция для проверки подписи CloudPayments
 function checkCloudPaymentsSignature(data: any, signature: string): boolean {
@@ -21,7 +22,7 @@ function checkCloudPaymentsSignature(data: any, signature: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log("Payment success webhook:", body)
+    logger.info("Payment success webhook", { body })
 
     // Проверяем подпись, если секрет установлен
     const signature = request.headers.get("Content-HMAC") || request.headers.get("Content-Hmac")
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (purchaseError) {
-      console.error("Error creating purchase:", purchaseError)
+      logger.error("Error creating purchase", { error: purchaseError instanceof Error ? purchaseError.message : String(purchaseError) })
       return NextResponse.json(
         { error: "Failed to create purchase record" },
         { status: 500 }
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (userError) {
-      console.error("Error creating/updating user:", userError)
+      logger.error("Error creating/updating user", { error: userError instanceof Error ? userError.message : String(userError) })
     }
 
     // Предоставляем доступ к курсу
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
         })
 
       if (accessError) {
-        console.error("Error granting course access:", accessError)
+        logger.error("Error granting course access", { error: accessError instanceof Error ? accessError.message : String(accessError) })
       }
     }
 
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.error("Lead upsert failed:", e)
+      logger.error("Lead upsert failed", { error: e instanceof Error ? e.message : String(e) })
     }
 
     return NextResponse.json({
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
       message: "Payment processed successfully"
     })
   } catch (error) {
-    console.error("Payment webhook error:", error)
+    logger.error("Payment webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -160,28 +161,28 @@ export async function PUT(request: NextRequest) {
     switch (Type) {
       case "Payment":
         // Успешный платеж
-        console.log("Payment notification:", data)
+        logger.info("Payment notification", { data })
         break
       
       case "Refund":
         // Возврат средств
-        console.log("Refund notification:", data)
+        logger.info("Refund notification", { data })
         await handleRefund(data)
         break
       
       case "RecurrentPayment":
         // Рекуррентный платеж (подписка)
-        console.log("Recurrent payment:", data)
+        logger.info("Recurrent payment", { data })
         break
       
       default:
-        console.log("Unknown notification type:", Type)
+        logger.warn("Unknown notification type", { type: Type })
     }
 
     // CloudPayments требует ответ {code: 0}
     return NextResponse.json({ code: 0 })
   } catch (error) {
-    console.error("Webhook error:", error)
+    logger.error("Webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ code: 13 }) // Ошибка в обработке
   }
 }

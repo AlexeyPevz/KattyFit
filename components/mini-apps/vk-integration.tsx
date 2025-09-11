@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { User, Share2, Heart, MessageCircle } from "lucide-react"
+import logger from "@/lib/logger"
 
 // VK Bridge types
 declare global {
@@ -73,7 +74,7 @@ export function VKMiniApp() {
 
       setIsReady(true)
     } catch (error) {
-      console.error("VK Bridge initialization error:", error)
+      logger.error("VK Bridge initialization error", { error: error instanceof Error ? error.message : String(error) })
       setIsReady(true)
     }
   }
@@ -88,7 +89,7 @@ export function VKMiniApp() {
         description: "Персональные тренировки с профессиональным тренером",
       })
     } catch (error) {
-      console.error("Share error:", error)
+      logger.error("Share error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -98,7 +99,7 @@ export function VKMiniApp() {
     try {
       await window.vkBridge.send("VKWebAppAddToFavorites")
     } catch (error) {
-      console.error("Add to favorites error:", error)
+      logger.error("Add to favorites error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -108,7 +109,7 @@ export function VKMiniApp() {
     try {
       await window.vkBridge.send("VKWebAppShowInviteBox")
     } catch (error) {
-      console.error("Invite friends error:", error)
+      logger.error("Invite friends error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -136,7 +137,7 @@ export function VKMiniApp() {
         })
       }
     } catch (error) {
-      console.error("Payment error:", error)
+      logger.error("Payment error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

@@ -1,5 +1,7 @@
 // Клиентская библиотека для фоновой загрузки видео
 
+import logger from './logger'
+
 interface UploadTask {
   id: string
   file: File
@@ -88,9 +90,9 @@ export class BackgroundUploadManager {
         // Слушаем сообщения от Service Worker
         navigator.serviceWorker.addEventListener('message', this.handleWorkerMessage.bind(this))
         
-        console.log('Service Worker зарегистрирован для фоновой загрузки')
+        logger.info('Service Worker зарегистрирован для фоновой загрузки')
       } catch (error) {
-        console.error('Ошибка регистрации Service Worker:', error)
+        logger.error('Ошибка регистрации Service Worker', { error: error instanceof Error ? error.message : String(error) })
       }
     }
   }
@@ -228,7 +230,7 @@ export class BackgroundUploadManager {
           break
         }
       } catch (error) {
-        console.error(`Ошибка загрузки чанка ${chunk.index}:`, error)
+        logger.error(`Ошибка загрузки чанка ${chunk.index}`, { error: error instanceof Error ? error.message : String(error) })
         
         if (task.retryCount < this.MAX_RETRIES) {
           task.retryCount++
@@ -407,7 +409,7 @@ export class BackgroundUploadManager {
       // Сохраняем сам файл отдельно если нужно восстановить
       await this.saveFileToCache(task.id, task.file)
     } catch (error) {
-      console.error('Ошибка сохранения в БД:', error)
+      logger.error('Ошибка сохранения в БД', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -419,7 +421,7 @@ export class BackgroundUploadManager {
         const response = new Response(file)
         await cache.put(`/uploads/${uploadId}`, response)
       } catch (error) {
-        console.error('Ошибка сохранения файла в кеш:', error)
+        logger.error('Ошибка сохранения файла в кеш', { error: error instanceof Error ? error.message : String(error) })
       }
     }
   }
@@ -457,7 +459,7 @@ export class BackgroundUploadManager {
         } else {
           // Все задачи собраны, восстанавливаем их
           Promise.all(pendingUploads.map(id => {
-            console.log('Восстанавливаем загрузку:', id)
+            logger.info('Восстанавливаем загрузку', { uploadId: id })
             return this.resumeUpload(id)
           })).then(() => resolve()).catch(reject)
         }
@@ -488,7 +490,7 @@ export class BackgroundUploadManager {
         
         const savedTask = request.result
         if (!savedTask) {
-          console.error('Задача не найдена:', uploadId)
+          logger.error('Задача не найдена', { uploadId })
           return
         }
         
@@ -513,7 +515,7 @@ export class BackgroundUploadManager {
             
             this.tasks.set(uploadId, task!)
           } else {
-            console.error('Файл не найден в кеше:', uploadId)
+            logger.error('Файл не найден в кеше', { uploadId })
             return
           }
         }
@@ -522,7 +524,7 @@ export class BackgroundUploadManager {
       // Продолжаем загрузку
       this.startUpload(uploadId)
     } catch (error) {
-      console.error('Ошибка восстановления загрузки:', error)
+      logger.error('Ошибка восстановления загрузки', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

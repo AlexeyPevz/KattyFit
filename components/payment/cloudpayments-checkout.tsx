@@ -16,6 +16,7 @@ import {
 import { Loader2, Lock, CreditCard, Shield, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { trackEvent, ANALYTICS_EVENTS } from "@/lib/analytics"
+import logger from "@/lib/logger"
 
 declare global {
   interface Window {
@@ -95,7 +96,7 @@ export function CloudPaymentsCheckout({
 
   const handlePayment = async () => {
     if (!window.cp) {
-      console.error("CloudPayments widget not loaded")
+      logger.error("CloudPayments widget not loaded")
       return
     }
 
@@ -132,7 +133,7 @@ export function CloudPaymentsCheckout({
       {
         onSuccess: (options: any) => {
           // Платеж прошел успешно
-          console.log("Payment success:", options)
+          logger.info("Payment success", { options })
           setIsLoading(false)
           setShowSuccessDialog(true)
           
@@ -171,7 +172,7 @@ export function CloudPaymentsCheckout({
         },
         onFail: (reason: any, options: any) => {
           // Платеж не прошел
-          console.error("Payment failed:", reason, options)
+          logger.error("Payment failed", { reason, options })
           setIsLoading(false)
           alert(`Ошибка оплаты: ${reason}`)
           

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 export const POST = apiHandler(async (request: NextRequest) => {
   try {
@@ -28,7 +29,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       })
 
     if (error) {
-      console.error("Error saving subscription:", error)
+      logger.error("Error saving subscription", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Failed to save subscription" },
         { status: 500 }
@@ -37,7 +38,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Subscription error:", error)
+    logger.error("Subscription error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Failed to process subscription" },
       { status: 500 }

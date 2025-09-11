@@ -2,6 +2,7 @@
 // Улучшение отзывчивости интерфейса
 
 import { useCallback, useMemo, useRef, useEffect, useState } from 'react'
+import logger from './logger'
 
 // Дебаунс для оптимизации частых вызовов
 export function useDebounce<T extends (...args: any[]) => any>(
@@ -302,7 +303,7 @@ export function measurePerformance(name: string, fn: () => void) {
   const end = performance.now()
   
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`)
+    logger.debug(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`)
   }
   
   return end - start
@@ -318,7 +319,7 @@ export function measureAsyncPerformance<T>(
     const end = performance.now()
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`)
+      logger.debug(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`)
     }
     
     return result

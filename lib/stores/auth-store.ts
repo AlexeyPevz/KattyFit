@@ -3,6 +3,7 @@
 
 import { AuthSession, User, LoginCredentials, AdminCredentials } from '@/types/api'
 import { AppError, AuthenticationError } from '@/types/errors'
+import logger from './logger'
 
 // ===== ТИПЫ =====
 
@@ -157,7 +158,7 @@ class AuthStoreImpl implements AuthStore {
         }
       }
     } catch (error) {
-      console.error('Error loading auth state from storage:', error)
+      logger.error('Error loading auth state from storage', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -171,7 +172,7 @@ class AuthStoreImpl implements AuthStore {
       }
       localStorage.setItem('auth-storage', JSON.stringify(data))
     } catch (error) {
-      console.error('Error saving auth state to storage:', error)
+      logger.error('Error saving auth state to storage', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
+import logger from "@/lib/logger"
 
 // Для MVP используем простое расписание из БД
 // В будущем можно интегрировать с Яндекс.Календарь API
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
     return generateSlots(startDate, endDate, schedule, trainerId)
     
   } catch (error) {
-    console.error("Ошибка получения слотов:", error)
+    logger.error("Ошибка получения слотов", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка получения расписания" },
       { status: 500 }
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
       .single()
       
     if (error) {
-      console.error("Ошибка создания бронирования:", error)
+      logger.error("Ошибка создания бронирования", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Не удалось создать бронирование" },
         { status: 500 }
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ booking })
     
   } catch (error) {
-    console.error("Ошибка бронирования:", error)
+    logger.error("Ошибка бронирования", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка создания бронирования" },
       { status: 500 }

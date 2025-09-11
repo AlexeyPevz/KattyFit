@@ -1,6 +1,8 @@
 // Утилита для проверки конфигурации v0
 // Помогает диагностировать проблемы с переменными окружения
 
+import logger from './logger'
+
 export interface ConfigStatus {
   isConfigured: boolean
   missingVars: string[]
@@ -78,25 +80,25 @@ export function checkV0Configuration(): ConfigStatus {
 export function logConfigStatus(): void {
   const status = checkV0Configuration()
   
-  console.group('🔧 v0 Configuration Status')
+  logger.info('🔧 v0 Configuration Status')
   
   if (status.isConfigured) {
-    console.log('✅ Все обязательные переменные настроены')
+    logger.info('✅ Все обязательные переменные настроены')
   } else {
-    console.error('❌ Отсутствуют обязательные переменные:', status.missingVars)
+    logger.error('❌ Отсутствуют обязательные переменные', { missingVars: status.missingVars })
   }
   
   if (status.warnings.length > 0) {
-    console.warn('⚠️ Предупреждения:')
-    status.warnings.forEach(warning => console.warn(`  - ${warning}`))
+    logger.warn('⚠️ Предупреждения:')
+    status.warnings.forEach(warning => logger.warn(`  - ${warning}`))
   }
   
   if (status.recommendations.length > 0) {
-    console.info('💡 Рекомендации:')
-    status.recommendations.forEach(rec => console.info(`  - ${rec}`))
+    logger.info('💡 Рекомендации:')
+    status.recommendations.forEach(rec => logger.info(`  - ${rec}`))
   }
   
-  console.groupEnd()
+  // Group end not needed with logger
 }
 
 // Функция для проверки конфигурации в runtime
@@ -105,13 +107,13 @@ export function validateRuntimeConfig(): boolean {
     const status = checkV0Configuration()
     
     if (!status.isConfigured) {
-      console.error('❌ Критическая ошибка конфигурации v0:', status.missingVars)
+      logger.error('❌ Критическая ошибка конфигурации v0', { missingVars: status.missingVars })
       return false
     }
     
     return true
   } catch (error) {
-    console.error('❌ Ошибка проверки конфигурации:', error)
+    logger.error('❌ Ошибка проверки конфигурации', { error: error instanceof Error ? error.message : String(error) })
     return false
   }
 }

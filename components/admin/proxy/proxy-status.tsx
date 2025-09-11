@@ -14,6 +14,7 @@ import {
   Clock,
   Zap
 } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface ServiceStatus {
   name: string
@@ -60,7 +61,7 @@ export function ProxyStatus() {
         setLastUpdate(new Date())
       }
     } catch (error) {
-      console.error('Ошибка загрузки статуса:', error)
+      logger.error('Ошибка загрузки статуса', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }

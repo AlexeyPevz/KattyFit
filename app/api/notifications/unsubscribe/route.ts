@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 export const POST = apiHandler(async (request: NextRequest) => {
   try {
@@ -20,7 +21,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       .eq("endpoint", endpoint)
 
     if (error) {
-      console.error("Error removing subscription:", error)
+      logger.error("Error removing subscription", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Failed to remove subscription" },
         { status: 500 }
@@ -29,7 +30,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Unsubscription error:", error)
+    logger.error("Unsubscription error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Failed to process unsubscription" },
       { status: 500 }

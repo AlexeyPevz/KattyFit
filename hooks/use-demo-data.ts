@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import logger from "@/lib/logger"
 
 interface DemoDataStatus {
   hasRealLessons: boolean
@@ -46,7 +47,7 @@ export function useDemoData() {
         })
       }
     } catch (error) {
-      console.error('Ошибка проверки демо данных:', error)
+      logger.error('Ошибка проверки демо данных', { error: error instanceof Error ? error.message : String(error) })
       setStatus({
         hasRealLessons: false,
         hasRealUsers: false,

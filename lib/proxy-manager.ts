@@ -1,6 +1,8 @@
 // Универсальная система управления прокси
 // Поддержка ASOCKS.COM, Beget VPS и других провайдеров
 
+import logger from './logger'
+
 export interface ProxyConfig {
   id: string
   name: string
@@ -456,7 +458,7 @@ export async function makeProxiedRequest(url: string, options: RequestInit = {})
     return response
   } catch (error) {
     // Fallback на прямой запрос
-    console.warn(`Proxy request failed for ${url}, falling back to direct:`, error)
+    logger.warn(`Proxy request failed for ${url}, falling back to direct`, { error: error instanceof Error ? error.message : String(error) })
     return fetch(url, options)
   }
 }

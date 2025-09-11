@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "./logger"
 
 export function apiHandler<T extends any[]>(handler: (request: NextRequest, ...args: T) => Promise<NextResponse>) {
   return async (request: NextRequest, ...args: T) => {
     try {
       return await handler(request, ...args)
     } catch (error) {
-      console.error("API Error:", error)
+      logger.error("API Error", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Внутренняя ошибка сервера" },
         { status: 500 }
@@ -25,7 +26,7 @@ export async function logEvent(eventType: string, data: any) {
         created_at: new Date().toISOString()
       })
   } catch (error) {
-    console.error("Ошибка логирования события:", error)
+    logger.error("Ошибка логирования события", { error: error instanceof Error ? error.message : String(error) })
   }
 }
 

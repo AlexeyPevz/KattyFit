@@ -1,6 +1,8 @@
 // Простая система аналитики для v0
 // В продакшене можно заменить на Google Analytics, Яндекс.Метрику или Amplitude
 
+import logger from './logger'
+
 interface AnalyticsEvent {
   event: string
   properties?: Record<string, any>
@@ -60,7 +62,7 @@ class Analytics {
 
     // Логируем в консоль для отладки (убрать в продакшене)
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Analytics:', event, properties)
+      logger.debug('📊 Analytics', { event, properties })
     }
   }
 

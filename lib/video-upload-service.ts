@@ -1,5 +1,7 @@
 // Сервис для умной загрузки видео с учетом доступности API
 
+import logger from './logger'
+
 interface VideoUploadConfig {
   useProxy: boolean
   proxyUrl?: string
@@ -40,7 +42,7 @@ export class VideoUploadService {
     // Загружаем на доступные платформы
     for (const platform of this.config.platforms) {
       if (!availablePlatforms[platform]) {
-        console.log(`Пропускаем ${platform} - недоступна`)
+        logger.info(`Пропускаем ${platform} - недоступна`)
         continue
       }
 
@@ -62,7 +64,7 @@ export class VideoUploadService {
         const vkResult = await this.uploadToPlatform('vk', file, metadata)
         results.push(vkResult)
       } catch (error) {
-        console.error('Fallback to VK failed:', error)
+        logger.error('Fallback to VK failed', { error: error instanceof Error ? error.message : String(error) })
       }
     }
 

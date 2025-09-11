@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 export async function GET() {
   try {
@@ -44,7 +45,7 @@ export async function GET() {
       hasAnyRealData: hasRealLessons || hasRealUsers || hasRealCourses || hasRealBookings,
     })
   } catch (error) {
-    console.error("Ошибка проверки демо данных:", error)
+    logger.error("Ошибка проверки демо данных", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка проверки демо данных" },
       { status: 500 }

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface ConfigStatus {
   isConfigured: boolean
@@ -24,7 +25,7 @@ export function V0ConfigStatus() {
       const data = await response.json()
       setStatus(data)
     } catch (error) {
-      console.error('Ошибка проверки конфигурации:', error)
+      logger.error('Ошибка проверки конфигурации', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setIsLoading(false)
     }
