@@ -293,7 +293,7 @@ class ProxyManager {
       body: request.body,
       // @ts-ignore - Node.js fetch не поддерживает agent, но это работает в некоторых средах
       agent: proxyAgent
-    })
+    } as any)
   }
 
   // Beget VPS прокси запрос
@@ -315,7 +315,7 @@ class ProxyManager {
       body: request.body,
       // @ts-ignore
       agent: proxyAgent
-    })
+    } as any)
   }
 
   // Custom прокси запрос
@@ -334,7 +334,7 @@ class ProxyManager {
       body: request.body,
       // @ts-ignore
       agent: proxyAgent
-    })
+    } as any)
   }
 
   // Проверка здоровья всех прокси
