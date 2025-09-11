@@ -1,61 +1,45 @@
+const { withSentryConfig } = require('@sentry/nextjs')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Оптимизация для Core Web Vitals
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    serverComponentsExternalPackages: ['@sentry/nextjs'],
   },
-  
-  // Компрессия для LCP оптимизации
-  compress: true,
-  
-  // Оптимизация изображений
   images: {
+    domains: ['localhost', 'via.placeholder.com'],
     formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 31536000, // 1 год
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  
-  // Оптимизация бандлов
+  // Настройки для PWA
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ]
+  },
+  // Настройки для оптимизации
   webpack: (config, { dev, isServer }) => {
     // Оптимизация для production
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {
-          default: false,
-          vendors: false,
-          // Vendor chunk
           vendor: {
-            name: 'vendor',
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
             chunks: 'all',
-            test: /node_modules/,
-            priority: 20,
           },
-          // Common chunk
           common: {
             name: 'common',
             minChunks: 2,
             chunks: 'all',
-            priority: 10,
-            reuseExistingChunk: true,
             enforce: true,
-          },
-          // React chunk
-          react: {
-            name: 'react',
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            chunks: 'all',
-            priority: 30,
-          },
-          // UI components chunk
-          ui: {
-            name: 'ui',
-            test: /[\\/]node_modules[\\/](@radix-ui|lucide-react)[\\/]/,
-            chunks: 'all',
-            priority: 25,
           },
         },
       }
@@ -63,79 +47,26 @@ const nextConfig = {
     
     return config
   },
+}
+
+// Sentry configuration
+const sentryWebpackPluginOptions = {
+  // Дополнительные настройки для Sentry webpack plugin
+  silent: true, // Отключаем логи Sentry в консоли
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
   
-  // Headers для кеширования и безопасности
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
-          }
-        ]
-      },
-      {
-        source: '/fonts/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
-          }
-        ]
-      },
-      {
-        source: '/_next/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
-          }
-        ]
-      }
-    ]
-  },
+  // Настройки для source maps
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+  disableServerWebpackPlugin: false,
+  disableClientWebpackPlugin: false,
   
-  // Redirects для SEO
-  async redirects() {
-    return [
-      {
-        source: '/home',
-        destination: '/',
-        permanent: true,
-      },
-    ]
-  },
-  
-  // Output для статической генерации
-  output: 'standalone',
-  
-  // Оптимизация для v0
-  poweredByHeader: false,
-  generateEtags: false,
-  
-  // Оптимизация TypeScript
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  
-  // Оптимизация ESLint
-  eslint: {
-    ignoreDuringBuilds: false,
+  // Настройки для автоматического релиза
+  release: process.env.SENTRY_RELEASE,
+  deploy: {
+    env: process.env.NODE_ENV,
   },
 }
 
-module.exports = nextConfig
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions)
