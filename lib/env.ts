@@ -1,13 +1,18 @@
 // Централизованное управление переменными окружения
-// Строгая типизация и валидация
+// Строгая типизация и валидация для v0
 
 import { EnvironmentConfig } from '@/types/api'
-import { AppError, ErrorCode } from '@/types/errors'
+import { AppError, ErrorCode, ErrorSeverity } from '@/types/errors'
 
-// ===== ВАЛИДАЦИЯ ПЕРЕМЕННЫХ =====
+// ===== УТИЛИТЫ ДЛЯ V0 =====
+
+function getEnvVar(name: string): string | undefined {
+  if (typeof process === 'undefined') return undefined
+  return process.env[name]
+}
 
 function requireEnv(name: string): string {
-  const value = process.env[name]
+  const value = getEnvVar(name)
   if (!value || value.length === 0) {
     // В v0 переменные могут быть не установлены во время билда
     if (typeof window === 'undefined') {
@@ -15,7 +20,7 @@ function requireEnv(name: string): string {
         `Missing required environment variable: ${name}. Please configure it in v0 Environment Variables.`,
         ErrorCode.MISSING_ENV_VAR,
         500,
-        'critical',
+        ErrorSeverity.CRITICAL,
         { variable: name }
       )
     }
@@ -26,24 +31,24 @@ function requireEnv(name: string): string {
 }
 
 function getOptionalEnv(name: string, defaultValue: string = ''): string {
-  return process.env[name] || defaultValue
+  return getEnvVar(name) || defaultValue
 }
 
 function getBooleanEnv(name: string, defaultValue: boolean = false): boolean {
-  const value = process.env[name]
+  const value = getEnvVar(name)
   if (!value) return defaultValue
   return value.toLowerCase() === 'true' || value === '1'
 }
 
 function getNumberEnv(name: string, defaultValue: number = 0): number {
-  const value = process.env[name]
+  const value = getEnvVar(name)
   if (!value) return defaultValue
   const parsed = parseInt(value, 10)
   return isNaN(parsed) ? defaultValue : parsed
 }
 
 function getArrayEnv(name: string, separator: string = ','): string[] {
-  const value = process.env[name]
+  const value = getEnvVar(name)
   if (!value) return []
   return value.split(separator).map(item => item.trim()).filter(Boolean)
 }
@@ -64,31 +69,31 @@ export const env: EnvironmentConfig = {
   },
   
   ai: {
-    yandexGpt: process.env.YANDEXGPT_API_KEY ? {
-      apiKey: process.env.YANDEXGPT_API_KEY,
-      folderId: process.env.YANDEXGPT_FOLDER_ID || '',
+    yandexGpt: getEnvVar('YANDEXGPT_API_KEY') ? {
+      apiKey: getEnvVar('YANDEXGPT_API_KEY')!,
+      folderId: getEnvVar('YANDEXGPT_FOLDER_ID') || '',
     } : undefined,
     
-    openai: process.env.OPENAI_API_KEY ? {
-      apiKey: process.env.OPENAI_API_KEY,
+    openai: getEnvVar('OPENAI_API_KEY') ? {
+      apiKey: getEnvVar('OPENAI_API_KEY')!,
     } : undefined,
   },
   
   payments: {
-    cloudPayments: (process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID && process.env.CLOUDPAYMENTS_SECRET) ? {
-      publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID,
-      secret: process.env.CLOUDPAYMENTS_SECRET,
+    cloudPayments: (getEnvVar('NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID') && getEnvVar('CLOUDPAYMENTS_SECRET')) ? {
+      publicId: getEnvVar('NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID')!,
+      secret: getEnvVar('CLOUDPAYMENTS_SECRET')!,
     } : undefined,
   },
   
   integrations: {
-    vk: process.env.VK_API_TOKEN ? {
-      apiToken: process.env.VK_API_TOKEN,
-      groupId: process.env.VK_GROUP_ID || '',
+    vk: getEnvVar('VK_API_TOKEN') ? {
+      apiToken: getEnvVar('VK_API_TOKEN')!,
+      groupId: getEnvVar('VK_GROUP_ID') || '',
     } : undefined,
     
-    telegram: process.env.TELEGRAM_BOT_TOKEN ? {
-      botToken: process.env.TELEGRAM_BOT_TOKEN,
+    telegram: getEnvVar('TELEGRAM_BOT_TOKEN') ? {
+      botToken: getEnvVar('TELEGRAM_BOT_TOKEN')!,
     } : undefined,
   },
 }
@@ -148,8 +153,8 @@ export const additionalEnv = {
   youtubeClientSecret: getOptionalEnv('YOUTUBE_CLIENT_SECRET'),
   
   // Настройки приложения
-  isProduction: getBooleanEnv('NODE_ENV', false) && process.env.NODE_ENV === 'production',
-  isDevelopment: getBooleanEnv('NODE_ENV', true) && process.env.NODE_ENV === 'development',
+  isProduction: getBooleanEnv('NODE_ENV', false) && getEnvVar('NODE_ENV') === 'production',
+  isDevelopment: getBooleanEnv('NODE_ENV', true) && getEnvVar('NODE_ENV') === 'development',
 }
 
 // ===== УТИЛИТЫ =====
@@ -177,7 +182,7 @@ export function getMissingVariables(): string[] {
     'ADMIN_PASSWORD',
   ]
   
-  return required.filter(name => !process.env[name])
+  return required.filter(name => !getEnvVar(name))
 }
 
 export function getOptionalVariables(): string[] {
@@ -191,7 +196,7 @@ export function getOptionalVariables(): string[] {
     'CONTENTSTUDIO_API_KEY',
   ]
   
-  return optional.filter(name => !process.env[name])
+  return optional.filter(name => !getEnvVar(name))
 }
 
 // ===== ВАЛИДАЦИЯ КОНФИГУРАЦИИ =====

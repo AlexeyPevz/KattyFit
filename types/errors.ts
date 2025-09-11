@@ -84,7 +84,7 @@ export class AppError extends Error {
     this.isOperational = isOperational
 
     // Обеспечиваем правильный stack trace
-    if (Error.captureStackTrace) {
+    if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, AppError)
     }
   }

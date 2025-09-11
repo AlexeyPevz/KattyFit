@@ -1,7 +1,6 @@
 // Единообразная обработка ошибок
 // Централизованная система для обработки всех типов ошибок
 
-import { NextRequest, NextResponse } from 'next/server'
 import { AppError, ErrorCode, ErrorSeverity, isAppError, isOperationalError } from '@/types/errors'
 
 // ===== КОНФИГУРАЦИЯ =====
@@ -16,7 +15,6 @@ const ERROR_CONFIG = {
   
   // Коды ошибок, которые требуют уведомления
   NOTIFY_ERRORS: [
-    ErrorCode.CRITICAL,
     ErrorCode.EXTERNAL_SERVICE_ERROR,
     ErrorCode.CONFIGURATION_ERROR,
   ],
@@ -45,7 +43,7 @@ export class ErrorHandler {
   }
 
   // Обработка ошибок в API routes
-  async handleApiError(error: unknown, request: NextRequest): Promise<NextResponse> {
+  async handleApiError(error: unknown, request: any): Promise<any> {
     const appError = this.normalizeError(error)
     const context = this.extractContext(request)
     
@@ -109,7 +107,7 @@ export class ErrorHandler {
   }
 
   // Извлечение контекста из запроса
-  private extractContext(request: NextRequest): Record<string, any> {
+  private extractContext(request: any): Record<string, any> {
     return {
       url: request.url,
       method: request.method,
@@ -120,7 +118,7 @@ export class ErrorHandler {
   }
 
   // Получение IP адреса клиента
-  private getClientIP(request: NextRequest): string {
+  private getClientIP(request: any): string {
     const forwarded = request.headers.get('x-forwarded-for')
     const realIP = request.headers.get('x-real-ip')
     
@@ -142,7 +140,7 @@ export class ErrorHandler {
   }
 
   // Создание ответа об ошибке
-  private createErrorResponse(error: AppError, context: Record<string, any>): NextResponse {
+  private createErrorResponse(error: AppError, context: Record<string, any>): any {
     const statusCode = error.statusCode
     const message = this.sanitizeMessage(error.message)
     
@@ -158,10 +156,10 @@ export class ErrorHandler {
 
     // Добавляем детали только для операционных ошибок
     if (isOperationalError(error) && error.context) {
-      response.error.details = this.sanitizeContext(error.context)
+      (response.error as any).details = this.sanitizeContext(error.context)
     }
 
-    return NextResponse.json(response, { status: statusCode })
+    return { response, status: statusCode }
   }
 
   // Санитизация сообщения об ошибке
@@ -220,7 +218,11 @@ class ErrorLogger {
     }
 
     // В production отправляем в внешний сервис логирования
-    if (process.env.NODE_ENV === 'production') {
+    const isProduction = typeof process !== 'undefined' && 
+      process.env && 
+      process.env.NODE_ENV === 'production'
+    
+    if (isProduction) {
       await this.sendToExternalLogger(logEntry)
     } else {
       // В development выводим в консоль
@@ -288,14 +290,15 @@ export const errorHandler = ErrorHandler.getInstance()
 
 // Wrapper для API routes
 export function withErrorHandler<T extends any[]>(
-  handler: (...args: T) => Promise<NextResponse>
+  handler: (...args: T) => Promise<any>
 ) {
-  return async (...args: T): Promise<NextResponse> => {
+  return async (...args: T): Promise<any> => {
     try {
       return await handler(...args)
     } catch (error) {
-      const request = args[0] as NextRequest
-      return await errorHandler.handleApiError(error, request)
+      const request = args[0]
+      const result = await errorHandler.handleApiError(error, request)
+      return result
     }
   }
 }
@@ -316,5 +319,4 @@ export function withClientErrorHandler<T extends any[], R>(
 
 // ===== ЭКСПОРТ =====
 
-export { ErrorHandler }
 export default errorHandler

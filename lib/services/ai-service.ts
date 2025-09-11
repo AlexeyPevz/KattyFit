@@ -227,7 +227,7 @@ export class YandexGPTService extends BaseAIService {
   }
 
   private buildUserPrompt(context: RAGContext): string {
-    const knowledgeContext = context.userContext?.knowledge?.map(item => 
+    const knowledgeContext = context.userContext?.knowledge?.map((item: any) => 
       `Q: ${item.question}\nA: ${item.answer}`
     ).join('\n\n') || ''
 
@@ -316,7 +316,7 @@ Answer in Russian.`
   }
 
   private buildUserPrompt(context: RAGContext): string {
-    const knowledgeContext = context.userContext?.knowledge?.map(item => 
+    const knowledgeContext = context.userContext?.knowledge?.map((item: any) => 
       `Q: ${item.question}\nA: ${item.answer}`
     ).join('\n\n') || ''
 
@@ -399,7 +399,7 @@ export class AIServiceFactory {
     const services: AIService[] = []
 
     // YandexGPT
-    if (process.env.YANDEXGPT_API_KEY && process.env.YANDEXGPT_FOLDER_ID) {
+    if (typeof process !== 'undefined' && process.env?.YANDEXGPT_API_KEY && process.env?.YANDEXGPT_FOLDER_ID) {
       const yandexService = this.createYandexGPT({
         apiKey: process.env.YANDEXGPT_API_KEY,
         folderId: process.env.YANDEXGPT_FOLDER_ID,
@@ -408,7 +408,7 @@ export class AIServiceFactory {
     }
 
     // OpenAI
-    if (process.env.OPENAI_API_KEY) {
+    if (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY) {
       const openaiService = this.createOpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       })

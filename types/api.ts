@@ -79,6 +79,7 @@ export interface UserContext {
   preferences?: Record<string, any>
   location?: GeoLocation
   deviceInfo?: DeviceInfo
+  knowledge?: KnowledgeItem[]
 }
 
 export interface GeoLocation {

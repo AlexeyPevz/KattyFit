@@ -1,20 +1,19 @@
 // Централизованное управление состоянием аутентификации
-// Использует Zustand для простоты и производительности
+// Простая реализация без внешних зависимостей
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
 import { AuthSession, User, LoginCredentials, AdminCredentials } from '@/types/api'
 import { AppError, AuthenticationError } from '@/types/errors'
 
-// ===== СОСТОЯНИЕ =====
+// ===== ТИПЫ =====
 
 interface AuthState {
-  // Состояние
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
   error: AppError | null
-  
+}
+
+interface AuthStore extends AuthState {
   // Действия
   login: (credentials: LoginCredentials) => Promise<void>
   loginAdmin: (credentials: AdminCredentials) => Promise<void>
@@ -99,190 +98,252 @@ async function refreshUserSession(): Promise<AuthSession> {
   return response.json()
 }
 
-// ===== STORE =====
+// ===== STORE РЕАЛИЗАЦИЯ =====
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      // Начальное состояние
+class AuthStoreImpl implements AuthStore {
+  private state: AuthState = {
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+  }
+
+  private listeners: Set<() => void> = new Set()
+
+  constructor() {
+    this.loadFromStorage()
+    this.setupStorageListener()
+  }
+
+  // Геттеры
+  get user(): User | null {
+    return this.state.user
+  }
+
+  get isAuthenticated(): boolean {
+    return this.state.isAuthenticated
+  }
+
+  get isLoading(): boolean {
+    return this.state.isLoading
+  }
+
+  get error(): AppError | null {
+    return this.state.error
+  }
+
+  // Приватные методы
+  private setState(newState: Partial<AuthState>): void {
+    this.state = { ...this.state, ...newState }
+    this.notifyListeners()
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => listener())
+  }
+
+  private loadFromStorage(): void {
+    if (typeof window === 'undefined') return
+
+    try {
+      const stored = localStorage.getItem('auth-storage')
+      if (stored) {
+        const data = JSON.parse(stored)
+        if (data.user && data.isAuthenticated) {
+          this.setState({
+            user: data.user,
+            isAuthenticated: data.isAuthenticated,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error loading auth state from storage:', error)
+    }
+  }
+
+  private saveToStorage(): void {
+    if (typeof window === 'undefined') return
+
+    try {
+      const data = {
+        user: this.state.user,
+        isAuthenticated: this.state.isAuthenticated,
+      }
+      localStorage.setItem('auth-storage', JSON.stringify(data))
+    } catch (error) {
+      console.error('Error saving auth state to storage:', error)
+    }
+  }
+
+  private setupStorageListener(): void {
+    if (typeof window === 'undefined') return
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'auth-storage') {
+        this.loadFromStorage()
+      }
+    })
+  }
+
+  // Публичные методы
+  async login(credentials: LoginCredentials): Promise<void> {
+    this.setState({ isLoading: true, error: null })
+    
+    try {
+      const session = await loginUser(credentials)
+      
+      this.setState({
+        user: session.user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      })
+      
+      this.saveToStorage()
+    } catch (error) {
+      const appError = error instanceof AppError ? error : new AuthenticationError('Login failed')
+      this.setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: appError,
+      })
+      throw appError
+    }
+  }
+
+  async loginAdmin(credentials: AdminCredentials): Promise<void> {
+    this.setState({ isLoading: true, error: null })
+    
+    try {
+      const session = await loginAdmin(credentials)
+      
+      this.setState({
+        user: session.user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      })
+      
+      this.saveToStorage()
+    } catch (error) {
+      const appError = error instanceof AppError ? error : new AuthenticationError('Admin login failed')
+      this.setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: appError,
+      })
+      throw appError
+    }
+  }
+
+  logout(): void {
+    // Очищаем localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth-storage')
+      localStorage.removeItem('user_session')
+      localStorage.removeItem('admin_session')
+    }
+    
+    this.setState({
       user: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
+    })
+  }
 
-      // Логин пользователя
-      login: async (credentials: LoginCredentials) => {
-        set({ isLoading: true, error: null })
-        
-        try {
-          const session = await loginUser(credentials)
-          
-          set({
-            user: session.user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          })
-        } catch (error) {
-          const appError = error instanceof AppError ? error : new AuthenticationError('Login failed')
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: appError,
-          })
-          throw appError
-        }
-      },
-
-      // Логин администратора
-      loginAdmin: async (credentials: AdminCredentials) => {
-        set({ isLoading: true, error: null })
-        
-        try {
-          const session = await loginAdmin(credentials)
-          
-          set({
-            user: session.user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          })
-        } catch (error) {
-          const appError = error instanceof AppError ? error : new AuthenticationError('Admin login failed')
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: appError,
-          })
-          throw appError
-        }
-      },
-
-      // Выход
-      logout: () => {
-        // Очищаем localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user_session')
-          localStorage.removeItem('admin_session')
-        }
-        
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        })
-      },
-
-      // Обновление сессии
-      refreshSession: async () => {
-        const { isAuthenticated } = get()
-        
-        if (!isAuthenticated) {
-          return
-        }
-
-        set({ isLoading: true })
-        
-        try {
-          const session = await refreshUserSession()
-          
-          set({
-            user: session.user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          })
-        } catch (error) {
-          // При ошибке обновления сессии выходим
-          get().logout()
-        }
-      },
-
-      // Очистка ошибки
-      clearError: () => {
-        set({ error: null })
-      },
-
-      // Проверка роли
-      hasRole: (role: string) => {
-        const { user } = get()
-        return user?.role === role
-      },
-
-      // Проверка разрешения
-      hasPermission: (permission: string) => {
-        const { user } = get()
-        
-        if (!user) return false
-        
-        // Админ имеет все разрешения
-        if (user.role === 'admin') return true
-        
-        // Тренер имеет разрешения на курсы
-        if (user.role === 'trainer') {
-          return ['courses:read', 'courses:write', 'bookings:read'].includes(permission)
-        }
-        
-        // Пользователь имеет базовые разрешения
-        return ['profile:read', 'profile:write'].includes(permission)
-      },
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
+  async refreshSession(): Promise<void> {
+    if (!this.state.isAuthenticated) {
+      return
     }
-  )
-)
 
-// ===== HOOKS =====
+    this.setState({ isLoading: true })
+    
+    try {
+      const session = await refreshUserSession()
+      
+      this.setState({
+        user: session.user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      })
+      
+      this.saveToStorage()
+    } catch (error) {
+      // При ошибке обновления сессии выходим
+      this.logout()
+    }
+  }
 
-export const useAuth = () => {
-  const store = useAuthStore()
-  
-  return {
-    user: store.user,
-    isAuthenticated: store.isAuthenticated,
-    isLoading: store.isLoading,
-    error: store.error,
-    login: store.login,
-    loginAdmin: store.loginAdmin,
-    logout: store.logout,
-    refreshSession: store.refreshSession,
-    clearError: store.clearError,
-    hasRole: store.hasRole,
-    hasPermission: store.hasPermission,
+  clearError(): void {
+    this.setState({ error: null })
+  }
+
+  hasRole(role: string): boolean {
+    return this.state.user?.role === role
+  }
+
+  hasPermission(permission: string): boolean {
+    if (!this.state.user) return false
+    
+    // Админ имеет все разрешения
+    if (this.state.user.role === 'admin') return true
+    
+    // Тренер имеет разрешения на курсы
+    if (this.state.user.role === 'trainer') {
+      return ['courses:read', 'courses:write', 'bookings:read'].includes(permission)
+    }
+    
+    // Пользователь имеет базовые разрешения
+    return ['profile:read', 'profile:write'].includes(permission)
+  }
+
+  // Подписка на изменения
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
   }
 }
 
-export const useUser = () => {
-  const { user, isAuthenticated } = useAuthStore()
-  return { user, isAuthenticated }
+// ===== SINGLETON =====
+
+const authStore = new AuthStoreImpl()
+
+// ===== HOOKS =====
+
+export function useAuth(): AuthStore {
+  return authStore
 }
 
-export const usePermissions = () => {
-  const { hasRole, hasPermission } = useAuthStore()
-  return { hasRole, hasPermission }
+export function useUser(): { user: User | null; isAuthenticated: boolean } {
+  return {
+    user: authStore.user,
+    isAuthenticated: authStore.isAuthenticated,
+  }
+}
+
+export function usePermissions(): { hasRole: (role: string) => boolean; hasPermission: (permission: string) => boolean } {
+  return {
+    hasRole: authStore.hasRole.bind(authStore),
+    hasPermission: authStore.hasPermission.bind(authStore),
+  }
 }
 
 // ===== УТИЛИТЫ =====
 
 export const isAdmin = (): boolean => {
-  return useAuthStore.getState().hasRole('admin')
+  return authStore.hasRole('admin')
 }
 
 export const isTrainer = (): boolean => {
-  return useAuthStore.getState().hasRole('trainer')
+  return authStore.hasRole('trainer')
 }
 
 export const canAccess = (permission: string): boolean => {
-  return useAuthStore.getState().hasPermission(permission)
+  return authStore.hasPermission(permission)
 }
 
 // ===== АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ СЕССИИ =====
@@ -290,17 +351,17 @@ export const canAccess = (permission: string): boolean => {
 if (typeof window !== 'undefined') {
   // Обновляем сессию каждые 5 минут
   setInterval(() => {
-    const { isAuthenticated, refreshSession } = useAuthStore.getState()
-    if (isAuthenticated) {
-      refreshSession()
+    if (authStore.isAuthenticated) {
+      authStore.refreshSession()
     }
   }, 5 * 60 * 1000)
 
   // Обновляем сессию при фокусе на окне
   window.addEventListener('focus', () => {
-    const { isAuthenticated, refreshSession } = useAuthStore.getState()
-    if (isAuthenticated) {
-      refreshSession()
+    if (authStore.isAuthenticated) {
+      authStore.refreshSession()
     }
   })
 }
+
+export default authStore
