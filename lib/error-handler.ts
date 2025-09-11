@@ -2,6 +2,7 @@
 // Централизованная система для обработки всех типов ошибок
 
 import { AppError, ErrorCode, ErrorSeverity, isAppError, isOperationalError } from '@/types/errors'
+import logger from './logger'
 
 // ===== КОНФИГУРАЦИЯ =====
 
@@ -217,17 +218,16 @@ class ErrorLogger {
       stack: error.stack,
     }
 
-    // В production отправляем в внешний сервис логирования
-    const isProduction = typeof process !== 'undefined' && 
-      process.env && 
-      process.env.NODE_ENV === 'production'
-    
-    if (isProduction) {
-      await this.sendToExternalLogger(logEntry)
-    } else {
-      // В development выводим в консоль
-      console.error('Error logged:', logEntry)
-    }
+    // Используем централизованный логгер
+    await logger.error('Error logged', {
+      code: error.code,
+      message: error.message,
+      statusCode: error.statusCode,
+      severity: error.severity,
+      context: context || {},
+      timestamp: error.timestamp,
+      stack: error.stack,
+    })
   }
 
   private getLogLevel(severity: ErrorSeverity): string {
