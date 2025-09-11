@@ -9,6 +9,7 @@ import { CloudPaymentsCheckout } from "@/components/payment/cloudpayments-checko
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Clock, Video, FileText, Shield, RefreshCw } from "lucide-react"
+import logger from "@/lib/logger"
 
 // В реальном приложении данные загружаются из БД
 const getCourseData = (id: string) => ({
@@ -42,12 +43,12 @@ export default function CourseCheckoutPage() {
   }, [courseId])
 
   const handlePaymentSuccess = async (transaction: any) => {
-    console.log("Payment successful:", transaction)
+    logger.info("Payment successful", { transaction })
     // Здесь можно добавить дополнительную логику после успешной оплаты
   }
 
   const handlePaymentFail = (reason: any) => {
-    console.error("Payment failed:", reason)
+    logger.error("Payment failed", { reason })
   }
 
   if (!course) {

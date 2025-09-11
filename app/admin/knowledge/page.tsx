@@ -24,6 +24,7 @@ import {
   DollarSign
 } from "lucide-react"
 import Link from "next/link"
+import logger from "@/lib/logger"
 import {
   Dialog,
   DialogContent,
@@ -94,10 +95,10 @@ export default function KnowledgeBasePage() {
       if (data.success) {
         setItems(data.items)
       } else {
-        console.error("Ошибка загрузки:", data.error)
+        logger.error("Ошибка загрузки", { error: data.error })
       }
     } catch (error) {
-      console.error("Ошибка загрузки базы знаний:", error)
+      logger.error("Ошибка загрузки базы знаний", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -134,10 +135,10 @@ export default function KnowledgeBasePage() {
         setFormData({ type: "faq", question: "", answer: "" })
         fetchKnowledge()
       } else {
-        console.error("Ошибка сохранения:", data.error)
+        logger.error("Ошибка сохранения", { error: data.error })
       }
     } catch (error) {
-      console.error("Ошибка сохранения:", error)
+      logger.error("Ошибка сохранения", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -153,22 +154,22 @@ export default function KnowledgeBasePage() {
         if (data.success) {
           fetchKnowledge()
         } else {
-          console.error("Ошибка удаления:", data.error)
+          logger.error("Ошибка удаления", { error: data.error })
         }
       } catch (error) {
-        console.error("Ошибка удаления:", error)
+        logger.error("Ошибка удаления", { error: error instanceof Error ? error.message : String(error) })
       }
     }
   }
 
   const handleImport = async () => {
     // Здесь будет импорт из файла
-    console.log("Импорт базы знаний")
+    logger.info("Импорт базы знаний")
   }
 
   const handleExport = async () => {
     // Здесь будет экспорт в файл
-    console.log("Экспорт базы знаний")
+    logger.info("Экспорт базы знаний")
   }
 
   return (

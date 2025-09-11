@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
 import { createHmac } from "crypto"
+import logger from "@/lib/logger"
 
 // Проверка подписи CloudPayments
 function verifySignature(body: string, signature: string): boolean {
   if (!process.env.CLOUDPAYMENTS_SECRET) {
-    console.error("CloudPayments secret not configured")
+    logger.error("CloudPayments secret not configured")
     return false
   }
   
@@ -24,14 +25,14 @@ export async function POST(request: NextRequest) {
     
     // Проверяем подпись
     if (!verifySignature(body, signature)) {
-      console.error("Invalid CloudPayments signature")
+      logger.error("Invalid CloudPayments signature")
       return NextResponse.json({ code: 13 }) // Неверная подпись
     }
     
     const data = JSON.parse(body)
     const { Type, Data } = data
     
-    console.log(`CloudPayments webhook: ${Type}`, Data)
+    logger.info(`CloudPayments webhook: ${Type}`, { data: Data })
     
     switch (Type) {
       case 'Pay':
@@ -54,14 +55,14 @@ export async function POST(request: NextRequest) {
         return handleCheck(Data)
         
       default:
-        console.log(`Unknown CloudPayments webhook type: ${Type}`)
+        logger.warn(`Unknown CloudPayments webhook type: ${Type}`)
     }
     
     // Успешный ответ
     return NextResponse.json({ code: 0 })
     
   } catch (error) {
-    console.error("CloudPayments webhook error:", error)
+    logger.error("CloudPayments webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ code: 13 }) // Временная ошибка
   }
 }
@@ -102,7 +103,7 @@ async function handleCheck(data: any) {
     return NextResponse.json({ code: 0 })
     
   } catch (error) {
-    console.error("Check handler error:", error)
+    logger.error("Check handler error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ code: 13 })
   }
 }
@@ -141,7 +142,7 @@ async function handlePayment(data: any) {
       })
     
     if (paymentError) {
-      console.error("Error saving payment:", paymentError)
+      logger.error("Error saving payment", { error: paymentError instanceof Error ? paymentError.message : String(paymentError) })
     }
     
     // Предоставляем доступ к курсу
@@ -189,7 +190,7 @@ async function handlePayment(data: any) {
     // TODO: Отправить email с подтверждением
     
   } catch (error) {
-    console.error("Payment handler error:", error)
+    logger.error("Payment handler error", { error: error instanceof Error ? error.message : String(error) })
   }
 }
 
@@ -211,7 +212,7 @@ async function handleFailedPayment(data: any) {
       })
       
   } catch (error) {
-    console.error("Failed payment handler error:", error)
+    logger.error("Failed payment handler error", { error: error instanceof Error ? error.message : String(error) })
   }
 }
 
@@ -244,6 +245,6 @@ async function handleRefund(data: any) {
     }
     
   } catch (error) {
-    console.error("Refund handler error:", error)
+    logger.error("Refund handler error", { error: error instanceof Error ? error.message : String(error) })
   }
 }

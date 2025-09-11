@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import logger from "@/lib/logger"
 
 // Вебхук для захвата лидов из различных источников
 export async function POST(request: NextRequest) {
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
           lead: result.lead,
           source: leadData.source,
         }),
-      }).catch(console.error)
+      }).catch((error) => logger.error("Lead capture error", { error: error instanceof Error ? error.message : String(error) }))
     }
 
     return NextResponse.json({
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
       isNew: result.isNew,
     })
   } catch (error: any) {
-    console.error("Lead capture webhook error:", error)
+    logger.error("Lead capture webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || "Ошибка обработки лида" },
       { status: 500 }

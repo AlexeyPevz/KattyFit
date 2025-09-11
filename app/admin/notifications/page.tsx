@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import logger from "@/lib/logger"
 
 interface NotificationSetting {
   id: string
@@ -107,7 +108,7 @@ export default function NotificationsPage() {
       const subscription = await pushNotifications.getSubscription()
       setIsSubscribed(!!subscription)
     } catch (error) {
-      console.error("Ошибка проверки подписки:", error)
+      logger.error("Ошибка проверки подписки", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -131,7 +132,7 @@ export default function NotificationsPage() {
         })
       }
     } catch (error) {
-      console.error("Ошибка подписки:", error)
+      logger.error("Ошибка подписки", { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: "Ошибка",
         description: "Произошла ошибка при включении уведомлений",
@@ -154,7 +155,7 @@ export default function NotificationsPage() {
         })
       }
     } catch (error) {
-      console.error("Ошибка отписки:", error)
+      logger.error("Ошибка отписки", { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: "Ошибка",
         description: "Не удалось отключить уведомления",
