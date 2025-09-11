@@ -8,6 +8,7 @@ import { MobileVideoPlayer } from "@/components/mobile/touch-interface"
 import { StudioLocator } from "@/components/mobile/geolocation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import logger from "@/lib/logger"
 
 const mockLessons = [
   {
@@ -77,7 +78,7 @@ export default function MobilePage() {
                   currentLessonIndex={currentLessonIndex}
                   onLessonChange={setCurrentLessonIndex}
                   onLessonStart={(lesson) => {
-                    console.log("Starting lesson:", lesson.title)
+                    logger.info("Starting lesson", { title: lesson.title })
                   }}
                 />
               </CardContent>
@@ -94,8 +95,8 @@ export default function MobilePage() {
                   src="/placeholder.svg"
                   poster="/images/trainer-studio.jpg"
                   title="Урок растяжки для начинающих"
-                  onNext={() => console.log("Next video")}
-                  onPrevious={() => console.log("Previous video")}
+                  onNext={() => logger.info("Next video")}
+                  onPrevious={() => logger.info("Previous video")}
                   hasNext={true}
                   hasPrevious={true}
                 />

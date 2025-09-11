@@ -21,6 +21,7 @@ import {
   Loader2
 } from "lucide-react"
 import Link from "next/link"
+import logger from "@/lib/logger"
 
 interface Integration {
   id: string
@@ -166,7 +167,7 @@ export default function IntegrationsPage() {
         setIntegrations(updated)
       }
     } catch (error) {
-      console.error("Ошибка загрузки интеграций:", error)
+      logger.error("Ошибка загрузки интеграций", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -198,7 +199,7 @@ export default function IntegrationsPage() {
         setCredentials(prev => ({ ...prev, [integrationId]: {} }))
       }
     } catch (error) {
-      console.error("Ошибка сохранения:", error)
+      logger.error("Ошибка сохранения", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setSaving(null)
     }

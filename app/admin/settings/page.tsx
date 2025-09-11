@@ -29,6 +29,7 @@ import {
 import Link from "next/link"
 import { useDemoData } from "@/hooks/use-demo-data"
 import { DemoDataBanner, DemoDataIndicator } from "@/components/admin/demo-data-banner"
+import logger from "@/lib/logger"
 
 interface Settings {
   general: {
@@ -121,7 +122,7 @@ export default function SettingsPage() {
         setSettings({ ...defaultSettings, ...data })
       }
     } catch (error) {
-      console.error('Ошибка загрузки настроек:', error)
+      logger.error('Ошибка загрузки настроек', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -140,10 +141,10 @@ export default function SettingsPage() {
 
       if (response.ok) {
         // Показать уведомление об успехе
-        console.log('Настройки сохранены')
+        logger.info('Настройки сохранены')
       }
     } catch (error) {
-      console.error('Ошибка сохранения настроек:', error)
+      logger.error('Ошибка сохранения настроек', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setSaving(false)
     }
