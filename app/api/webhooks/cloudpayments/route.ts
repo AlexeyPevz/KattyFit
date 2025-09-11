@@ -5,12 +5,12 @@ import { createHmac } from "crypto"
 
 // Проверка подписи CloudPayments
 function verifySignature(body: string, signature: string): boolean {
-  if (!env.cloudPaymentsSecret) {
+  if (!process.env.CLOUDPAYMENTS_SECRET) {
     console.error("CloudPayments secret not configured")
     return false
   }
   
-  const hash = createHmac('sha256', env.cloudPaymentsSecret)
+  const hash = createHmac('sha256', process.env.CLOUDPAYMENTS_SECRET)
     .update(body)
     .digest('base64')
   

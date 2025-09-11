@@ -1,7 +1,7 @@
 // Абстракция для работы с базой данных
 // Инверсия зависимостей для тестируемости
 
-import { AppError, ErrorCode } from '@/types/errors'
+import { AppError, ErrorCode, ErrorSeverity } from '@/types/errors'
 import logger from '../logger'
 
 // ===== ИНТЕРФЕЙСЫ =====
@@ -105,7 +105,7 @@ abstract class BaseDatabaseService implements DatabaseService {
         `Query execution failed: ${error}`,
         ErrorCode.DATABASE_ERROR,
         500,
-        'high',
+        ErrorSeverity.HIGH,
         { query, params }
       )
     }
@@ -126,7 +126,7 @@ abstract class BaseDatabaseService implements DatabaseService {
         `Transaction failed: ${error}`,
         ErrorCode.DATABASE_ERROR,
         500,
-        'high',
+        ErrorSeverity.HIGH,
         { operationsCount: operations.length, completedOperations: results.length }
       )
     }
@@ -148,7 +148,7 @@ abstract class BaseDatabaseService implements DatabaseService {
         `Duplicate entry in ${operation}`,
         ErrorCode.DUPLICATE_ENTRY,
         409,
-        'medium',
+        ErrorSeverity.MEDIUM,
         { operation }
       )
     }
@@ -158,7 +158,7 @@ abstract class BaseDatabaseService implements DatabaseService {
         `Foreign key constraint violation in ${operation}`,
         ErrorCode.CONSTRAINT_VIOLATION,
         400,
-        'medium',
+        ErrorSeverity.MEDIUM,
         { operation }
       )
     }
@@ -167,7 +167,7 @@ abstract class BaseDatabaseService implements DatabaseService {
       `Database operation failed: ${operation}`,
       ErrorCode.DATABASE_ERROR,
       500,
-      'high',
+      ErrorSeverity.HIGH,
       { originalError: error, operation }
     )
   }
@@ -340,7 +340,7 @@ export class DatabaseServiceFactory {
         'Database configuration is incomplete',
         ErrorCode.CONFIGURATION_ERROR,
         500,
-        'critical',
+        ErrorSeverity.CRITICAL,
         { config: { url: !!config.url, anonKey: !!config.anonKey, serviceRoleKey: !!config.serviceRoleKey } }
       )
     }

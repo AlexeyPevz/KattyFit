@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDebounce, useOptimizedSearch } from "@/lib/performance-optimizations"
 
 interface Course {
   id: string
@@ -138,37 +139,50 @@ const levels = [
 ]
 
 export function CourseGrid() {
-  const [courses, setCourses] = useState<Course[]>(mockCourses)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [courses] = useState<Course[]>(mockCourses)
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedLevel, setSelectedLevel] = useState("all")
   const [sortBy, setSortBy] = useState("popular")
 
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || course.category === selectedCategory
-    const matchesLevel = selectedLevel === "all" || course.level === selectedLevel
-    
-    return matchesSearch && matchesCategory && matchesLevel
-  })
+  // Оптимизированный поиск с дебаунсом
+  const { query: searchQuery, setQuery: setSearchQuery, results: searchResults } = useOptimizedSearch(
+    courses,
+    (course, query) => 
+      course.title.toLowerCase().includes(query.toLowerCase()) ||
+      course.description.toLowerCase().includes(query.toLowerCase()),
+    300
+  )
 
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price
-      case "price-high":
-        return b.price - a.price
-      case "rating":
-        return b.rating - a.rating
-      case "students":
-        return b.students - a.students
-      default:
-        return 0
-    }
-  })
+  // Мемоизированная фильтрация для INP оптимизации
+  const filteredCourses = useMemo(() => {
+    return searchResults.filter((course: Course) => {
+      const matchesCategory = selectedCategory === "all" || course.category === selectedCategory
+      const matchesLevel = selectedLevel === "all" || course.level === selectedLevel
+      
+      return matchesCategory && matchesLevel
+    })
+  }, [searchResults, selectedCategory, selectedLevel])
 
-  const getLevelBadgeVariant = (level: string) => {
+  // Мемоизированная сортировка для INP оптимизации
+  const sortedCourses = useMemo(() => {
+    return [...filteredCourses].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return a.price - b.price
+        case "price-high":
+          return b.price - a.price
+        case "rating":
+          return b.rating - a.rating
+        case "students":
+          return b.students - a.students
+        default:
+          return 0
+      }
+    })
+  }, [filteredCourses, sortBy])
+
+  // Мемоизированные функции для INP оптимизации
+  const getLevelBadgeVariant = useCallback((level: string) => {
     switch (level) {
       case "beginner":
         return "secondary"
@@ -179,9 +193,9 @@ export function CourseGrid() {
       default:
         return "outline"
     }
-  }
+  }, [])
 
-  const getLevelLabel = (level: string) => {
+  const getLevelLabel = useCallback((level: string) => {
     switch (level) {
       case "beginner":
         return "Начинающий"
@@ -192,7 +206,7 @@ export function CourseGrid() {
       default:
         return level
     }
-  }
+  }, [])
 
   return (
     <section id="courses" className="py-20 bg-muted/30">

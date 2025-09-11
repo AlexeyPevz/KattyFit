@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return new Response('Bad request', { status: 400 })
   }
 
-  const payload = verifyJwt(token, env.hlsJwtSecret)
+  const payload = verifyJwt(token, process.env.HLS_JWT_SECRET || 'default-secret')
   if (!payload) {
     return new Response('Unauthorized', { status: 401 })
   }
@@ -42,7 +42,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   } catch {
     return new Response('Invalid upstream', { status: 400 })
   }
-  const allowed = env.hlsAllowedHosts.includes(upstreamUrl.host)
+  const allowedHosts = (process.env.HLS_ALLOWED_HOSTS || 'localhost').split(',')
+  const allowed = allowedHosts.includes(upstreamUrl.host)
   if (!allowed) {
     return new Response('Upstream not allowed', { status: 403 })
   }

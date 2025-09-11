@@ -232,7 +232,11 @@ export const logApiRequest = (method: string, url: string, context?: Record<stri
 
 export const logApiResponse = (method: string, url: string, status: number, context?: Record<string, any>) => {
   const level = status >= 400 ? LogLevel.ERROR : LogLevel.INFO
-  logger.log(level, `API Response: ${method} ${url} - ${status}`, context)
+  if (level === LogLevel.ERROR) {
+    logger.error(`API Response: ${method} ${url} - ${status}`, context)
+  } else {
+    logger.info(`API Response: ${method} ${url} - ${status}`, context)
+  }
 }
 
 export const logUserAction = (action: string, context?: Record<string, any>) => {

@@ -8,28 +8,28 @@ import Link from "next/link"
 
 export function Hero() {
   return (
-    <section className="relative pt-24 pb-12 md:pt-32 md:pb-20 overflow-hidden">
-      {/* Background gradient */}
+    <section className="hero-section">
+      {/* Background gradient - оптимизирован для LCP */}
       <div className="absolute inset-0 bg-gradient-to-br from-violet-50 to-pink-50 dark:from-violet-950/20 dark:to-pink-950/20" />
       
       <div className="container relative mx-auto px-4">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
-          {/* Text content */}
-          <div className="space-y-8">
+          {/* Text content - критический контент для LCP */}
+          <div className="space-y-8 fade-in-up">
             <div className="space-y-4">
               <Badge className="mb-4" variant="secondary">
                 <Star className="mr-1 h-3 w-3 fill-current" />
                 Топ-тренер по растяжке
               </Badge>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+              <h1 className="hero-title">
                 Достигни гибкости своей мечты с{" "}
                 <span className="bg-gradient-to-r from-violet-600 to-pink-600 bg-clip-text text-transparent">
                   KattyFit
                 </span>
               </h1>
               
-              <p className="text-lg md:text-xl text-muted-foreground">
+              <p className="hero-subtitle">
                 Онлайн-курсы растяжки и аэройоги от сертифицированного тренера. 
                 Занимайся в удобное время, достигай результатов быстрее!
               </p>
@@ -51,15 +51,15 @@ export function Hero() {
               </div>
             </div>
 
-            {/* CTA buttons */}
+            {/* CTA buttons - оптимизированы для LCP */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="gap-2" asChild>
+              <Button size="lg" className="hero-cta gap-2" asChild>
                 <Link href="#courses">
                   <Play className="h-4 w-4" />
                   Начать заниматься
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="gap-2" asChild>
+              <Button size="lg" variant="outline" className="hero-cta gap-2" asChild>
                 <Link href="/booking">
                   <Calendar className="h-4 w-4" />
                   Записаться на тренировку

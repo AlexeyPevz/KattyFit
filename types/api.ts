@@ -72,6 +72,7 @@ export interface RAGContext {
   platform: string
   userName?: string
   userContext: UserContext
+  conversationId?: string
 }
 
 export interface UserContext {

@@ -4,7 +4,7 @@ import { env } from "@/lib/env"
 
 // Получение API ключа ContentStudio только из env (v0)
 async function getContentStudioKey(): Promise<string | null> {
-  return env.contentStudioApiKey
+  return process.env.CONTENTSTUDIO_API_KEY || null
 }
 
 // Генерация обложек через ContentStudio AI

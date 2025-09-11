@@ -27,7 +27,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const fileBytes = await file.arrayBuffer()
     const { data: storageUpload, error: storageError } = await supabaseAdmin
       .storage
-      .from(env.storageBucket)
+      .from('content')
       .upload(`content/${filename}`, new Uint8Array(fileBytes), {
         cacheControl: '3600',
         upsert: false,
@@ -41,7 +41,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
     // Публичный URL файла
     const { data: publicUrlData } = supabaseAdmin.storage
-      .from(env.storageBucket)
+      .from('content')
       .getPublicUrl(storageUpload.path)
     const publicUrl = publicUrlData.publicUrl
 

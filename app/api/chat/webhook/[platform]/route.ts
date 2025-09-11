@@ -207,6 +207,8 @@ async function generateChatResponse(message: UnifiedMessage) {
     chatHistory: history || [],
     platform: message.platform,
     userName: message.userName,
+    userContext: {},
+    conversationId: 'unknown'
   })
 
   return response

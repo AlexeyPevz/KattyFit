@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AdminCredentials, AuthSession, User } from "@/types/api"
-import { AppError, AuthenticationError, ValidationError } from "@/types/errors"
+import { AppError, AuthenticationError, ValidationError, ErrorCode, ErrorSeverity } from "@/types/errors"
 import { withErrorHandler } from "@/lib/error-handler"
 
 // Simple in-memory rate limiting (in production use Redis or similar)
@@ -40,9 +40,9 @@ async function handleAdminLogin(request: NextRequest): Promise<NextResponse> {
   if (!checkRateLimit(ip)) {
     throw new AppError(
       'Too many login attempts. Please try again later.',
-      'RATE_LIMIT_EXCEEDED',
+      ErrorCode.RATE_LIMIT_EXCEEDED,
       429,
-      'medium'
+      ErrorSeverity.MEDIUM
     )
   }
 
@@ -64,9 +64,9 @@ async function handleAdminLogin(request: NextRequest): Promise<NextResponse> {
   if (!expectedUser || !expectedPass) {
     throw new AppError(
       'Admin credentials not configured',
-      'CONFIGURATION_ERROR',
+      ErrorCode.CONFIGURATION_ERROR,
       500,
-      'critical'
+      ErrorSeverity.CRITICAL
     )
   }
 

@@ -44,7 +44,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
         }
 
         // Check if username matches expected admin username
-        const expectedUser = env.adminUsernamePublic
+        const expectedUser = process.env.ADMIN_USERNAME
         console.log("AdminGuard auth check:", {
           sessionUsername: session.username,
           expectedUser: expectedUser,
