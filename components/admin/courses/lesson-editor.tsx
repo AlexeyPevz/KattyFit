@@ -69,7 +69,10 @@ export function LessonEditorComponent({
         description: lesson.description,
         type: lesson.type,
         duration: lesson.duration,
-        content: lesson.content
+        content: {
+          ...lesson.content,
+          quizQuestions: lesson.content.quizQuestions as QuizQuestion[] || []
+        }
       })
     }
   }, [lesson])
@@ -95,7 +98,8 @@ export function LessonEditorComponent({
     if (lesson && formData.title.trim()) {
       const updatedLesson: CourseLesson = {
         ...lesson,
-        ...formData
+        ...formData,
+        type: formData.type as "text" | "video" | "quiz" | "assignment"
       }
       onLessonUpdate(updatedLesson)
     }

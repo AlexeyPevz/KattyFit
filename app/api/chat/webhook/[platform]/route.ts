@@ -16,31 +16,40 @@ interface UnifiedMessage {
 
 // Парсеры для разных платформ
 const platformParsers = {
-  telegram: (body: Record<string, unknown>): UnifiedMessage => ({
-    userId: body.message?.from?.id?.toString() || body.callback_query?.from?.id?.toString(),
-    userName: body.message?.from?.first_name || body.callback_query?.from?.first_name,
-    text: body.message?.text || body.callback_query?.data || "",
-    platform: "telegram",
-    chatId: body.message?.chat?.id?.toString(),
-    messageId: body.message?.message_id?.toString(),
-  }),
+  telegram: (body: Record<string, unknown>): UnifiedMessage => {
+    const message = body.message as Record<string, unknown> | undefined
+    const callbackQuery = body.callback_query as Record<string, unknown> | undefined
+    return {
+      userId: (message?.from as Record<string, unknown>)?.id?.toString() || 
+              (callbackQuery?.from as Record<string, unknown>)?.id?.toString(),
+      userName: (message?.from as Record<string, unknown>)?.first_name as string || 
+                (callbackQuery?.from as Record<string, unknown>)?.first_name as string,
+      text: (message?.text as string) || (callbackQuery?.data as string) || "",
+      platform: "telegram",
+      chatId: (message?.chat as Record<string, unknown>)?.id?.toString(),
+      messageId: (message?.message_id as string)?.toString(),
+    }
+  },
 
   vk: (body: Record<string, unknown>): UnifiedMessage => {
-    const message = body.object?.message || body.object
+    const object = body.object as Record<string, unknown> | undefined
+    const message = (object?.message as Record<string, unknown>) || object
     return {
-      userId: message.from_id?.toString(),
-      text: message.text || "",
+      userId: (message?.from_id as number)?.toString(),
+      text: (message?.text as string) || "",
       platform: "vk",
-      messageId: message.id?.toString(),
-      attachments: message.attachments,
+      messageId: (message?.id as number)?.toString(),
+      attachments: message?.attachments as Array<Record<string, unknown>>,
     }
   },
 
   instagram: (body: Record<string, unknown>): UnifiedMessage => {
-    const messaging = body.entry?.[0]?.messaging?.[0]
+    const entry = body.entry as Array<Record<string, unknown>> | undefined
+    const messaging = entry?.[0]?.messaging as Array<Record<string, unknown>> | undefined
+    const messageData = messaging?.[0]
     return {
-      userId: messaging?.sender?.id,
-      text: messaging?.message?.text || "",
+      userId: (messageData?.sender as Record<string, unknown>)?.id as string,
+      text: ((messageData?.message as Record<string, unknown>)?.text as string) || "",
       platform: "instagram",
       messageId: messaging?.message?.mid,
     }

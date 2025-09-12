@@ -140,30 +140,34 @@ export async function POST(request: NextRequest) {
     if (!leadData.tags) leadData.tags = []
 
     // Автоматическое определение интересов
-    const message = (leadData.message || "").toLowerCase()
+    const message = (leadData.message as string || "").toLowerCase()
+    if (!Array.isArray(leadData.tags)) {
+      leadData.tags = []
+    }
+    
     if (message.includes("растяжк") || message.includes("шпагат")) {
-      leadData.tags.push("растяжка")
+      (leadData.tags as string[]).push("растяжка")
     }
     if (message.includes("йог") || message.includes("аэройог")) {
-      leadData.tags.push("йога")
+      (leadData.tags as string[]).push("йога")
     }
     if (message.includes("курс")) {
-      leadData.tags.push("курс")
+      (leadData.tags as string[]).push("курс")
     }
     if (message.includes("тренировк") || message.includes("занят")) {
-      leadData.tags.push("тренировки")
+      (leadData.tags as string[]).push("тренировки")
     }
     if (message.includes("пакет") || message.includes("абонемент")) {
-      leadData.tags.push("пакет")
+      (leadData.tags as string[]).push("пакет")
     }
 
     // Определяем потенциальную стоимость если не указана
     if (!leadData.value) {
-      if (leadData.tags.includes("пакет")) {
+      if ((leadData.tags as string[]).includes("пакет")) {
         leadData.value = 11250 // Средняя цена пакета
-      } else if (leadData.tags.includes("курс")) {
+      } else if ((leadData.tags as string[]).includes("курс")) {
         leadData.value = 3990 // Средняя цена курса
-      } else if (leadData.tags.includes("тренировки")) {
+      } else if ((leadData.tags as string[]).includes("тренировки")) {
         leadData.value = 2500 // Цена одной тренировки
       }
     }

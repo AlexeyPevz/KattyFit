@@ -81,7 +81,8 @@ export function CourseBuilderComponent({
       ...prev,
       course: {
         ...prev.course,
-        ...courseData
+        ...courseData,
+        level: courseData.level as "beginner" | "intermediate" | "advanced"
       },
       hasUnsavedChanges: true
     }))

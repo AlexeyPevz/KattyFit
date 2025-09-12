@@ -2,7 +2,8 @@
 // Позволяет использовать сервисы в React компонентах
 
 import { useMemo } from 'react'
-import { getService, ServiceMap } from '@/lib/di/setup'
+import { getService } from '@/lib/di/setup'
+import { ServiceMap } from '@/lib/di/services'
 
 /**
  * Хук для получения сервиса из DI контейнера
@@ -11,7 +12,7 @@ import { getService, ServiceMap } from '@/lib/di/setup'
  */
 export function useService<T extends keyof ServiceMap>(serviceName: T): ServiceMap[T] {
   return useMemo(() => {
-    return getService(serviceName)
+    return getService(serviceName as string) as ServiceMap[T]
   }, [serviceName])
 }
 
@@ -27,7 +28,7 @@ export function useServices<T extends (keyof ServiceMap)[]>(
     const services = {} as { [K in T[number]]: ServiceMap[K] }
     
     serviceNames.forEach(name => {
-      services[name] = getService(name)
+      services[name] = getService(name as string) as ServiceMap[T[number]]
     })
     
     return services

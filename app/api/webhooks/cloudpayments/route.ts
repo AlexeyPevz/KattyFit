@@ -169,7 +169,7 @@ async function handlePayment(data: Record<string, unknown>) {
     }
     
     // Записываем на тренировку
-    if (customData?.bookingId) {
+    if (customData && typeof customData === 'object' && 'bookingId' in customData) {
       await supabaseAdmin
         .from('bookings')
         .update({
@@ -177,13 +177,13 @@ async function handlePayment(data: Record<string, unknown>) {
           payment_id: TransactionId,
           paid_at: DateTime
         })
-        .eq('id', customData.bookingId)
+        .eq('id', customData.bookingId as string)
     }
     
     // Применяем промокод (увеличиваем счетчик использований)
-    if (customData?.promoCode) {
+    if (customData && typeof customData === 'object' && 'promoCode' in customData) {
       await supabaseAdmin.rpc('increment_promo_usage', {
-        code: customData.promoCode
+        code: customData.promoCode as string
       })
     }
     
