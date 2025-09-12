@@ -17,6 +17,7 @@
   - Все ошибки в компоненте `chart.tsx`
   - Ошибка Buffer.concat в `app/api/video/upload-complete/route.ts`
   - Типы Uint8Array в `lib/upload-chunks.ts`
+  - Типы Buffer в `app/api/video/upload-chunk/route.ts`
 
 ### 3. **API роуты** ✅
 - **Статус**: УСПЕШНО
