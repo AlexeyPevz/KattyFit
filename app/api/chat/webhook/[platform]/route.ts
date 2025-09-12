@@ -300,7 +300,7 @@ export async function GET(
   { params }: { params: Promise<{ platform: string }> }
 ) {
   const { platform } = await params
-  const { searchParams } = new URL(request.url)
+  const { searchParams } = request.nextUrl
 
   switch (platform) {
     case "telegram":

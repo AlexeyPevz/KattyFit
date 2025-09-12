@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const stage = searchParams.get("stage")
     const source = searchParams.get("source")
     const search = searchParams.get("search")

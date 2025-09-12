@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 // Проверка конкретного прокси
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const proxyId = searchParams.get("proxyId")
     const serviceUrl = searchParams.get("serviceUrl")
     

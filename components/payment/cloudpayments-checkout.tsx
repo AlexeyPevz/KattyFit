@@ -154,7 +154,7 @@ export function CloudPaymentsCheckout({
     const widget = new (window as any).cp.CloudPayments()
     
     const paymentData = {
-      publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001", // v0 will use env var
+      publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001", // fallback для v0 preview
       description: description,
       amount: finalAmount,
       currency: currency,

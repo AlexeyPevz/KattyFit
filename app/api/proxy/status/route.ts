@@ -4,7 +4,7 @@ import { ProxyUtils } from "@/lib/smart-proxy"
 // Получение статуса всех прокси и сервисов
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const checkServices = searchParams.get("checkServices") === "true"
 
     // Получаем статус прокси
