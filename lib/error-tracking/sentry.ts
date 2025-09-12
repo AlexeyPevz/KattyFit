@@ -265,7 +265,7 @@ export function useSentry() {
 }
 
 // Утилиты для интеграции с существующим logger
-export function enhanceLoggerWithSentry(logger: any) {
+export function enhanceLoggerWithSentry(logger: { error: (message: string, context?: Record<string, unknown>) => void; warn: (message: string, context?: Record<string, unknown>) => void; info: (message: string, context?: Record<string, unknown>) => void }) {
   const originalError = logger.error
   const originalCritical = logger.critical
 
