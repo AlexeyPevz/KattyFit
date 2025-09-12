@@ -131,4 +131,3 @@ export async function generateRAGResponse(context: RAGContext): Promise<string> 
     return generateFallbackResponse(context, [])
   }
 }
-

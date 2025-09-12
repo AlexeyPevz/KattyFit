@@ -7,14 +7,14 @@
 ## 🐛 ПРОБЛЕМА
 
 ### Ошибка деплоя
-```
+\`\`\`
 ERR_PNPM_OUTDATED_LOCKFILE  Cannot install with "frozen-lockfile" because pnpm-lock.yaml is not up to date with <ROOT>/package.json
 
 specifiers in the lockfile don't match specifiers in package.json:
 * 7 dependencies were added: @types/jest@^29.5.8, eslint@^8.55.0, eslint-config-next@14.0.4, jest@^29.7.0, jest-environment-jsdom@^29.7.0, web-vitals@^3.5.0, @sentry/nextjs@^7.100.0
 * 63 dependencies were removed: @emotion/is-prop-valid@latest, @hello-pangea/dnd@latest, ...
 * 9 dependencies are mismatched: @supabase/supabase-js, next, react, react-dom, zod, @types/node, @types/react, @types/react-dom, typescript
-```
+\`\`\`
 
 ### Причина
 - `package.json` был обрезан и содержал только базовые зависимости
@@ -32,7 +32,7 @@ specifiers in the lockfile don't match specifiers in package.json:
 - Правильно разделены dependencies и devDependencies
 
 **До**:
-```json
+\`\`\`json
 {
   "dependencies": {
     "@sentry/nextjs": "^7.100.0",
@@ -43,10 +43,10 @@ specifiers in the lockfile don't match specifiers in package.json:
     "zod": "^3.22.4"
   }
 }
-```
+\`\`\`
 
 **После**:
-```json
+\`\`\`json
 {
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -60,7 +60,7 @@ specifiers in the lockfile don't match specifiers in package.json:
     // ... и другие
   }
 }
-```
+\`\`\`
 
 ### 2. Исправление next.config.js
 **Файл**: `next.config.js`  
@@ -68,43 +68,43 @@ specifiers in the lockfile don't match specifiers in package.json:
 **Решение**: Заменено на `experimental.serverComponentsExternalPackages`
 
 **До**:
-```javascript
+\`\`\`javascript
 const nextConfig = {
   serverExternalPackages: [],
   // ...
 }
-```
+\`\`\`
 
 **После**:
-```javascript
+\`\`\`javascript
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: []
   },
   // ...
 }
-```
+\`\`\`
 
 ### 3. Переустановка зависимостей
-```bash
+\`\`\`bash
 # Удаление старого lockfile
 rm pnpm-lock.yaml
 
 # Переустановка с новым package.json
 pnpm install
-```
+\`\`\`
 
 ## ✅ РЕЗУЛЬТАТ
 
 ### Успешная сборка
-```bash
+\`\`\`bash
 npm run build
 # ✅ Compiled successfully
 # ✅ Linting and checking validity of types
 # ✅ Collecting page data
 # ✅ Generating static pages (74/74)
 # ✅ Finalizing page optimization
-```
+\`\`\`
 
 ### Метрики сборки
 - **Страниц**: 74 (статически сгенерированы)
@@ -129,7 +129,7 @@ npm run build
 ## 🔍 ДЕТАЛИ ИСПРАВЛЕНИЙ
 
 ### Восстановленные зависимости
-```json
+\`\`\`json
 {
   "dependencies": {
     // UI компоненты
@@ -180,10 +180,10 @@ npm run build
     "web-vitals": "^3.5.0"
   }
 }
-```
+\`\`\`
 
 ### Исправленная конфигурация Next.js
-```javascript
+\`\`\`javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -195,7 +195,7 @@ const nextConfig = {
   },
   // ... остальная конфигурация
 }
-```
+\`\`\`
 
 ## 🚀 ГОТОВНОСТЬ К ДЕПЛОЮ
 
@@ -222,11 +222,11 @@ const nextConfig = {
 
 ### Для деплоя
 1. **Коммит изменений**:
-   ```bash
+   \`\`\`bash
    git add package.json pnpm-lock.yaml next.config.js
    git commit -m "fix: restore dependencies and fix Next.js config for deployment"
    git push origin main
-   ```
+   \`\`\`
 
 2. **Проверка деплоя**:
    - Vercel автоматически пересоберет проект
@@ -240,21 +240,21 @@ const nextConfig = {
 
 ### Для разработки
 1. **Локальная разработка**:
-   ```bash
+   \`\`\`bash
    npm run dev
    # Открыть http://localhost:3000
-   ```
+   \`\`\`
 
 2. **Тестирование**:
-   ```bash
+   \`\`\`bash
    npm run test
    npm run type-check
-   ```
+   \`\`\`
 
 3. **Сборка**:
-   ```bash
+   \`\`\`bash
    npm run build
-   ```
+   \`\`\`
 
 ## 🎯 ЗАКЛЮЧЕНИЕ
 

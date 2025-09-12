@@ -5,16 +5,16 @@
 ## 📋 Обязательные переменные
 
 ### 1. Supabase (База данных)
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+\`\`\`
 **Источник**: Supabase Dashboard → Settings → API  
 **Файл**: `lib/supabase.ts:1-20`
 
 ### 2. AI Сервисы
-```env
+\`\`\`env
 # YandexGPT (основной AI)
 YANDEX_GPT_API_KEY=AQVN1234567890abcdef...
 
@@ -23,60 +23,60 @@ OPENAI_API_KEY=sk-1234567890abcdef...
 
 # ElevenLabs (дубляж видео)
 ELEVENLABS_API_KEY=1234567890abcdef...
-```
+\`\`\`
 **Источник**: 
 - YandexGPT: [Yandex Cloud Console](https://console.cloud.yandex.ru/)
 - OpenAI: [OpenAI Platform](https://platform.openai.com/)
 - ElevenLabs: [ElevenLabs Dashboard](https://elevenlabs.io/)
 
 ### 3. Платежи (CloudPayments)
-```env
+\`\`\`env
 CLOUDPAYMENTS_PUBLIC_ID=pk_1234567890abcdef...
 CLOUDPAYMENTS_SECRET=1234567890abcdef...
-```
+\`\`\`
 **Источник**: [CloudPayments Dashboard](https://merchant.cloudpayments.ru/)  
 **Файл**: `app/api/webhooks/cloudpayments/route.ts:1-50`
 
 ### 4. VK Интеграция
-```env
+\`\`\`env
 VK_ACCESS_TOKEN=vk1.a.1234567890abcdef...
 VK_GROUP_ID=123456789
-```
+\`\`\`
 **Источник**: [VK API](https://vk.com/apps?act=manage)  
 **Файл**: `lib/video-upload-service.ts:50-80`
 
 ### 5. YouTube Интеграция
-```env
+\`\`\`env
 YOUTUBE_CLIENT_ID=1234567890-abcdef.apps.googleusercontent.com
 YOUTUBE_CLIENT_SECRET=GOCSPX-1234567890abcdef
 YOUTUBE_REFRESH_TOKEN=1//1234567890abcdef
-```
+\`\`\`
 **Источник**: [Google Cloud Console](https://console.cloud.google.com/)  
 **Файл**: `lib/video-upload-service.ts:100-150`
 
 ## 🔧 Опциональные переменные
 
 ### 6. ContentStudio (Автопостинг)
-```env
+\`\`\`env
 CONTENTSTUDIO_API_KEY=cs_1234567890abcdef...
-```
+\`\`\`
 **Источник**: [ContentStudio Dashboard](https://contentstudio.io/)  
 **Файл**: `app/api/content/contentstudio/route.ts:1-30`
 
 ### 7. Webhook токены
-```env
+\`\`\`env
 META_WEBHOOK_TOKEN=your_webhook_verification_token
-```
+\`\`\`
 **Источник**: Meta Business Manager  
 **Файл**: `app/api/chat/webhook/[platform]/route.ts:1-50`
 
 ### 8. Sentry (Мониторинг ошибок)
-```env
+\`\`\`env
 NEXT_PUBLIC_SENTRY_DSN=https://1234567890@o123456.ingest.sentry.io/123456
 SENTRY_ORG=your-org
 SENTRY_PROJECT=your-project
 SENTRY_AUTH_TOKEN=1234567890abcdef...
-```
+\`\`\`
 **Источник**: [Sentry Dashboard](https://sentry.io/)  
 **Файл**: `lib/error-tracking/sentry.tsx:8-12`
 
@@ -117,7 +117,7 @@ SENTRY_AUTH_TOKEN=1234567890abcdef...
 - ✅ **YouTube Integration**: Настроено
 
 ### Ручная проверка через API
-```bash
+\`\`\`bash
 # Проверка статуса конфигурации
 curl https://yourdomain.com/api/settings/config-status
 
@@ -129,7 +129,7 @@ curl https://yourdomain.com/api/settings/config-status
   "vk": true,
   "youtube": true
 }
-```
+\`\`\`
 
 ## 🐛 Troubleshooting
 

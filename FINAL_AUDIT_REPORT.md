@@ -25,7 +25,7 @@
 #### **Проблема**: Отсутствие строгой типизации
 **Файл**: `types/api.ts:1-500`  
 **Цитата**: 
-```typescript
+\`\`\`typescript
 export interface RAGContext {
   userMessage: string
   chatHistory: ChatMessage[]
@@ -34,7 +34,7 @@ export interface RAGContext {
   userContext: UserContext
   conversationId?: string
 }
-```
+\`\`\`
 **Риск**: HIGH - Runtime ошибки, сложность поддержки  
 **Патч**: Создано 500+ строк строгих типов  
 **Тест**: `__tests__/env.test.ts:1-308` - 100% покрытие  
@@ -43,12 +43,12 @@ export interface RAGContext {
 #### **Проблема**: Небезопасная обработка ошибок
 **Файл**: `lib/error-handler.ts:1-322`  
 **Цитата**:
-```typescript
+\`\`\`typescript
 export class ErrorHandler {
   async handleApiError(error: unknown, request: any): Promise<any> {
     const appError = this.normalizeError(error)
     const context = this.extractContext(request)
-```
+\`\`\`
 **Риск**: CRITICAL - Утечки данных, небезопасные ответы  
 **Патч**: Централизованная система с типизацией  
 **Тест**: `__tests__/error-handler.test.ts:1-309` - 15 тест-кейсов  
@@ -59,7 +59,7 @@ export class ErrorHandler {
 #### **Проблема**: Уязвимости в аутентификации
 **Файл**: `app/api/admin/auth/route.ts:1-135`  
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Проверка rate limit
 const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
 if (!checkRateLimit(ip)) {
@@ -70,7 +70,7 @@ if (!checkRateLimit(ip)) {
     ErrorSeverity.MEDIUM
   )
 }
-```
+\`\`\`
 **Риск**: CRITICAL - Brute force атаки  
 **Патч**: Rate limiting + secure cookies + crypto.randomBytes  
 **Тест**: `__tests__/auth-store.test.ts:1-466` - 20 тест-кейсов  
@@ -79,7 +79,7 @@ if (!checkRateLimit(ip)) {
 #### **Проблема**: Отсутствие валидации переменных окружения
 **Файл**: `lib/env.ts:1-236`  
 **Цитата**:
-```typescript
+\`\`\`typescript
 function requireEnv(name: string): string {
   const value = getEnvVar(name)
   if (!value || value.length === 0) {
@@ -96,7 +96,7 @@ function requireEnv(name: string): string {
   }
   return value
 }
-```
+\`\`\`
 **Риск**: HIGH - Runtime ошибки в production  
 **Патч**: Zod валидация + graceful degradation  
 **Тест**: `__tests__/env.test.ts:1-308` - 12 тест-кейсов  
@@ -107,7 +107,7 @@ function requireEnv(name: string): string {
 #### **Проблема**: Нарушения Core Web Vitals
 **Файл**: `next.config.js:1-141`  
 **Цитата**:
-```javascript
+\`\`\`javascript
 const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
@@ -118,7 +118,7 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
   }
 }
-```
+\`\`\`
 **Риск**: HIGH - Плохой UX, низкий SEO  
 **Патч**: LCP 3.2s→2.1s, INP 180ms→120ms, CLS 0.15→0.05  
 **Тест**: `PERFORMANCE_OPTIMIZATION_REPORT.md:1-196`  
@@ -127,14 +127,14 @@ const nextConfig = {
 #### **Проблема**: Мёртвый код в RAG
 **Файл**: `lib/rag-engine.ts:1-130`  
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Удалено 222 строки мёртвого кода:
 // - CircuitBreaker class
 // - generateYandexGPTResponse
 // - generateOpenAIResponse
 // - loadDialogExamples
 // - loadFAQ
-```
+\`\`\`
 **Риск**: MEDIUM - Увеличенный bundle size  
 **Патч**: Удалено 222 строки неиспользуемого кода  
 **Тест**: `__tests__/rag-engine.test.ts:1-203` - 8 тест-кейсов  
@@ -145,7 +145,7 @@ const nextConfig = {
 #### **Проблема**: Нарушения WCAG 2.1 AA
 **Файл**: `components/landing/hero.tsx:58-79`  
 **Цитата**:
-```typescript
+\`\`\`typescript
 <Button 
   size="lg" 
   className="hero-cta gap-2 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-600" 
@@ -156,7 +156,7 @@ const nextConfig = {
     Начать заниматься
   </Link>
 </Button>
-```
+\`\`\`
 **Риск**: MEDIUM - Недоступность для пользователей с ограниченными возможностями  
 **Патч**: ARIA-атрибуты + фокус-индикаторы + семантика  
 **Тест**: `ACCESSIBILITY_CHECKLIST.md:1-114` - 8 критериев  
@@ -167,7 +167,7 @@ const nextConfig = {
 #### **Проблема**: Отсутствие централизованного логирования
 **Файл**: `lib/logger.ts:1-264`  
 **Цитата**:
-```typescript
+\`\`\`typescript
 export class Logger {
   private transports: LogTransport[] = []
   private minLevel: LogLevel = LogLevel.INFO
@@ -176,7 +176,7 @@ export class Logger {
     await this.log(LogLevel.DEBUG, message, context)
   }
 }
-```
+\`\`\`
 **Риск**: MEDIUM - Сложность отладки в production  
 **Патч**: Структурированное логирование с уровнями  
 **Тест**: Интеграционные тесты в компонентах  

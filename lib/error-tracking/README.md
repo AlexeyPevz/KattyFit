@@ -28,15 +28,15 @@
 ## Использование
 
 ### Инициализация
-```typescript
+\`\`\`typescript
 import { initializeErrorTracking } from '@/lib/error-tracking'
 
 // Инициализация всех сервисов
 initializeErrorTracking()
-```
+\`\`\`
 
 ### Error Boundary
-```typescript
+\`\`\`typescript
 import { ErrorBoundary, withErrorBoundary } from '@/lib/error-tracking/error-boundary'
 
 // Обертка компонента
@@ -46,10 +46,10 @@ import { ErrorBoundary, withErrorBoundary } from '@/lib/error-tracking/error-bou
 
 // HOC
 const SafeComponent = withErrorBoundary(MyComponent)
-```
+\`\`\`
 
 ### Performance Monitoring
-```typescript
+\`\`\`typescript
 import { performanceMonitor } from '@/lib/error-tracking/performance-monitoring'
 
 // Добавление пользовательской метрики
@@ -59,10 +59,10 @@ performanceMonitor.addMetric({
   unit: 'ms',
   tags: { feature: 'search' }
 })
-```
+\`\`\`
 
 ### User Feedback
-```typescript
+\`\`\`typescript
 import { userFeedbackManager } from '@/lib/error-tracking/user-feedback'
 
 // Отправка фидбека об ошибке
@@ -71,17 +71,17 @@ await userFeedbackManager.submitErrorFeedback(error, {
   component: 'SearchForm',
   action: 'search'
 })
-```
+\`\`\`
 
 ## Конфигурация
 
 ### Environment Variables
-```env
+\`\`\`env
 NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 SENTRY_ORG=your_sentry_org
 SENTRY_PROJECT=your_sentry_project
 SENTRY_RELEASE=1.0.0
-```
+\`\`\`
 
 ### Next.js Configuration
 Sentry интегрирован в `next.config.js` с помощью `withSentryConfig`.
@@ -92,7 +92,7 @@ Sentry интегрирован в `next.config.js` с помощью `withSentr
 Принимает пользовательский фидбек и сохраняет его.
 
 **Request Body:**
-```json
+\`\`\`json
 {
   "message": "string",
   "email": "string (optional)",
@@ -103,15 +103,15 @@ Sentry интегрирован в `next.config.js` с помощью `withSentr
   "userAgent": "string (optional)",
   "timestamp": "string (optional)"
 }
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "success": true,
   "message": "Feedback received successfully"
 }
-```
+\`\`\`
 
 ## Мониторинг
 

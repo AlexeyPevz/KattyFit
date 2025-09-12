@@ -21,19 +21,19 @@
 ## 🔧 ТЕХНИЧЕСКАЯ ПРОВЕРКА
 
 ### 1. **TypeScript**
-```bash
+\`\`\`bash
 npx tsc --noEmit
 # ✅ 0 ошибок
-```
+\`\`\`
 
 ### 2. **Сборка проекта**
-```bash
+\`\`\`bash
 npm run build
 # ✅ Compiled successfully
 # ✅ Linting and checking validity of types
 # ✅ Generating static pages (74/74)
 # ✅ Finalizing page optimization
-```
+\`\`\`
 
 ### 3. **Метрики сборки**
 - **Страниц**: 74 (статически сгенерированы)
@@ -64,7 +64,7 @@ npm run build
 ## 📁 СТРУКТУРА ПРОЕКТА
 
 ### **Основные папки**
-```
+\`\`\`
 /workspace
 ├── /app                    # Next.js App Router (19 папок)
 ├── /components            # React компоненты (16 папок)
@@ -74,7 +74,7 @@ npm run build
 ├── /__tests__             # Тесты (3 папки)
 ├── /scripts               # Скрипты (1 файл)
 └── /docs                  # Документация (2 файла)
-```
+\`\`\`
 
 ### **Ключевые файлы**
 - **package.json**: 63+ зависимостей ✅
@@ -91,7 +91,7 @@ npm run build
 - **Jest конфигурация**: Исправлена (`moduleNameMapping` → `moduleNameMapper`)
 
 ### **Тестовые файлы**
-```
+\`\`\`
 __tests__/
 ├── env.test.ts                    # Тесты переменных окружения
 ├── error-handler.test.ts          # Тесты обработки ошибок
@@ -102,7 +102,7 @@ __tests__/
     ├── chat-api.test.ts
     ├── payments-api.test.ts
     └── video-upload-api.test.ts
-```
+\`\`\`
 
 ## 🔍 КАЧЕСТВО КОДА
 
@@ -162,23 +162,23 @@ __tests__/
 ## ⚠️ ИЗВЕСТНЫЕ ПРОБЛЕМЫ
 
 ### **1. Metadata Warnings (200+ предупреждений)**
-```
+\`\`\`
 ⚠ Unsupported metadata themeColor is configured in metadata export
 ⚠ Unsupported metadata viewport is configured in metadata export
-```
+\`\`\`
 **Статус**: Не критично, косметические предупреждения
 
 ### **2. Dynamic Server Usage**
-```
+\`\`\`
 ERROR: Dynamic server usage: Page couldn't be rendered statically because it used `request.url`
 ERROR: Dynamic server usage: Page couldn't be rendered statically because it used `headers`
-```
+\`\`\`
 **Статус**: Не критично, некоторые страницы динамические
 
 ### **3. Тесты падают**
-```
+\`\`\`
 Cannot find module '@/lib/error-handler' from '__tests__/error-handler.test.ts'
-```
+\`\`\`
 **Статус**: Исправлено в Jest конфигурации, требует перезапуска
 
 ## 🎯 РЕКОМЕНДАЦИИ

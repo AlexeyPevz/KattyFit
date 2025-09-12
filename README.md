@@ -39,7 +39,7 @@
 
 ### 1. Клонирование и установка
 
-```bash
+\`\`\`bash
 # Клонируйте репозиторий
 git clone <repository-url>
 cd ai-content-studio
@@ -48,13 +48,13 @@ cd ai-content-studio
 npm install
 # или
 pnpm install
-```
+\`\`\`
 
 ### 2. Настройка окружения
 
 Создайте `.env.local` файл в корне проекта:
 
-```env
+\`\`\`env
 # Supabase (обязательно)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -89,13 +89,13 @@ NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 SENTRY_ORG=your_sentry_org
 SENTRY_PROJECT=your_sentry_project
 SENTRY_AUTH_TOKEN=your_sentry_auth_token
-```
+\`\`\`
 
 ### 3. Инициализация базы данных
 
 Выполните SQL скрипты в Supabase SQL Editor:
 
-```sql
+\`\`\`sql
 -- Основная схема
 -- См. файл: /docs/supabase-schema.sql
 
@@ -103,22 +103,22 @@ SENTRY_AUTH_TOKEN=your_sentry_auth_token
 -- См. файл: /docs/migrations/001_initial_schema.sql
 -- См. файл: /docs/migrations/002_add_indexes.sql
 -- См. файл: /docs/migrations/003_add_triggers.sql
-```
+\`\`\`
 
 ### 4. Запуск в режиме разработки
 
-```bash
+\`\`\`bash
 # Запуск dev сервера
 npm run dev
 # или
 pnpm dev
 
 # Откройте http://localhost:3000
-```
+\`\`\`
 
 ### 5. Проверка конфигурации
 
-```bash
+\`\`\`bash
 # Проверка переменных окружения
 npm run check-env
 
@@ -127,11 +127,11 @@ npm run type-check
 
 # Запуск тестов
 npm run test
-```
+\`\`\`
 
 ## 📂 Архитектура проекта
 
-```
+\`\`\`
 /workspace
 ├── /app                          # Next.js App Router
 │   ├── /admin                    # Админ-панель
@@ -162,7 +162,7 @@ npm run test
 ├── /types                       # TypeScript типы
 ├── /__tests__                   # Тесты
 └── /docs                        # Документация
-```
+\`\`\`
 
 ## 🔧 Основные API маршруты
 
@@ -189,7 +189,7 @@ npm run test
 
 ### Запуск тестов
 
-```bash
+\`\`\`bash
 # Все тесты
 npm run test
 
@@ -204,11 +204,11 @@ npm run test:coverage
 
 # Watch режим
 npm run test:watch
-```
+\`\`\`
 
 ### Структура тестов
 
-```
+\`\`\`
 /__tests__
 ├── /integration                 # Интеграционные тесты
 │   ├── auth-api.test.ts        # Тесты аутентификации
@@ -217,19 +217,19 @@ npm run test:watch
 │   └── video-upload-api.test.ts # Тесты загрузки видео
 ├── /unit                       # Unit тесты
 └── rag-engine.test.ts          # Тесты RAG движка
-```
+\`\`\`
 
 ## 🚀 Деплой на v0
 
 ### 1. Подготовка к деплою
 
-```bash
+\`\`\`bash
 # Сборка проекта
 npm run build
 
 # Проверка сборки
 npm run type-check
-```
+\`\`\`
 
 ### 2. Настройка переменных окружения в v0
 
@@ -241,13 +241,13 @@ npm run type-check
 
 ### 3. Деплой
 
-```bash
+\`\`\`bash
 # Деплой через v0 CLI (если доступен)
 v0 deploy
 
 # Или через GitHub интеграцию
 git push origin main
-```
+\`\`\`
 
 ### 4. Проверка после деплоя
 
@@ -259,27 +259,27 @@ git push origin main
 
 ### Мониторинг
 
-```bash
+\`\`\`bash
 # Проверка статуса сервисов
 curl https://yourdomain.com/api/health
 
 # Проверка логов (если настроен Sentry)
 # См. Sentry dashboard
-```
+\`\`\`
 
 ### Резервное копирование
 
-```bash
+\`\`\`bash
 # Экспорт базы данных
 pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
 
 # Импорт базы данных
 psql $DATABASE_URL < backup_20240101.sql
-```
+\`\`\`
 
 ### Обновление
 
-```bash
+\`\`\`bash
 # Получение обновлений
 git pull origin main
 
@@ -292,7 +292,7 @@ npm run migrate
 # Перезапуск
 npm run build
 npm run start
-```
+\`\`\`
 
 ## 📊 Мониторинг и аналитика
 
@@ -348,29 +348,29 @@ npm run start
 ### Частые проблемы
 
 1. **Ошибка "Module not found"**
-   ```bash
+   \`\`\`bash
    # Очистка кэша
    rm -rf .next node_modules
    npm install
-   ```
+   \`\`\`
 
 2. **Ошибки TypeScript**
-   ```bash
+   \`\`\`bash
    # Проверка типов
    npm run type-check
    
    # Исправление
    npm run build
-   ```
+   \`\`\`
 
 3. **Проблемы с базой данных**
-   ```bash
+   \`\`\`bash
    # Проверка подключения
    npm run check-env
    
    # Применение миграций
    npm run migrate
-   ```
+   \`\`\`
 
 ### Логи и отладка
 

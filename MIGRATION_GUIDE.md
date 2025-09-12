@@ -17,18 +17,18 @@
 ### Из v0.x (Pre-production)
 
 #### 1. Обновление зависимостей
-```bash
+\`\`\`bash
 # Удаление старых зависимостей
 npm uninstall @types/jest jest
 
 # Установка новых зависимостей
 npm install @types/jest@^29.5.0 jest@^29.7.0
-```
+\`\`\`
 
 #### 2. Обновление конфигурации
 
 ##### TypeScript (tsconfig.json)
-```json
+\`\`\`json
 {
   "compilerOptions": {
     "strict": true,
@@ -37,10 +37,10 @@ npm install @types/jest@^29.5.0 jest@^29.7.0
   },
   "exclude": ["node_modules", "__tests__/**/*"]
 }
-```
+\`\`\`
 
 ##### Next.js (next.config.js)
-```javascript
+\`\`\`javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -49,12 +49,12 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
-```
+\`\`\`
 
 #### 3. Обновление переменных окружения
 
 ##### Добавить новые переменные
-```env
+\`\`\`env
 # Sentry (опционально)
 NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 SENTRY_ORG=your_org
@@ -69,12 +69,12 @@ VK_GROUP_ID=your_group_id
 YOUTUBE_CLIENT_ID=your_youtube_client_id
 YOUTUBE_CLIENT_SECRET=your_youtube_client_secret
 YOUTUBE_REFRESH_TOKEN=your_youtube_refresh_token
-```
+\`\`\`
 
 #### 4. Обновление базы данных
 
 ##### Миграция 001: Initial Schema
-```sql
+\`\`\`sql
 -- Создание основных таблиц
 -- Файл: /docs/migrations/001_initial_schema.sql
 
@@ -134,10 +134,10 @@ CREATE TABLE IF NOT EXISTS leads (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-```
+\`\`\`
 
 ##### Миграция 002: Indexes
-```sql
+\`\`\`sql
 -- Создание индексов для производительности
 -- Файл: /docs/migrations/002_add_indexes.sql
 
@@ -164,10 +164,10 @@ CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
 CREATE INDEX IF NOT EXISTS idx_leads_source ON leads(source);
 CREATE INDEX IF NOT EXISTS idx_leads_stage ON leads(stage);
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at);
-```
+\`\`\`
 
 ##### Миграция 003: Triggers
-```sql
+\`\`\`sql
 -- Создание триггеров для автоматического обновления
 -- Файл: /docs/migrations/003_add_triggers.sql
 
@@ -195,17 +195,17 @@ CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
 
 CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-```
+\`\`\`
 
 #### 5. Обновление кода
 
 ##### Замена console.* на logger.*
-```bash
+\`\`\`bash
 # Автоматическая замена (уже выполнено)
 # Все console.log заменены на logger.info
 # Все console.error заменены на logger.error
 # Все console.warn заменены на logger.warn
-```
+\`\`\`
 
 **Файлы изменены**:
 - `lib/logger.ts:1-150` - Новый Logger класс
@@ -214,7 +214,7 @@ CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads
 - `lib/**/*.ts` - Замена в утилитах
 
 ##### Устранение any типов
-```typescript
+\`\`\`typescript
 // Было:
 function processData(data: any): any {
   return data.someProperty;
@@ -232,7 +232,7 @@ function processData(data: unknown): ProcessedData {
   }
   throw new Error('Invalid data format');
 }
-```
+\`\`\`
 
 **Файлы изменены**:
 - `lib/services/database-service.ts:1-100`
@@ -241,7 +241,7 @@ function processData(data: unknown): ProcessedData {
 - `app/api/**/*.ts` - Все API routes
 
 ##### Внедрение DI контейнера
-```typescript
+\`\`\`typescript
 // Новый DI контейнер
 // Файл: lib/di/container.ts:1-200
 
@@ -254,7 +254,7 @@ function MyComponent() {
   
   // Использование сервисов
 }
-```
+\`\`\`
 
 **Новые файлы**:
 - `lib/di/container.ts` - DI контейнер
@@ -265,14 +265,14 @@ function MyComponent() {
 #### 6. Добавление тестов
 
 ##### Интеграционные тесты
-```bash
+\`\`\`bash
 # Новые тестовые файлы
 __tests__/integration/auth-api.test.ts
 __tests__/integration/chat-api.test.ts
 __tests__/integration/payments-api.test.ts
 __tests__/integration/video-upload-api.test.ts
 __tests__/rag-engine.test.ts
-```
+\`\`\`
 
 **Конфигурация Jest**:
 - `jest.config.js:1-50` - Основная конфигурация
@@ -282,13 +282,13 @@ __tests__/rag-engine.test.ts
 #### 7. Error Tracking
 
 ##### Sentry интеграция
-```typescript
+\`\`\`typescript
 // Новые файлы для мониторинга
 lib/error-tracking/sentry.tsx:1-280
 lib/error-tracking/error-boundary.tsx:1-150
 lib/error-tracking/performance-monitoring.ts:1-220
 lib/error-tracking/user-feedback.ts:1-300
-```
+\`\`\`
 
 **Stub файлы** (для отсутствующих зависимостей):
 - `lib/error-tracking/sentry-stub.ts:1-50`
@@ -298,7 +298,7 @@ lib/error-tracking/user-feedback.ts:1-300
 
 ### 1. Подготовка
 
-```bash
+\`\`\`bash
 # 1. Создание резервной копии
 pg_dump $DATABASE_URL > backup_before_migration.sql
 
@@ -308,11 +308,11 @@ git checkout -b migration/v1.0.0
 # 3. Проверка текущего состояния
 npm run type-check
 npm run test
-```
+\`\`\`
 
 ### 2. Применение изменений
 
-```bash
+\`\`\`bash
 # 1. Обновление зависимостей
 npm install
 
@@ -324,11 +324,11 @@ npm run migrate
 
 # 4. Проверка конфигурации
 npm run check-env
-```
+\`\`\`
 
 ### 3. Тестирование
 
-```bash
+\`\`\`bash
 # 1. Проверка типов
 npm run type-check
 
@@ -340,11 +340,11 @@ npm run build
 
 # 4. Проверка в dev режиме
 npm run dev
-```
+\`\`\`
 
 ### 4. Деплой
 
-```bash
+\`\`\`bash
 # 1. Коммит изменений
 git add .
 git commit -m "feat: migrate to v1.0.0 - production ready"
@@ -354,11 +354,11 @@ git push origin main
 
 # 3. Деплой через v0
 # (автоматический при push в main)
-```
+\`\`\`
 
 ### 5. Проверка после деплоя
 
-```bash
+\`\`\`bash
 # 1. Проверка health endpoint
 curl https://yourdomain.com/api/health
 
@@ -367,13 +367,13 @@ curl https://yourdomain.com/api/health
 
 # 3. Проверка статуса конфигурации
 # /admin/settings/integrations
-```
+\`\`\`
 
 ## 🚨 Откат (Rollback)
 
 ### Если что-то пошло не так
 
-```bash
+\`\`\`bash
 # 1. Откат кода
 git checkout previous-commit-hash
 git push origin main --force
@@ -386,7 +386,7 @@ psql $DATABASE_URL < backup_before_migration.sql
 
 # 4. Перезапуск
 # (автоматический при push)
-```
+\`\`\`
 
 ## 📊 Проверка миграции
 
@@ -405,7 +405,7 @@ psql $DATABASE_URL < backup_before_migration.sql
 
 ### Мониторинг после миграции
 
-```bash
+\`\`\`bash
 # Проверка логов
 tail -f logs/app.log | grep -E "(ERROR|CRITICAL)"
 
@@ -414,48 +414,48 @@ curl -w "@curl-format.txt" -o /dev/null -s https://yourdomain.com/
 
 # Проверка базы данных
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM users;"
-```
+\`\`\`
 
 ## 🔧 Troubleshooting миграции
 
 ### Частые проблемы
 
 #### 1. Ошибки TypeScript
-```bash
+\`\`\`bash
 # Очистка кэша
 rm -rf .next node_modules
 npm install
 
 # Проверка типов
 npm run type-check
-```
+\`\`\`
 
 #### 2. Ошибки базы данных
-```bash
+\`\`\`bash
 # Проверка подключения
 psql $DATABASE_URL -c "SELECT 1;"
 
 # Применение миграций вручную
 psql $DATABASE_URL < docs/migrations/001_initial_schema.sql
-```
+\`\`\`
 
 #### 3. Ошибки переменных окружения
-```bash
+\`\`\`bash
 # Проверка переменных
 npm run check-env
 
 # Проверка в v0 dashboard
 # Settings → Environment Variables
-```
+\`\`\`
 
 #### 4. Ошибки тестов
-```bash
+\`\`\`bash
 # Очистка кэша Jest
 npm run test -- --clearCache
 
 # Запуск тестов с подробным выводом
 npm run test -- --verbose
-```
+\`\`\`
 
 ## 📞 Поддержка миграции
 

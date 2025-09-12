@@ -19,7 +19,7 @@
 - `app/admin/trainings/page.tsx` (650+ строк)
 
 **Детали:**
-```typescript
+\`\`\`typescript
 // app/admin/courses/builder/page.tsx:771
 // Один компонент содержит:
 // - Управление состоянием курса
@@ -27,7 +27,7 @@
 // - API вызовы
 // - UI рендеринг
 // - Бизнес-логику
-```
+\`\`\`
 
 **Риск:** Высокий - невозможность тестирования, поддержки и масштабирования
 
@@ -40,14 +40,14 @@
 - `app/admin/settings/integrations/page.tsx:146` - `Record<string, any>`
 
 **Детали:**
-```typescript
+\`\`\`typescript
 // lib/rag-engine.ts:6
 interface RAGContext {
   userMessage: string
   chatHistory?: any[]  // ❌ Должен быть строго типизирован
   userContext?: any    // ❌ Должен быть строго типизирован
 }
-```
+\`\`\`
 
 **Риск:** Критический - runtime ошибки, невозможность рефакторинга
 
@@ -60,11 +60,11 @@ interface RAGContext {
 - `app/api/*/route.ts` - прямые импорты без абстракции
 
 **Детали:**
-```typescript
+\`\`\`typescript
 // lib/supabase.ts:6
 export const supabase = createClient(env.supabaseUrl || 'http://localhost', env.supabaseAnonKey || 'public-anon-key')
 // ❌ Прямая зависимость от env без инверсии управления
-```
+\`\`\`
 
 **Риск:** Высокий - невозможность тестирования, tight coupling
 
@@ -77,11 +77,11 @@ export const supabase = createClient(env.supabaseUrl || 'http://localhost', env.
 - `components/user-menu.tsx:30` - дублирование состояния
 
 **Детали:**
-```typescript
+\`\`\`typescript
 // components/auth/admin-guard.tsx:25
 const sessionData = localStorage.getItem("admin_session")
 // ❌ Нет валидации, нет синхронизации между компонентами
-```
+\`\`\`
 
 **Риск:** Критический - race conditions, data inconsistency
 
@@ -94,7 +94,7 @@ const sessionData = localStorage.getItem("admin_session")
 - `app/api/booking/slots/route.ts:47` - `catch (error)`
 
 **Детали:**
-```typescript
+\`\`\`typescript
 // app/api/crm/leads/route.ts:143
 } catch (error: any) {
   console.error("Error creating lead:", error)
@@ -104,7 +104,7 @@ const sessionData = localStorage.getItem("admin_session")
   )
 }
 // ❌ Нет типизации ошибок, нет retry логики, нет мониторинга
-```
+\`\`\`
 
 **Риск:** Высокий - silent failures, плохой UX
 
@@ -181,7 +181,7 @@ const sessionData = localStorage.getItem("admin_session")
 ## АРХИТЕКТУРНЫЕ НАРУШЕНИЯ
 
 ### 1. Нарушение принципа инверсии зависимостей
-```typescript
+\`\`\`typescript
 // ❌ Плохо - прямая зависимость
 import { env } from '@/lib/env'
 export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey)
@@ -193,10 +193,10 @@ interface DatabaseConfig {
 }
 export const createSupabaseClient = (config: DatabaseConfig) => 
   createClient(config.url, config.key)
-```
+\`\`\`
 
 ### 2. Нарушение принципа открытости/закрытости
-```typescript
+\`\`\`typescript
 // ❌ Плохо - модификация для добавления новых платформ
 switch (platform) {
   case 'vk': return uploadToVK()
@@ -209,10 +209,10 @@ switch (platform) {
 interface VideoUploader {
   upload(file: File, metadata: any): Promise<UploadResult>
 }
-```
+\`\`\`
 
 ### 3. Нарушение принципа подстановки Лисков
-```typescript
+\`\`\`typescript
 // ❌ Плохо - разные интерфейсы для похожих операций
 class VKUploader { upload() { /* VK specific */ } }
 class YouTubeUploader { uploadVideo() { /* YouTube specific */ } }
@@ -221,7 +221,7 @@ class YouTubeUploader { uploadVideo() { /* YouTube specific */ } }
 interface VideoUploader {
   upload(file: File, metadata: any): Promise<UploadResult>
 }
-```
+\`\`\`
 
 ---
 
@@ -230,7 +230,7 @@ interface VideoUploader {
 ### Немедленно (критично)
 
 1. **Создать строгие типы для всех интерфейсов**
-```typescript
+\`\`\`typescript
 // types/api.ts
 export interface ChatMessage {
   id: string
@@ -246,10 +246,10 @@ export interface RAGContext {
   userContext: UserContext
   platform: string
 }
-```
+\`\`\`
 
 2. **Внедрить централизованное управление состоянием**
-```typescript
+\`\`\`typescript
 // stores/auth-store.ts
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -258,10 +258,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => { /* */ },
   syncWithStorage: () => { /* */ }
 }))
-```
+\`\`\`
 
 3. **Создать единообразную обработку ошибок**
-```typescript
+\`\`\`typescript
 // lib/error-handler.ts
 export class AppError extends Error {
   constructor(
@@ -277,12 +277,12 @@ export class AppError extends Error {
 export const handleApiError = (error: unknown): AppError => {
   // Единообразная обработка всех ошибок
 }
-```
+\`\`\`
 
 ### В течение недели (высоко)
 
 4. **Разделить монолитные компоненты**
-```typescript
+\`\`\`typescript
 // components/admin/crm/leads-list.tsx
 export const LeadsList = ({ leads, onLeadSelect }: LeadsListProps) => {
   // Только отображение списка лидов
@@ -297,10 +297,10 @@ export const LeadsFilters = ({ onFilterChange }: LeadsFiltersProps) => {
 export const LeadsStats = ({ leads }: LeadsStatsProps) => {
   // Только статистика
 }
-```
+\`\`\`
 
 5. **Создать абстракции для внешних сервисов**
-```typescript
+\`\`\`typescript
 // services/ai-service.ts
 export interface AIService {
   generateResponse(context: RAGContext): Promise<string>
@@ -313,12 +313,12 @@ export class YandexGPTService implements AIService {
 export class OpenAIService implements AIService {
   // Реализация для OpenAI
 }
-```
+\`\`\`
 
 ### В течение месяца (средне)
 
 6. **Добавить тесты**
-```typescript
+\`\`\`typescript
 // __tests__/api/leads.test.ts
 describe('Leads API', () => {
   it('should create lead with valid data', async () => {
@@ -329,10 +329,10 @@ describe('Leads API', () => {
     // Тест валидации
   })
 })
-```
+\`\`\`
 
 7. **Оптимизировать производительность**
-```typescript
+\`\`\`typescript
 // components/admin/crm/leads-list.tsx
 export const LeadsList = memo(({ leads, onLeadSelect }: LeadsListProps) => {
   const filteredLeads = useMemo(() => 
@@ -343,7 +343,7 @@ export const LeadsList = memo(({ leads, onLeadSelect }: LeadsListProps) => {
     // Рендеринг списка
   )
 })
-```
+\`\`\`
 
 ---
 

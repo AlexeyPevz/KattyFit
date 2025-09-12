@@ -4,7 +4,7 @@
 
 ## Структура
 
-```
+\`\`\`
 __tests__/
 ├── integration/           # Интеграционные тесты
 │   ├── auth-api.test.ts   # Тесты API аутентификации
@@ -17,34 +17,34 @@ __tests__/
 ├── error-handler.test.ts  # Тесты обработки ошибок
 ├── rag-engine.test.ts    # Тесты RAG движка
 └── README.md             # Этот файл
-```
+\`\`\`
 
 ## Запуск тестов
 
 ### Все тесты
-```bash
+\`\`\`bash
 npm test
-```
+\`\`\`
 
 ### Только unit тесты
-```bash
+\`\`\`bash
 npm run test:unit
-```
+\`\`\`
 
 ### Только интеграционные тесты
-```bash
+\`\`\`bash
 npm run test:integration
-```
+\`\`\`
 
 ### Тесты в режиме наблюдения
-```bash
+\`\`\`bash
 npm run test:watch
-```
+\`\`\`
 
 ### Тесты с покрытием кода
-```bash
+\`\`\`bash
 npm run test:coverage
-```
+\`\`\`
 
 ## Типы тестов
 
@@ -91,7 +91,7 @@ npm run test:coverage
 ## Примеры тестов
 
 ### Unit тест
-```typescript
+\`\`\`typescript
 describe('MyComponent', () => {
   it('should render correctly', () => {
     // Arrange
@@ -104,10 +104,10 @@ describe('MyComponent', () => {
     expect(result.getByText('Test')).toBeInTheDocument()
   })
 })
-```
+\`\`\`
 
 ### Интеграционный тест
-```typescript
+\`\`\`typescript
 describe('API Integration', () => {
   it('should handle complete flow', async () => {
     // Arrange
@@ -125,4 +125,4 @@ describe('API Integration', () => {
     expect(data.success).toBe(true)
   })
 })
-```
+\`\`\`

@@ -20,7 +20,7 @@
 - Все интерфейсы следуют принципам TypeScript best practices
 
 **Ключевые улучшения:**
-```typescript
+\`\`\`typescript
 // Было: any[]
 interface RAGContext {
   chatHistory?: any[]
@@ -41,7 +41,7 @@ interface ChatMessage {
   platform: 'web' | 'telegram' | 'vk' | 'whatsapp'
   metadata?: Record<string, any>
 }
-```
+\`\`\`
 
 ### 2. Централизованное управление состоянием
 
@@ -53,7 +53,7 @@ interface ChatMessage {
 - Добавлена автоматическая синхронизация с localStorage
 
 **Ключевые улучшения:**
-```typescript
+\`\`\`typescript
 // Централизованное управление аутентификацией
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -68,7 +68,7 @@ export const useAuthStore = create<AuthState>()(
     { name: 'auth-storage' }
   )
 )
-```
+\`\`\`
 
 ### 3. Единообразная обработка ошибок
 
@@ -80,7 +80,7 @@ export const useAuthStore = create<AuthState>()(
 - Добавлены утилиты для логирования и уведомлений
 
 **Ключевые улучшения:**
-```typescript
+\`\`\`typescript
 // Специализированные ошибки
 export class ValidationError extends AppError {
   public readonly fieldErrors: FieldError[]
@@ -102,7 +102,7 @@ export const withErrorHandler = (handler) => {
     }
   }
 }
-```
+\`\`\`
 
 ### 4. Абстракции для внешних сервисов
 
@@ -114,7 +114,7 @@ export const withErrorHandler = (handler) => {
 - Добавлена фабрика для создания доступных сервисов
 
 **Ключевые улучшения:**
-```typescript
+\`\`\`typescript
 // Абстракция AI сервисов
 export interface AIService {
   generateResponse(context: RAGContext): Promise<string>
@@ -128,7 +128,7 @@ export class AIServiceFactory {
     // Автоматический выбор доступного сервиса
   }
 }
-```
+\`\`\`
 
 ### 5. Абстракция базы данных
 
@@ -140,7 +140,7 @@ export class AIServiceFactory {
 - Добавлена обработка ошибок базы данных
 
 **Ключевые улучшения:**
-```typescript
+\`\`\`typescript
 // Абстракция базы данных
 export interface DatabaseService {
   getUserById(id: string): Promise<any>
@@ -154,7 +154,7 @@ export class DatabaseServiceFactory {
     return new SupabaseDatabaseService(config)
   }
 }
-```
+\`\`\`
 
 ### 6. Обновление существующих файлов
 
@@ -169,37 +169,37 @@ export class DatabaseServiceFactory {
 ## 🎯 АРХИТЕКТУРНЫЕ ПРИНЦИПЫ
 
 ### 1. Инверсия зависимостей (DIP)
-```typescript
+\`\`\`typescript
 // Вместо прямых зависимостей
 import { supabase } from './supabase'
 
 // Используем абстракции
 const database = DatabaseServiceFactory.createFromEnv()
-```
+\`\`\`
 
 ### 2. Принцип единственной ответственности (SRP)
-```typescript
+\`\`\`typescript
 // Каждый сервис отвечает за одну область
 class AIService - только AI
 class DatabaseService - только база данных
 class ErrorHandler - только обработка ошибок
-```
+\`\`\`
 
 ### 3. Принцип открытости/закрытости (OCP)
-```typescript
+\`\`\`typescript
 // Легко добавлять новые AI сервисы
 class NewAIService extends BaseAIService {
   // Реализация нового сервиса
 }
-```
+\`\`\`
 
 ### 4. Принцип подстановки Лисков (LSP)
-```typescript
+\`\`\`typescript
 // Все AI сервисы взаимозаменяемы
 const service: AIService = new YandexGPTService(config)
 // или
 const service: AIService = new OpenAIService(config)
-```
+\`\`\`
 
 ---
 

@@ -28,59 +28,59 @@
 ### useDebounce
 Задерживает обновление значения до тех пор, пока не пройдет указанное время без изменений.
 
-```typescript
+\`\`\`typescript
 const debouncedSearchTerm = useDebounce(searchTerm, 300)
-```
+\`\`\`
 
 ### useThrottle
 Ограничивает частоту вызова функции.
 
-```typescript
+\`\`\`typescript
 const throttledScrollHandler = useThrottle(handleScroll, 16) // ~60fps
-```
+\`\`\`
 
 ### useOptimizedSearch
 Оптимизированный поиск с дебаунсингом.
 
-```typescript
+\`\`\`typescript
 const filteredItems = useOptimizedSearch(
   items,
   searchTerm,
   ['name', 'email'],
   300 // debounce delay
 )
-```
+\`\`\`
 
 ### useVirtualScroll
 Виртуальная прокрутка для больших списков.
 
-```typescript
+\`\`\`typescript
 const {
   visibleItems,
   totalHeight,
   offsetY,
   setScrollTop
 } = useVirtualScroll(items, itemHeight, containerHeight, overscan)
-```
+\`\`\`
 
 ### usePerformanceMonitor
 Мониторинг производительности компонента.
 
-```typescript
+\`\`\`typescript
 const { renderCount, lastRenderTime } = usePerformanceMonitor('ComponentName')
-```
+\`\`\`
 
 ### useLazyLoad
 Ленивая загрузка компонентов при появлении в viewport.
 
-```typescript
+\`\`\`typescript
 const { ref, isIntersecting, hasLoaded } = useLazyLoad(0.1, '0px')
-```
+\`\`\`
 
 ### useOptimizedForm
 Оптимизированная обработка форм.
 
-```typescript
+\`\`\`typescript
 const {
   values,
   errors,
@@ -90,12 +90,12 @@ const {
   reset,
   isValid
 } = useOptimizedForm(initialValues, validationSchema)
-```
+\`\`\`
 
 ## Лучшие практики
 
 ### 1. Избегайте лишних ре-рендеров
-```typescript
+\`\`\`typescript
 // ❌ Плохо - создает новую функцию при каждом рендере
 <Component onClick={() => handleClick(id)} />
 
@@ -105,10 +105,10 @@ const handleClick = useCallback((id: string) => {
 }, [dependencies])
 
 <Component onClick={handleClick} />
-```
+\`\`\`
 
 ### 2. Мемоизируйте дорогие вычисления
-```typescript
+\`\`\`typescript
 // ❌ Плохо - вычисляется при каждом рендере
 const expensiveValue = items.reduce((acc, item) => acc + item.value, 0)
 
@@ -117,10 +117,10 @@ const expensiveValue = useMemo(() =>
   items.reduce((acc, item) => acc + item.value, 0), 
   [items]
 )
-```
+\`\`\`
 
 ### 3. Оптимизируйте зависимости
-```typescript
+\`\`\`typescript
 // ❌ Плохо - лишние зависимости
 useEffect(() => {
   fetchData(userId)
@@ -130,10 +130,10 @@ useEffect(() => {
 useEffect(() => {
   fetchData(userId)
 }, [userId])
-```
+\`\`\`
 
 ### 4. Используйте виртуализацию для больших списков
-```typescript
+\`\`\`typescript
 // Для списков > 100 элементов
 const { visibleItems, totalHeight, offsetY } = useVirtualScroll(
   items, 
@@ -141,10 +141,10 @@ const { visibleItems, totalHeight, offsetY } = useVirtualScroll(
   400, // высота контейнера
   5 // overscan
 )
-```
+\`\`\`
 
 ### 5. Дебаунсинг для поиска
-```typescript
+\`\`\`typescript
 const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
 const filteredItems = useMemo(() => {
@@ -152,7 +152,7 @@ const filteredItems = useMemo(() => {
     item.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   )
 }, [items, debouncedSearchTerm])
-```
+\`\`\`
 
 ## Измерение производительности
 
@@ -163,21 +163,21 @@ const filteredItems = useMemo(() => {
 4. Анализируйте компоненты с высоким временем рендеринга
 
 ### Performance API
-```typescript
+\`\`\`typescript
 // Измерение времени рендеринга
 const startTime = performance.now()
 // ... рендеринг компонента
 const endTime = performance.now()
 console.log(`Render time: ${endTime - startTime}ms`)
-```
+\`\`\`
 
 ### usePerformanceMonitor
-```typescript
+\`\`\`typescript
 const { renderCount, lastRenderTime } = usePerformanceMonitor('MyComponent')
 
 // В development режиме будет логировать:
 // [Performance] MyComponent rendered 5 times, 120ms since last render
-```
+\`\`\`
 
 ## Профилирование
 

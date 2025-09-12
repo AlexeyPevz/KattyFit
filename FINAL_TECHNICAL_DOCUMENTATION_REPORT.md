@@ -109,14 +109,14 @@
 4. **Различные пакетные менеджеры**: npm, yarn, pnpm ✅
 
 ### ✅ Результаты сборки
-```bash
+\`\`\`bash
 npm run build
 # ✅ Compiled successfully
 # ✅ Linting and checking validity of types
 # ✅ Collecting page data
 # ✅ Generating static pages (74/74)
 # ✅ Finalizing page optimization
-```
+\`\`\`
 
 **Метрики сборки**:
 - **Страниц**: 74 (статически сгенерированы)

@@ -36,7 +36,7 @@
 ## Решение
 
 ### 1. Адаптивная валидация переменных окружения для v0
-```typescript
+\`\`\`typescript
 // lib/env.ts - адаптировано для v0
 export const env = {
   get supabaseUrl() {
@@ -52,39 +52,39 @@ export const env = {
   },
   // ... остальные переменные
 }
-```
+\`\`\`
 
 ### 2. Криптографически стойкие токены
-```typescript
+\`\`\`typescript
 // app/api/admin/auth/route.ts
 const crypto = await import('crypto')
 const sessionToken = crypto.randomBytes(32).toString('hex')
-```
+\`\`\`
 
 ### 3. Timeout'ы для всех внешних запросов
-```typescript
+\`\`\`typescript
 // lib/proxy-manager.ts
 const controller = new AbortController()
 const timeoutId = setTimeout(() => controller.abort(), timeout)
-```
+\`\`\`
 
 ### 4. Circuit breaker для AI сервисов
-```typescript
+\`\`\`typescript
 // lib/rag-engine.ts
 class CircuitBreaker {
   private failures: Map<string, number> = new Map()
   private readonly maxFailures = 3
   private readonly resetTimeout = 60000
 }
-```
+\`\`\`
 
 ### 5. Валидация и санитизация входных данных
-```typescript
+\`\`\`typescript
 // app/api/chat/yandexgpt/route.ts
 if (!message || typeof message !== 'string' || message.length > 4000) {
   return NextResponse.json({ error: "Invalid input" }, { status: 400 })
 }
-```
+\`\`\`
 
 ## Последствия
 

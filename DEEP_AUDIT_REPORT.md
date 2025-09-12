@@ -43,7 +43,7 @@
 **Файл**: `components/admin/content/content-publisher.tsx`
 **Строки**: 1-500+
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Компонент выполняет:
 // 1. Управление состоянием загрузки
 // 2. HTTP запросы к API
@@ -51,7 +51,7 @@
 // 4. Рендеринг UI
 // 5. Валидацию данных
 // 6. Логирование
-```
+\`\`\`
 
 **Риск**: HIGH - Сложность тестирования, поддержки и переиспользования  
 **Патч**: Разделить на отдельные компоненты: ContentUploader, ContentValidator, ContentLogger  
@@ -61,13 +61,13 @@
 **Файл**: `components/landing/course-grid.tsx`
 **Строки**: 1-400+
 **Цитата**:
-```typescript
+\`\`\`typescript
 // В одном компоненте:
 // - Фильтрация курсов (бизнес-логика)
 // - Сортировка (бизнес-логика)
 // - Управление состоянием (UI логика)
 // - Рендеринг (UI логика)
-```
+\`\`\`
 
 **Риск**: MEDIUM - Нарушение разделения concerns  
 **Патч**: Вынести бизнес-логику в custom hooks  
@@ -79,11 +79,11 @@
 **Файл**: `lib/rag-engine.ts`
 **Строки**: 1-130
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Прямое обращение к конкретным сервисам
 const database = DatabaseServiceFactory.createFromEnv()
 const aiService = AIServiceFactory.createFromEnv()
-```
+\`\`\`
 
 **Риск**: HIGH - Сложность добавления новых AI провайдеров  
 **Патч**: Внедрить Dependency Injection контейнер  
@@ -93,14 +93,14 @@ const aiService = AIServiceFactory.createFromEnv()
 **Файл**: `app/api/content/contentstudio/route.ts`
 **Строки**: 1-100
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Прямое обращение к ContentStudio API
 const response = await fetch('https://api.contentstudio.io/v1/...', {
   headers: {
     'Authorization': `Bearer ${process.env.CONTENTSTUDIO_API_KEY}`,
   }
 })
-```
+\`\`\`
 
 **Риск**: MEDIUM - Сложность переключения на другой сервис  
 **Патч**: Создать абстракцию ContentService  
@@ -112,7 +112,7 @@ const response = await fetch('https://api.contentstudio.io/v1/...', {
 **Файл**: `lib/services/ai-service.ts`
 **Строки**: 1-433
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Разные методы для разных AI сервисов
 class YandexGPTService implements AIService {
   async generateResponse(context: RAGContext): Promise<string> { ... }
@@ -122,7 +122,7 @@ class OpenAIService implements AIService {
   async generateResponse(context: RAGContext): Promise<string> { ... }
 }
 // Но разные параметры инициализации и конфигурации
-```
+\`\`\`
 
 **Риск**: MEDIUM - Нарушение принципа подстановки  
 **Патч**: Унифицировать интерфейсы и параметры  
@@ -134,7 +134,7 @@ class OpenAIService implements AIService {
 **Файл**: `types/api.ts`
 **Строки**: 1-500
 **Цитата**:
-```typescript
+\`\`\`typescript
 export interface RAGContext {
   userMessage: string
   chatHistory: ChatMessage[]
@@ -144,7 +144,7 @@ export interface RAGContext {
   conversationId?: string
   // Много полей, не все используются в каждом случае
 }
-```
+\`\`\`
 
 **Риск**: LOW - Усложнение использования  
 **Патч**: Разделить на более мелкие интерфейсы  
@@ -156,11 +156,11 @@ export interface RAGContext {
 **Файл**: `app/api/admin/auth/route.ts`
 **Строки**: 1-135
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Прямое обращение к process.env
 const adminUsername = process.env.ADMIN_USERNAME
 const adminPassword = process.env.ADMIN_PASSWORD
-```
+\`\`\`
 
 **Риск**: HIGH - Сложность тестирования и конфигурации  
 **Патч**: Внедрить конфигурационный сервис  
@@ -172,14 +172,14 @@ const adminPassword = process.env.ADMIN_PASSWORD
 **Файл**: `app/layout.tsx`
 **Строки**: 50-60
 **Цитата**:
-```typescript
+\`\`\`typescript
 <style dangerouslySetInnerHTML={{
   __html: `
     /* Critical CSS */
     .hero-cta { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
   `
 }} />
-```
+\`\`\`
 **Риск**: LOW - Статический CSS, но нарушает best practices  
 **Патч**: Вынести в отдельный CSS файл  
 **Статус**: ❌ НЕ РЕШЕНО
@@ -188,10 +188,10 @@ const adminPassword = process.env.ADMIN_PASSWORD
 **Файл**: `lib/stores/auth-store.ts`
 **Строки**: 1-367
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Хранение чувствительных данных в localStorage
 localStorage.setItem('adminSession', JSON.stringify(session))
-```
+\`\`\`
 **Риск**: MEDIUM - Данные доступны через JavaScript  
 **Патч**: Использовать httpOnly cookies  
 **Статус**: ⚠️ ЧАСТИЧНО РЕШЕНО (есть httpOnly cookies, но дублирование в localStorage)
@@ -200,12 +200,12 @@ localStorage.setItem('adminSession', JSON.stringify(session))
 **Файл**: `app/api/chat/yandexgpt/route.ts`
 **Строки**: 1-131
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Минимальная валидация
 if (!userMessage || userMessage.length === 0) {
   return NextResponse.json({ error: 'Message is required' }, { status: 400 })
 }
-```
+\`\`\`
 **Риск**: HIGH - Injection атаки, DoS  
 **Патч**: Добавить Zod валидацию  
 **Статус**: ⚠️ ЧАСТИЧНО РЕШЕНО (есть базовая валидация, но недостаточная)
@@ -216,12 +216,12 @@ if (!userMessage || userMessage.length === 0) {
 **Файл**: `components/landing/course-grid.tsx`
 **Строки**: 200-300
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Отсутствие мемоизации
 const filteredCourses = courses.filter(course => 
   course.title.toLowerCase().includes(searchQuery.toLowerCase())
 )
-```
+\`\`\`
 **Риск**: MEDIUM - Медленный поиск при большом количестве курсов  
 **Патч**: Добавить useMemo для фильтрации  
 **Статус**: ⚠️ ЧАСТИЧНО РЕШЕНО (добавлен useOptimizedSearch, но не везде)
@@ -230,11 +230,11 @@ const filteredCourses = courses.filter(course =>
 **Файл**: `app/api/video/upload/route.ts`
 **Строки**: 1-200
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Последовательные запросы вместо параллельных
 const vkResult = await uploadToVK(videoData)
 const youtubeResult = await uploadToYouTube(videoData)
-```
+\`\`\`
 **Риск**: HIGH - Медленная загрузка видео  
 **Патч**: Использовать Promise.allSettled  
 **Статус**: ✅ РЕШЕНО
@@ -243,13 +243,13 @@ const youtubeResult = await uploadToYouTube(videoData)
 **Файл**: `app/api/courses/route.ts`
 **Строки**: 1-100
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Отсутствие кэширования курсов
 export async function GET() {
   const courses = await fetchCoursesFromDB()
   return NextResponse.json(courses)
 }
-```
+\`\`\`
 **Риск**: MEDIUM - Медленная загрузка курсов  
 **Патч**: Добавить Next.js caching  
 **Статус**: ❌ НЕ РЕШЕНО
@@ -259,7 +259,7 @@ export async function GET() {
 ### **1. Избыточное использование any**
 **Файлы**: 148 explicit any типов
 **Примеры**:
-```typescript
+\`\`\`typescript
 // types/api.ts
 body?: any
 data?: any
@@ -272,7 +272,7 @@ const handleError = (event: any) => {
 // components/admin/proxy/proxy-status.tsx
 const getProxyIcon = (proxy: any) => {
 const getProxyStatus = (proxy: any) => {
-```
+\`\`\`
 
 **Риск**: HIGH - Потеря type safety  
 **Патч**: Создать строгие типы для всех данных  
@@ -282,12 +282,12 @@ const getProxyStatus = (proxy: any) => {
 **Файл**: `lib/services/database-service.ts`
 **Строки**: 1-355
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Неиспользование generic типов
 async executeQuery<T>(sql: string, params: any[]): Promise<T[]> {
   // Возвращает any вместо конкретного типа
 }
-```
+\`\`\`
 **Риск**: MEDIUM - Слабая типизация  
 **Патч**: Добавить generic constraints  
 **Статус**: ⚠️ ЧАСТИЧНО РЕШЕНО (есть generic, но слабая типизация)
@@ -297,7 +297,7 @@ async executeQuery<T>(sql: string, params: any[]): Promise<T[]> {
 ### **1. Избыточное использование console.log**
 **Файлы**: 226 console.log/warn/error
 **Примеры**:
-```typescript
+\`\`\`typescript
 // components/auth/admin-guard.tsx
 console.log("AdminGuard: No session data found")
 console.log("AdminGuard: Session expired")
@@ -306,7 +306,7 @@ console.log("AdminGuard authcheck:", {...})
 // components/admin/content/content-publisher.tsx
 console.error('Ошибка загрузки контента:', e)
 console.error("Ошибка загрузки статуса публикаций:", error)
-```
+\`\`\`
 
 **Риск**: MEDIUM - Засорение логов в production  
 **Патч**: Использовать централизованное логирование  
@@ -316,14 +316,14 @@ console.error("Ошибка загрузки статуса публикаций
 **Файл**: `lib/logger.ts`
 **Строки**: 1-264
 **Цитата**:
-```typescript
+\`\`\`typescript
 // Есть структура, но не везде используется
 class Logger {
   async debug(message: string, context?: Record<string, any>): Promise<void>
   async info(message: string, context?: Record<string, any>): Promise<void>
   async error(message: string, context?: Record<string, any>): Promise<void>
 }
-```
+\`\`\`
 **Риск**: MEDIUM - Сложность анализа логов  
 **Патч**: Заменить все console.* на logger.*  
 **Статус**: ❌ НЕ РЕШЕНО

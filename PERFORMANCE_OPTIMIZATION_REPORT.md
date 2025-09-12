@@ -73,55 +73,55 @@
 ## 📈 ДЕТАЛЬНЫЕ РЕЗУЛЬТАТЫ
 
 ### РАЗМЕРЫ БАНДЛОВ:
-```
+\`\`\`
 Критические страницы:
 ✅ /                    | 1.86 kB  | 497 kB   | OK
 ✅ /admin               | 3.85 kB  | 499 kB   | OK
 ✅ /courses             | 3.32 kB  | 498 kB   | OK (было 207kB)
 ✅ /booking             | 4.82 kB  | 500 kB   | OK
 ✅ /player/[courseId]   | 5.35 kB  | 500 kB   | OK (было 310kB)
-```
+\`\`\`
 
 ### SHARED CHUNKS:
-```
+\`\`\`
 ✅ chunks/vendor-2d7004c70b5fc05d.js | 432 kB | Основной бандл
 ✅ other shared chunks                 | 2.06 kB | Утилиты
-```
+\`\`\`
 
 ## 🔧 ТЕХНИЧЕСКИЕ ДЕТАЛИ
 
 ### КРИТИЧЕСКИЙ CSS:
-```css
+\`\`\`css
 /* Inline в app/layout.tsx */
 *{box-sizing:border-box}
 html{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 .hero-section{min-height:100vh;display:flex;align-items:center}
 .hero-title{font-size:clamp(2.5rem,5vw,4rem);font-weight:700}
-```
+\`\`\`
 
 ### LAZY LOADING:
-```typescript
+\`\`\`typescript
 // app/page.tsx
 const CourseGrid = lazy(() => import("@/components/landing/course-grid").then(m => ({ default: m.CourseGrid })))
 const AboutTrainer = lazy(() => import("@/components/landing/about-trainer").then(m => ({ default: m.AboutTrainer })))
-```
+\`\`\`
 
 ### РЕСУРСНЫЕ ПОДСКАЗКИ:
-```html
+\`\`\`html
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
 <link rel="prefetch" href="/courses" />
-```
+\`\`\`
 
 ### OPTIMIZED IMAGE:
-```typescript
+\`\`\`typescript
 // components/ui/optimized-image.tsx
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src, alt, width, height, priority = false, ...props
 }) => {
   return <Image src={src} alt={alt} width={width} height={height} priority={priority} {...props} />
 }
-```
+\`\`\`
 
 ## 🎯 ДОСТИГНУТЫЕ ЦЕЛИ
 
@@ -134,15 +134,15 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 ## 🚀 ДОПОЛНИТЕЛЬНЫЕ ОПТИМИЗАЦИИ
 
 ### PERFORMANCE HOOKS:
-```typescript
+\`\`\`typescript
 // lib/performance-optimizations.ts
 export function useDebounce<T extends (...args: any[]) => any>(callback: T, delay: number): T
 export function useOptimizedSearch<T>(items: T[], searchFn: (item: T, query: string) => boolean, delay: number)
 export function useAnimationFrame(callback: () => void)
-```
+\`\`\`
 
 ### NEXT.JS КОНФИГУРАЦИЯ:
-```javascript
+\`\`\`javascript
 // next.config.js
 const nextConfig = {
   experimental: {
@@ -154,7 +154,7 @@ const nextConfig = {
     minimumCacheTTL: 60,
   }
 }
-```
+\`\`\`
 
 ## 📊 ИТОГОВАЯ ОЦЕНКА
 

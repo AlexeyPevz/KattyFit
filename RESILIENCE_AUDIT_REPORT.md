@@ -7,7 +7,7 @@
 **Проблема:** `lib/env.ts:12-14` - переменные возвращали пустые строки вместо ошибок
 **Решение:** Адаптивная валидация для v0 с graceful degradation на клиенте
 
-```typescript
+\`\`\`typescript
 // lib/env.ts
 export function requireEnv(name: string): string {
   const value = process.env[name]
@@ -19,55 +19,55 @@ export function requireEnv(name: string): string {
   }
   return value
 }
-```
+\`\`\`
 
 ### 2. ✅ ИСПРАВЛЕНО: Небезопасная генерация токенов
 
 **Проблема:** `app/api/admin/auth/route.ts:93` - Math.random() для токенов сессии
 **Решение:** Криптографически стойкие токены
 
-```typescript
+\`\`\`typescript
 // app/api/admin/auth/route.ts
 const crypto = await import('crypto')
 const sessionToken = crypto.randomBytes(32).toString('hex')
-```
+\`\`\`
 
 ### 3. ✅ ИСПРАВЛЕНО: Отсутствие timeout'ов
 
 **Проблема:** `lib/proxy-manager.ts:204-255` - нет защиты от зависших запросов
 **Решение:** AbortController с настраиваемыми timeout'ами
 
-```typescript
+\`\`\`typescript
 // lib/proxy-manager.ts
 const controller = new AbortController()
 const timeoutId = setTimeout(() => controller.abort(), timeout)
-```
+\`\`\`
 
 ### 4. ✅ ИСПРАВЛЕНО: Каскадные сбои AI сервисов
 
 **Проблема:** `lib/rag-engine.ts:231-254` - нет circuit breaker'а
 **Решение:** Circuit breaker с автоматическим восстановлением
 
-```typescript
+\`\`\`typescript
 // lib/rag-engine.ts
 class CircuitBreaker {
   private failures: Map<string, number> = new Map()
   private readonly maxFailures = 3
   private readonly resetTimeout = 60000
 }
-```
+\`\`\`
 
 ### 5. ✅ ИСПРАВЛЕНО: Недостаточная валидация входных данных
 
 **Проблема:** `app/api/chat/yandexgpt/route.ts:6-13` - нет санитизации
 **Решение:** Строгая валидация и лимиты
 
-```typescript
+\`\`\`typescript
 // app/api/chat/yandexgpt/route.ts
 if (!message || typeof message !== 'string' || message.length > 4000) {
   return NextResponse.json({ error: "Invalid input" }, { status: 400 })
 }
-```
+\`\`\`
 
 ## НОВЫЕ УТИЛИТЫ ДЛЯ v0
 

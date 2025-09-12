@@ -15,17 +15,17 @@
 
 ### 1. Определение интерфейса сервиса
 
-```typescript
+\`\`\`typescript
 // lib/di/services.ts
 export interface ILogger {
   info(message: string, context?: Record<string, unknown>): void
   error(message: string, context?: Record<string, unknown>): void
 }
-```
+\`\`\`
 
 ### 2. Создание реализации
 
-```typescript
+\`\`\`typescript
 // lib/di/implementations.ts
 import { Injectable } from './container'
 import { ILogger } from './services'
@@ -40,11 +40,11 @@ export class LoggerService implements ILogger {
     console.error(`[ERROR] ${message}`, context)
   }
 }
-```
+\`\`\`
 
 ### 3. Использование в React компоненте
 
-```typescript
+\`\`\`typescript
 // components/MyComponent.tsx
 import { useLogger } from '@/hooks/use-di'
 
@@ -57,13 +57,13 @@ export function MyComponent() {
 
   return <button onClick={handleClick}>Click me</button>
 }
-```
+\`\`\`
 
 ## API Reference
 
 ### Контейнер
 
-```typescript
+\`\`\`typescript
 import { container } from '@/lib/di/container'
 
 // Регистрация сервиса
@@ -80,11 +80,11 @@ const service = container.get<IMyService>('myService')
 
 // Проверка существования
 const exists = container.has('myService')
-```
+\`\`\`
 
 ### Декораторы
 
-```typescript
+\`\`\`typescript
 import { Injectable, Inject } from '@/lib/di/container'
 
 @Injectable(true) // singleton
@@ -94,11 +94,11 @@ export class MyService {
     @Inject('config') private config: IConfig
   ) {}
 }
-```
+\`\`\`
 
 ### React хуки
 
-```typescript
+\`\`\`typescript
 import { 
   useService, 
   useServices, 
@@ -115,7 +115,7 @@ const { logger, auth, cache } = useServices(['logger', 'authService', 'cacheServ
 // Специализированные хуки
 const logger = useLogger()
 const auth = useAuth()
-```
+\`\`\`
 
 ## Доступные сервисы
 
@@ -138,7 +138,7 @@ const auth = useAuth()
 
 ### Аутентификация
 
-```typescript
+\`\`\`typescript
 function LoginForm() {
   const auth = useAuth()
   const logger = useLogger()
@@ -158,11 +158,11 @@ function LoginForm() {
 
   return <form onSubmit={handleLogin}>...</form>
 }
-```
+\`\`\`
 
 ### Кеширование
 
-```typescript
+\`\`\`typescript
 function DataComponent() {
   const cache = useCache()
   const [data, setData] = useState(null)
@@ -187,11 +187,11 @@ function DataComponent() {
 
   return <div>{data && JSON.stringify(data)}</div>
 }
-```
+\`\`\`
 
 ### Валидация
 
-```typescript
+\`\`\`typescript
 function ContactForm() {
   const validation = useValidation()
   const [email, setEmail] = useState('')
@@ -217,13 +217,13 @@ function ContactForm() {
     </div>
   )
 }
-```
+\`\`\`
 
 ## Тестирование
 
 ### Мокирование сервисов
 
-```typescript
+\`\`\`typescript
 import { createTestContainer } from '@/lib/di/setup'
 
 describe('MyComponent', () => {
@@ -241,11 +241,11 @@ describe('MyComponent', () => {
     expect(mockLogger.info).toHaveBeenCalledWith('Button clicked')
   })
 })
-```
+\`\`\`
 
 ### Замена сервисов в тестах
 
-```typescript
+\`\`\`typescript
 import { container } from '@/lib/di/container'
 
 beforeEach(() => {
@@ -256,7 +256,7 @@ beforeEach(() => {
     // ... другие методы
   })
 })
-```
+\`\`\`
 
 ## Лучшие практики
 
@@ -268,11 +268,11 @@ beforeEach(() => {
 
 Указывайте зависимости при регистрации сервисов:
 
-```typescript
+\`\`\`typescript
 container.registerClass('userService', UserService, {
   dependencies: ['logger', 'apiService']
 })
-```
+\`\`\`
 
 ### 3. Используйте специализированные хуки
 
@@ -280,20 +280,20 @@ container.registerClass('userService', UserService, {
 
 ### 4. Группируйте связанные сервисы
 
-```typescript
+\`\`\`typescript
 const { logger, auth, cache } = useServices(['logger', 'authService', 'cacheService'])
-```
+\`\`\`
 
 ### 5. Обрабатывайте ошибки
 
-```typescript
+\`\`\`typescript
 try {
   const result = await auth.login(credentials)
 } catch (error) {
   logger.error('Login failed', { error })
   notifications.sendNotification('user', 'Login failed', 'error')
 }
-```
+\`\`\`
 
 ## Производительность
 
@@ -305,8 +305,8 @@ try {
 
 Для отладки можно получить список всех зарегистрированных сервисов:
 
-```typescript
+\`\`\`typescript
 import { getRegisteredServices } from '@/lib/di/setup'
 
 console.log('Registered services:', getRegisteredServices())
-```
+\`\`\`

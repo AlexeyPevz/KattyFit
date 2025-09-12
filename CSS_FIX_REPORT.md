@@ -22,14 +22,14 @@
 ### ✅ **1. Создан PostCSS конфигурационный файл**
 **Файл**: `postcss.config.js`  
 **Содержание**:
-```javascript
+\`\`\`javascript
 module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
 }
-```
+\`\`\`
 
 ### ✅ **2. Исправлен globals.css**
 **Файл**: `app/globals.css`  
@@ -38,22 +38,22 @@ module.exports = {
 - Добавлены недостающие CSS переменные для chart и sidebar компонентов
 
 **До**:
-```css
+\`\`\`css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @import '../styles/admin-mobile.css'; /* ❌ Несуществующий файл */
-```
+\`\`\`
 
 **После**:
-```css
+\`\`\`css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ✅ Удален несуществующий импорт */
-```
+\`\`\`
 
 ### ✅ **3. Добавлены недостающие CSS переменные**
 **Добавлены переменные для**:
@@ -61,7 +61,7 @@ module.exports = {
 - Sidebar компонентов (sidebar-background, sidebar-foreground, и т.д.)
 
 **Light mode**:
-```css
+\`\`\`css
 :root {
   /* ... существующие переменные ... */
   --chart-1: 12 76% 61%;
@@ -78,10 +78,10 @@ module.exports = {
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
 }
-```
+\`\`\`
 
 **Dark mode**:
-```css
+\`\`\`css
 .dark {
   /* ... существующие переменные ... */
   --chart-1: 12 76% 61%;
@@ -98,19 +98,19 @@ module.exports = {
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 217.2 91.2% 59.8%;
 }
-```
+\`\`\`
 
 ## ✅ РЕЗУЛЬТАТ
 
 ### **Успешная сборка**
-```bash
+\`\`\`bash
 npm run build
 # ✅ Compiled successfully
 # ✅ Linting and checking validity of types
 # ✅ Collecting page data
 # ✅ Generating static pages (74/74)
 # ✅ Finalizing page optimization
-```
+\`\`\`
 
 ### **Метрики сборки**
 - **Страниц**: 74 (статически сгенерированы)
@@ -137,7 +137,7 @@ npm run build
 ## 🔍 ДЕТАЛИ ИСПРАВЛЕНИЙ
 
 ### 1. PostCSS конфигурация
-```javascript
+\`\`\`javascript
 // postcss.config.js
 module.exports = {
   plugins: {
@@ -145,7 +145,7 @@ module.exports = {
     autoprefixer: {},     // Автопрефиксы для браузеров
   },
 }
-```
+\`\`\`
 
 ### 2. CSS переменные
 Добавлены все необходимые переменные для:
@@ -172,11 +172,11 @@ module.exports = {
 
 ### ✅ **Следующие шаги**
 1. **Коммит изменений**:
-   ```bash
+   \`\`\`bash
    git add postcss.config.js app/globals.css
    git commit -m "fix: add PostCSS config and complete CSS variables"
    git push origin main
-   ```
+   \`\`\`
 
 2. **Деплой**: Vercel автоматически пересоберет проект с правильными стилями
 
@@ -191,7 +191,7 @@ module.exports = {
 - **Градиенты**: Yoga-themed градиенты для фитнес-тематики
 
 ### **Кастомные классы**
-```css
+\`\`\`css
 .yoga-gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -207,7 +207,7 @@ module.exports = {
 .smooth-transition {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-```
+\`\`\`
 
 ## 🎯 ЗАКЛЮЧЕНИЕ
 

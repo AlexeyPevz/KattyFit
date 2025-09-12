@@ -7,7 +7,7 @@
 ### 1. Проверка статуса приложения
 
 #### Автоматическая проверка
-```bash
+\`\`\`bash
 # Проверка health endpoint
 curl https://yourdomain.com/api/health
 
@@ -21,7 +21,7 @@ curl https://yourdomain.com/api/health
     "payments": "healthy"
   }
 }
-```
+\`\`\`
 
 #### Ручная проверка через админку
 1. Откройте `https://yourdomain.com/admin`
@@ -36,7 +36,7 @@ curl https://yourdomain.com/api/health
 - **Критические ошибки**: Настройте алерты
 
 #### Локальные логи
-```bash
+\`\`\`bash
 # Просмотр логов в development
 npm run dev
 
@@ -46,7 +46,7 @@ npm run dev
 # [WARN] - Предупреждения
 # [ERROR] - Ошибки
 # [CRITICAL] - Критические ошибки
-```
+\`\`\`
 
 **Файл логгера**: `lib/logger.ts:1-150`
 
@@ -66,25 +66,25 @@ npm run dev
 ### 1. Резервное копирование
 
 #### База данных (Supabase)
-```bash
+\`\`\`bash
 # Экспорт через Supabase CLI
 supabase db dump --file backup_$(date +%Y%m%d).sql
 
 # Или через pg_dump
 pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
-```
+\`\`\`
 
 #### Файлы и медиа
-```bash
+\`\`\`bash
 # Резервное копирование загруженных файлов
 # (если используется локальное хранилище)
 tar -czf media_backup_$(date +%Y%m%d).tar.gz /path/to/media
-```
+\`\`\`
 
 ### 2. Обновления
 
 #### Обновление кода
-```bash
+\`\`\`bash
 # Получение обновлений
 git pull origin main
 
@@ -99,14 +99,14 @@ npm run test
 
 # Сборка
 npm run build
-```
+\`\`\`
 
 #### Применение миграций
-```bash
+\`\`\`bash
 # Миграции выполняются автоматически при деплое
 # Ручное применение (если нужно):
 npm run migrate
-```
+\`\`\`
 
 ### 3. Масштабирование
 
@@ -124,7 +124,7 @@ npm run migrate
 ### 1. Частые проблемы
 
 #### Проблема: Приложение не запускается
-```bash
+\`\`\`bash
 # Проверка переменных окружения
 npm run check-env
 
@@ -134,30 +134,30 @@ npm run type-check
 # Очистка кэша
 rm -rf .next node_modules
 npm install
-```
+\`\`\`
 
 #### Проблема: Ошибки базы данных
-```bash
+\`\`\`bash
 # Проверка подключения к Supabase
 curl -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" \
      $NEXT_PUBLIC_SUPABASE_URL/rest/v1/
 
 # Проверка миграций
 npm run migrate:status
-```
+\`\`\`
 
 #### Проблема: AI сервисы не работают
-```bash
+\`\`\`bash
 # Проверка API ключей
 curl -H "Authorization: Bearer $YANDEX_GPT_API_KEY" \
      https://llm.api.cloud.yandex.net/foundationModels/v1/completion
 
 # Проверка через админку
 # /admin/settings/integrations
-```
+\`\`\`
 
 #### Проблема: Платежи не обрабатываются
-```bash
+\`\`\`bash
 # Проверка CloudPayments
 curl -H "Authorization: Basic $(echo -n $CLOUDPAYMENTS_PUBLIC_ID:$CLOUDPAYMENTS_SECRET | base64)" \
      https://api.cloudpayments.ru/payments/find
@@ -166,7 +166,7 @@ curl -H "Authorization: Basic $(echo -n $CLOUDPAYMENTS_PUBLIC_ID:$CLOUDPAYMENTS_
 curl -X POST https://yourdomain.com/api/webhooks/cloudpayments \
      -H "Content-Type: application/json" \
      -d '{"test": true}'
-```
+\`\`\`
 
 ### 2. Логи и отладка
 
@@ -187,7 +187,7 @@ curl -X POST https://yourdomain.com/api/webhooks/cloudpayments \
 ### 3. Восстановление после сбоев
 
 #### Полное восстановление
-```bash
+\`\`\`bash
 # 1. Восстановление кода
 git checkout main
 git pull origin main
@@ -202,10 +202,10 @@ psql $DATABASE_URL < backup_latest.sql
 # 4. Перезапуск
 npm run build
 npm run start
-```
+\`\`\`
 
 #### Частичное восстановление
-```bash
+\`\`\`bash
 # Восстановление только конфигурации
 npm run check-env
 
@@ -214,7 +214,7 @@ npm run migrate
 
 # Перезапуск сервисов
 npm run restart
-```
+\`\`\`
 
 ## 📈 Аналитика и метрики
 
@@ -266,13 +266,13 @@ npm run restart
 - Ошибки аутентификации
 
 #### Логи безопасности
-```bash
+\`\`\`bash
 # Поиск подозрительной активности
 grep -i "unauthorized\|forbidden\|hack\|attack" logs/app.log
 
 # Мониторинг API запросов
 grep -i "api" logs/app.log | tail -100
-```
+\`\`\`
 
 ### 3. Инциденты
 

@@ -5,36 +5,36 @@
 ## 🚀 За 5 минут
 
 ### 1. Клонирование и установка
-```bash
+\`\`\`bash
 # Клонируйте репозиторий
 git clone https://github.com/your-username/ai-content-studio.git
 cd ai-content-studio
 
 # Установите зависимости
 npm install
-```
+\`\`\`
 
 ### 2. Настройка окружения
-```bash
+\`\`\`bash
 # Скопируйте шаблон
 cp .env.example .env.local
 
 # Отредактируйте переменные
 nano .env.local
-```
+\`\`\`
 
 **Минимальные переменные**:
-```env
+\`\`\`env
 # Supabase (обязательно)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # AI (для чата)
 YANDEX_GPT_API_KEY=your_yandex_key
-```
+\`\`\`
 
 ### 3. Запуск
-```bash
+\`\`\`bash
 # Проверка
 npm run type-check
 
@@ -43,7 +43,7 @@ npm run build
 
 # Запуск
 npm run dev
-```
+\`\`\`
 
 ### 4. Проверка
 - Откройте http://localhost:3000
@@ -53,10 +53,10 @@ npm run dev
 ## 🔧 Полная настройка
 
 ### Автоматическая настройка
-```bash
+\`\`\`bash
 # Запустите скрипт настройки
 ./scripts/setup-from-scratch.sh
-```
+\`\`\`
 
 ### Ручная настройка
 
@@ -114,20 +114,20 @@ npm run dev
 ## 🐛 Troubleshooting
 
 ### Ошибка: "Module not found"
-```bash
+\`\`\`bash
 # Очистка кэша
 rm -rf .next node_modules
 npm install
-```
+\`\`\`
 
 ### Ошибка: "TypeScript errors"
-```bash
+\`\`\`bash
 # Проверка типов
 npm run type-check
 
 # Исправление (если нужно)
 npm run build
-```
+\`\`\`
 
 ### Ошибка: "Database connection failed"
 1. Проверьте Supabase URL и ключи
@@ -135,13 +135,13 @@ npm run build
 3. Проверьте SQL схему
 
 ### Ошибка: "Build failed"
-```bash
+\`\`\`bash
 # Подробный вывод
 npm run build -- --verbose
 
 # Проверка зависимостей
 npm ls
-```
+\`\`\`
 
 ## 📞 Поддержка
 
@@ -157,7 +157,7 @@ npm ls
 - **Slack**: #kattyfit-support
 
 ### Полезные команды
-```bash
+\`\`\`bash
 # Проверка статуса
 npm run check-env
 
@@ -172,7 +172,7 @@ npm run build
 
 # Запуск продакшен сервера
 npm run start
-```
+\`\`\`
 
 ---
 
