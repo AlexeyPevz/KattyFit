@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Объединяем чанки в один файл
-    const completeBuffer = Buffer.concat(uploadedChunks.map(chunk => Buffer.from(chunk)))
+    const completeBuffer = Buffer.concat(uploadedChunks)
     
     // Генерируем уникальное имя файла
     const timestamp = Date.now()

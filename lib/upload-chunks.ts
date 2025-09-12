@@ -3,7 +3,7 @@ const MAX_MEMORY_SIZE = 500 * 1024 * 1024 // 500MB макс
 let currentMemoryUsage = 0
 
 const chunkStorage = new Map<string, {
-  chunks: Map<number, Buffer>
+  chunks: Map<number, Uint8Array>
   metadata: Record<string, unknown>
   totalChunks: number
   uploadedAt: Date
@@ -26,14 +26,14 @@ const cleanupInterval = setInterval(() => {
   currentMemoryUsage -= memoryFreed
 }, 5 * 60 * 1000) // Каждые 5 минут
 
-export function getUploadedChunks(uploadId: string): Buffer[] | null {
+export function getUploadedChunks(uploadId: string): Uint8Array[] | null {
   const uploadData = chunkStorage.get(uploadId)
   if (!uploadData || uploadData.chunks.size !== uploadData.totalChunks) {
     return null
   }
 
   // Собираем чанки в правильном порядке
-  const chunks: Buffer[] = []
+  const chunks: Uint8Array[] = []
   for (let i = 0; i < uploadData.totalChunks; i++) {
     const chunk = uploadData.chunks.get(i)
     if (!chunk) return null
@@ -51,7 +51,7 @@ export function cleanupUpload(uploadId: string): void {
   }
 }
 
-export function storeChunk(uploadId: string, chunkIndex: number, chunk: Buffer, metadata: Record<string, unknown>, totalChunks: number): void {
+export function storeChunk(uploadId: string, chunkIndex: number, chunk: Uint8Array, metadata: Record<string, unknown>, totalChunks: number): void {
   let uploadData = chunkStorage.get(uploadId)
   
   if (!uploadData) {
