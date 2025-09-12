@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { AdminGuard } from "@/components/auth/admin-guard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -46,36 +46,38 @@ export function CRMDashboardComponent({
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
 
-  // Filter leads based on current filters
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch = !filters.search || 
-      lead.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      lead.email.toLowerCase().includes(filters.search.toLowerCase()) ||
-      (lead.phone && lead.phone.includes(filters.search))
+  // Filter leads based on current filters - memoized for performance
+  const filteredLeads = useMemo(() => {
+    return leads.filter(lead => {
+      const matchesSearch = !filters.search || 
+        lead.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        lead.email.toLowerCase().includes(filters.search.toLowerCase()) ||
+        (lead.phone && lead.phone.includes(filters.search))
 
-    const matchesStage = !filters.stage || lead.stage === filters.stage
-    const matchesSource = !filters.source || lead.source === filters.source
+      const matchesStage = !filters.stage || lead.stage === filters.stage
+      const matchesSource = !filters.source || lead.source === filters.source
 
-    const matchesDateFrom = !filters.dateFrom || 
-      new Date(lead.createdAt) >= new Date(filters.dateFrom)
-    
-    const matchesDateTo = !filters.dateTo || 
-      new Date(lead.createdAt) <= new Date(filters.dateTo)
+      const matchesDateFrom = !filters.dateFrom || 
+        new Date(lead.createdAt) >= new Date(filters.dateFrom)
+      
+      const matchesDateTo = !filters.dateTo || 
+        new Date(lead.createdAt) <= new Date(filters.dateTo)
 
-    const matchesTags = filters.tags.length === 0 || 
-      filters.tags.some(tag => lead.tags.includes(tag))
+      const matchesTags = filters.tags.length === 0 || 
+        filters.tags.some(tag => lead.tags.includes(tag))
 
-    return matchesSearch && matchesStage && matchesSource && 
-           matchesDateFrom && matchesDateTo && matchesTags
-  })
+      return matchesSearch && matchesStage && matchesSource && 
+             matchesDateFrom && matchesDateTo && matchesTags
+    })
+  }, [leads, filters])
 
   // Load leads and stats
   useEffect(() => {
     loadLeads()
     loadStats()
-  }, [])
+  }, [loadLeads, loadStats])
 
-  const loadLeads = async () => {
+  const loadLeads = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch('/api/crm/leads')
@@ -91,9 +93,9 @@ export function CRMDashboardComponent({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const response = await fetch('/api/crm/stats')
       const data = await response.json()
@@ -106,9 +108,9 @@ export function CRMDashboardComponent({
     } catch (error) {
       logger.error('Error loading CRM stats', { error: error instanceof Error ? error.message : String(error) })
     }
-  }
+  }, [])
 
-  const handleLeadSave = async (leadData: LeadFormData) => {
+  const handleLeadSave = useCallback(async (leadData: LeadFormData) => {
     try {
       setIsLoading(true)
       
@@ -146,9 +148,9 @@ export function CRMDashboardComponent({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [editingLead, loadStats])
 
-  const handleLeadUpdate = async (leadId: string, updates: Partial<Lead>) => {
+  const handleLeadUpdate = useCallback(async (leadId: string, updates: Partial<Lead>) => {
     try {
       const response = await fetch(`/api/crm/leads/${leadId}`, {
         method: 'PUT',
@@ -172,9 +174,9 @@ export function CRMDashboardComponent({
     } catch (error) {
       logger.error('Error updating lead', { error: error instanceof Error ? error.message : String(error) })
     }
-  }
+  }, [loadStats])
 
-  const handleLeadDelete = async (leadId: string) => {
+  const handleLeadDelete = useCallback(async (leadId: string) => {
     try {
       const response = await fetch(`/api/crm/leads/${leadId}`, {
         method: 'DELETE'
@@ -192,9 +194,9 @@ export function CRMDashboardComponent({
     } catch (error) {
       logger.error('Error deleting lead', { error: error instanceof Error ? error.message : String(error) })
     }
-  }
+  }, [loadStats])
 
-  const handleAddActivity = async (leadId: string, activity: Omit<LeadActivity, 'id' | 'leadId' | 'createdAt'>) => {
+  const handleAddActivity = useCallback(async (leadId: string, activity: Omit<LeadActivity, 'id' | 'leadId' | 'createdAt'>) => {
     try {
       const response = await fetch(`/api/crm/leads/${leadId}/activities`, {
         method: 'POST',
@@ -214,13 +216,13 @@ export function CRMDashboardComponent({
     } catch (error) {
       logger.error('Error adding activity', { error: error instanceof Error ? error.message : String(error) })
     }
-  }
+  }, [])
 
-  const handleFiltersChange = (newFilters: LeadFilters) => {
+  const handleFiltersChange = useCallback((newFilters: LeadFilters) => {
     setFilters(newFilters)
-  }
+  }, [])
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setFilters({
       search: "",
       stage: "",
@@ -229,17 +231,17 @@ export function CRMDashboardComponent({
       dateTo: "",
       tags: []
     })
-  }
+  }, [])
 
-  const handleEditLead = (lead: Lead) => {
+  const handleEditLead = useCallback((lead: Lead) => {
     setEditingLead(lead)
     setIsLeadFormOpen(true)
-  }
+  }, [])
 
-  const handleAddLead = () => {
+  const handleAddLead = useCallback(() => {
     setEditingLead(null)
     setIsLeadFormOpen(true)
-  }
+  }, [])
 
   return (
     <AdminGuard>

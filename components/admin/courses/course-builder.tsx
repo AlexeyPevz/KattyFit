@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { AdminGuard } from "@/components/auth/admin-guard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,14 +51,7 @@ export function CourseBuilderComponent({
 
   const [activeTab, setActiveTab] = useState("info")
 
-  // Load course data
-  useEffect(() => {
-    if (courseId) {
-      loadCourse(courseId)
-    }
-  }, [courseId])
-
-  const loadCourse = async (id: string) => {
+  const loadCourse = useCallback(async (id: string) => {
     try {
       const response = await fetch(`/api/admin/courses/${id}`)
       const data = await response.json()
@@ -74,9 +67,16 @@ export function CourseBuilderComponent({
     } catch (error) {
       logger.error('Error loading course', { error: error instanceof Error ? error.message : String(error) })
     }
-  }
+  }, [])
 
-  const handleCourseDataChange = (courseData: CourseFormData) => {
+  // Load course data
+  useEffect(() => {
+    if (courseId) {
+      loadCourse(courseId)
+    }
+  }, [courseId, loadCourse])
+
+  const handleCourseDataChange = useCallback((courseData: CourseFormData) => {
     setState(prev => ({
       ...prev,
       course: {
@@ -85,9 +85,9 @@ export function CourseBuilderComponent({
       },
       hasUnsavedChanges: true
     }))
-  }
+  }, [])
 
-  const handleModulesChange = (modules: CourseModule[]) => {
+  const handleModulesChange = useCallback((modules: CourseModule[]) => {
     setState(prev => ({
       ...prev,
       course: {
@@ -96,58 +96,62 @@ export function CourseBuilderComponent({
       },
       hasUnsavedChanges: true
     }))
-  }
+  }, [])
 
-  const handleModuleSelect = (module: CourseModule) => {
+  const handleModuleSelect = useCallback((module: CourseModule) => {
     setState(prev => ({
       ...prev,
       selectedModule: module,
       selectedLesson: null
     }))
-  }
+  }, [])
 
-  const handleLessonSelect = (lesson: CourseLesson) => {
+  const handleLessonSelect = useCallback((lesson: CourseLesson) => {
     setState(prev => ({
       ...prev,
       selectedLesson: lesson
     }))
-  }
+  }, [])
 
-  const handleLessonUpdate = (lesson: CourseLesson) => {
-    const updatedModules = state.course.modules.map(module => ({
-      ...module,
-      lessons: module.lessons.map(l => l.id === lesson.id ? lesson : l)
-    }))
+  const handleLessonUpdate = useCallback((lesson: CourseLesson) => {
+    setState(prev => {
+      const updatedModules = prev.course.modules.map(module => ({
+        ...module,
+        lessons: module.lessons.map(l => l.id === lesson.id ? lesson : l)
+      }))
 
-    setState(prev => ({
-      ...prev,
-      course: {
-        ...prev.course,
-        modules: updatedModules
-      },
-      selectedLesson: lesson,
-      hasUnsavedChanges: true
-    }))
-  }
+      return {
+        ...prev,
+        course: {
+          ...prev.course,
+          modules: updatedModules
+        },
+        selectedLesson: lesson,
+        hasUnsavedChanges: true
+      }
+    })
+  }, [])
 
-  const handleLessonDelete = (lessonId: string) => {
-    const updatedModules = state.course.modules.map(module => ({
-      ...module,
-      lessons: module.lessons.filter(l => l.id !== lessonId)
-    }))
+  const handleLessonDelete = useCallback((lessonId: string) => {
+    setState(prev => {
+      const updatedModules = prev.course.modules.map(module => ({
+        ...module,
+        lessons: module.lessons.filter(l => l.id !== lessonId)
+      }))
 
-    setState(prev => ({
-      ...prev,
-      course: {
-        ...prev.course,
-        modules: updatedModules
-      },
-      selectedLesson: null,
-      hasUnsavedChanges: true
-    }))
-  }
+      return {
+        ...prev,
+        course: {
+          ...prev.course,
+          modules: updatedModules
+        },
+        selectedLesson: null,
+        hasUnsavedChanges: true
+      }
+    })
+  }, [])
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, isSaving: true }))
       
@@ -180,26 +184,26 @@ export function CourseBuilderComponent({
     } finally {
       setState(prev => ({ ...prev, isSaving: false }))
     }
-  }
+  }, [state.course])
 
-  const handlePreview = () => {
+  const handlePreview = useCallback(() => {
     setState(prev => ({
       ...prev,
       isPreviewMode: !prev.isPreviewMode
     }))
-  }
+  }, [])
 
-  const calculateTotalDuration = () => {
+  const calculateTotalDuration = useMemo(() => {
     return state.course.modules.reduce((total, module) => {
       return total + module.lessons.reduce((moduleTotal, lesson) => {
         return moduleTotal + lesson.duration
       }, 0)
     }, 0)
-  }
+  }, [state.course.modules])
 
-  const getTotalLessons = () => {
+  const getTotalLessons = useMemo(() => {
     return state.course.modules.reduce((total, module) => total + module.lessons.length, 0)
-  }
+  }, [state.course.modules])
 
   return (
     <AdminGuard>

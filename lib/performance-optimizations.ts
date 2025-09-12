@@ -1,97 +1,248 @@
-// Оптимизации производительности для INP (Interaction to Next Paint)
-// Улучшение отзывчивости интерфейса
+import { useCallback, useMemo, useRef, useEffect } from 'react'
 
-import { useCallback, useMemo, useRef, useEffect, useState } from 'react'
-import logger from './logger'
+// ===== DEBOUNCE HOOK =====
 
-// Дебаунс для оптимизации частых вызовов
-export function useDebounce<T extends (...args: unknown[]) => unknown>(
-  callback: T,
-  delay: number
-): T {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  
-  return useCallback((...args: Parameters<T>) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    
-    timeoutRef.current = setTimeout(() => {
-      callback(...args)
+export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
     }, delay)
-  }, [callback, delay]) as T
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
 }
 
-// Троттлинг для ограничения частоты вызовов
+// ===== THROTTLE HOOK =====
+
 export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
-  const lastCallRef = useRef<number>(0)
-  
-  return useCallback((...args: Parameters<T>) => {
-    const now = Date.now()
-    
-    if (now - lastCallRef.current >= delay) {
-      lastCallRef.current = now
-      callback(...args)
-    }
-  }, [callback, delay]) as T
+  const lastRun = useRef(Date.now())
+
+  return useCallback(
+    ((...args: Parameters<T>) => {
+      if (Date.now() - lastRun.current >= delay) {
+        callback(...args)
+        lastRun.current = Date.now()
+      }
+    }) as T,
+    [callback, delay]
+  )
 }
 
-// Мемоизация для тяжелых вычислений
-export function useMemoizedValue<T>(
-  factory: () => T,
-  deps: React.DependencyList
-): T {
-  return useMemo(factory, deps)
+// ===== OPTIMIZED SEARCH =====
+
+export function useOptimizedSearch<T>(
+  items: T[],
+  searchTerm: string,
+  searchFields: (keyof T)[],
+  debounceDelay: number = 300
+) {
+  const debouncedSearchTerm = useDebounce(searchTerm, debounceDelay)
+
+  const filteredItems = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return items
+
+    return items.filter(item =>
+      searchFields.some(field => {
+        const value = item[field]
+        if (typeof value === 'string') {
+          return value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        }
+        return false
+      })
+    )
+  }, [items, debouncedSearchTerm, searchFields])
+
+  return filteredItems
 }
 
-// Оптимизация для больших списков
-export function useVirtualization<T>(
+// ===== VIRTUAL SCROLLING =====
+
+export function useVirtualScroll<T>(
   items: T[],
   itemHeight: number,
-  containerHeight: number
+  containerHeight: number,
+  overscan: number = 5
 ) {
-  const scrollTop = useRef(0)
-  
-  const visibleItems = useMemo(() => {
-    const startIndex = Math.floor(scrollTop.current / itemHeight)
+  const [scrollTop, setScrollTop] = useState(0)
+
+  const visibleRange = useMemo(() => {
+    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan)
     const endIndex = Math.min(
-      startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-      items.length
+      items.length - 1,
+      Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
     )
-    
-    return items.slice(startIndex, endIndex).map((item, index) => ({
-      item,
-      index: startIndex + index,
-      top: (startIndex + index) * itemHeight,
-    }))
-  }, [items, itemHeight, containerHeight, scrollTop.current])
-  
+    return { startIndex, endIndex }
+  }, [scrollTop, itemHeight, containerHeight, items.length, overscan])
+
+  const visibleItems = useMemo(() => {
+    return items.slice(visibleRange.startIndex, visibleRange.endIndex + 1)
+  }, [items, visibleRange])
+
+  const totalHeight = items.length * itemHeight
+  const offsetY = visibleRange.startIndex * itemHeight
+
   return {
     visibleItems,
-    totalHeight: items.length * itemHeight,
-    updateScrollTop: (newScrollTop: number) => {
-      scrollTop.current = newScrollTop
-    }
+    totalHeight,
+    offsetY,
+    setScrollTop
   }
 }
 
-// Оптимизация для анимаций
-export function useAnimationFrame(callback: () => void) {
-  const requestRef = useRef<number | null>(null)
-  const previousTimeRef = useRef<number | null>(null)
+// ===== MEMOIZED CALLBACKS =====
+
+export function useStableCallback<T extends (...args: unknown[]) => unknown>(
+  callback: T
+): T {
+  const callbackRef = useRef(callback)
+  callbackRef.current = callback
+
+  return useCallback(
+    ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
+    []
+  )
+}
+
+// ===== OPTIMIZED LIST RENDERING =====
+
+export function useOptimizedList<T>(
+  items: T[],
+  keyExtractor: (item: T, index: number) => string | number,
+  itemHeight?: number
+) {
+  const memoizedItems = useMemo(() => items, [items])
   
+  const getItemKey = useCallback(keyExtractor, [keyExtractor])
+
+  return {
+    items: memoizedItems,
+    getItemKey,
+    itemHeight
+  }
+}
+
+// ===== PERFORMANCE MONITORING =====
+
+export function usePerformanceMonitor(componentName: string) {
+  const renderCount = useRef(0)
+  const lastRenderTime = useRef(Date.now())
+
+  useEffect(() => {
+    renderCount.current += 1
+    const now = Date.now()
+    const timeSinceLastRender = now - lastRenderTime.current
+    lastRenderTime.current = now
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Performance] ${componentName} rendered ${renderCount.current} times, ${timeSinceLastRender}ms since last render`)
+    }
+  })
+
+  return {
+    renderCount: renderCount.current,
+    lastRenderTime: lastRenderTime.current
+  }
+}
+
+// ===== OPTIMIZED FORM HANDLING =====
+
+export function useOptimizedForm<T extends Record<string, unknown>>(
+  initialValues: T,
+  validationSchema?: (values: T) => Record<string, string>
+) {
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  const setValue = useCallback((field: keyof T, value: T[keyof T]) => {
+    setValues(prev => ({ ...prev, [field]: value }))
+    
+    if (validationSchema) {
+      const newErrors = validationSchema({ ...values, [field]: value })
+      setErrors(prev => ({ ...prev, [field]: newErrors[field] || '' }))
+    }
+  }, [values, validationSchema])
+
+  const setFieldTouched = useCallback((field: keyof T) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+  }, [])
+
+  const reset = useCallback(() => {
+    setValues(initialValues)
+    setErrors({})
+    setTouched({})
+  }, [initialValues])
+
+  const isValid = useMemo(() => {
+    return Object.values(errors).every(error => !error)
+  }, [errors])
+
+  return {
+    values,
+    errors,
+    touched,
+    setValue,
+    setFieldTouched,
+    reset,
+    isValid
+  }
+}
+
+// ===== LAZY LOADING =====
+
+export function useLazyLoad(
+  threshold: number = 0.1,
+  rootMargin: string = '0px'
+) {
+  const [isIntersecting, setIsIntersecting] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(false)
+  const ref = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasLoaded) {
+          setIsIntersecting(true)
+          setHasLoaded(true)
+        }
+      },
+      { threshold, rootMargin }
+    )
+
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }, [threshold, rootMargin, hasLoaded])
+
+  return { ref, isIntersecting, hasLoaded }
+}
+
+// ===== ANIMATION FRAME OPTIMIZATION =====
+
+export function useAnimationFrame(callback: () => void, deps: unknown[] = []) {
+  const requestRef = useRef<number>()
+  const previousTimeRef = useRef<number>()
+
   const animate = useCallback((time: number) => {
-    if (previousTimeRef.current !== null && previousTimeRef.current !== undefined) {
-      const deltaTime = time - previousTimeRef.current
+    if (previousTimeRef.current !== undefined) {
       callback()
     }
     previousTimeRef.current = time
     requestRef.current = requestAnimationFrame(animate)
   }, [callback])
-  
+
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate)
     return () => {
@@ -99,229 +250,90 @@ export function useAnimationFrame(callback: () => void) {
         cancelAnimationFrame(requestRef.current)
       }
     }
-  }, [animate])
+  }, [animate, ...deps])
 }
 
-// Оптимизация для тяжелых компонентов
-export function useLazyComponent<T extends React.ComponentType<any>>(
-  importFunc: () => Promise<{ default: T }>,
-  fallback?: React.ComponentType
-) {
-  const [Component, setComponent] = useState<T | null>(null)
-  const [loading, setLoading] = useState(true)
-  
-  useEffect(() => {
-    let cancelled = false
-    
-    importFunc().then((module) => {
-      if (!cancelled) {
-        setComponent(() => module.default)
-        setLoading(false)
-      }
-    }).catch(() => {
-      if (!cancelled) {
-        setLoading(false)
-      }
-    })
-    
-    return () => {
-      cancelled = true
-    }
-  }, [importFunc])
-  
-  if (loading) {
-    return fallback ? fallback : null
-  }
-  
-  return Component
-}
+// ===== MEMORY OPTIMIZATION =====
 
-// Оптимизация для форм
-export function useOptimizedForm<T extends Record<string, any>>(
-  initialValues: T,
-  onSubmit: (values: T) => void | Promise<void>
-) {
-  const [values, setValues] = useState(initialValues)
-  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  // Дебаунс для валидации
-  const debouncedValidate = useDebounce((field: keyof T, value: unknown) => {
-    // Простая валидация
-    if (typeof value === 'string' && value.trim() === '') {
-      setErrors(prev => ({ ...prev, [field]: 'Поле обязательно для заполнения' }))
-    } else {
-      setErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[field]
-        return newErrors
-      })
-    }
-  }, 300)
-  
-  const handleChange = useCallback((field: keyof T, value: unknown) => {
-    setValues(prev => ({ ...prev, [field]: value }))
-    debouncedValidate(field, value)
-  }, [debouncedValidate])
-  
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (isSubmitting) return
-    
-    setIsSubmitting(true)
-    try {
-      await onSubmit(values)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [values, onSubmit, isSubmitting])
-  
-  return {
-    values,
-    errors,
-    isSubmitting,
-    handleChange,
-    handleSubmit,
-  }
-}
-
-// Оптимизация для поиска
-export function useOptimizedSearch<T>(
+export function useMemoryOptimizedList<T>(
   items: T[],
-  searchFn: (item: T, query: string) => boolean,
-  debounceMs: number = 300
+  maxItems: number = 1000
 ) {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<T[]>(items)
-  
-  const debouncedSearch = useDebounce((searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setResults(items)
+  const [visibleItems, setVisibleItems] = useState<T[]>([])
+  const [startIndex, setStartIndex] = useState(0)
+
+  const processItems = useCallback(() => {
+    if (items.length <= maxItems) {
+      setVisibleItems(items)
       return
     }
-    
-    const filtered = items.filter(item => searchFn(item, searchQuery))
-    setResults(filtered)
-  }, debounceMs)
-  
+
+    const endIndex = Math.min(startIndex + maxItems, items.length)
+    setVisibleItems(items.slice(startIndex, endIndex))
+  }, [items, maxItems, startIndex])
+
   useEffect(() => {
-    debouncedSearch(query)
-  }, [query, debouncedSearch])
-  
+    processItems()
+  }, [processItems])
+
+  const loadMore = useCallback(() => {
+    if (startIndex + maxItems < items.length) {
+      setStartIndex(prev => prev + maxItems)
+    }
+  }, [startIndex, maxItems, items.length])
+
+  const hasMore = startIndex + maxItems < items.length
+
   return {
-    query,
-    setQuery,
-    results,
+    visibleItems,
+    loadMore,
+    hasMore,
+    totalItems: items.length
   }
 }
 
-// Оптимизация для модальных окон
-export function useOptimizedModal() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isAnimating, setIsAnimating] = useState(false)
-  
-  const open = useCallback(() => {
-    setIsOpen(true)
-    setIsAnimating(true)
-    
-    // Предотвращаем скролл body
-    document.body.style.overflow = 'hidden'
-  }, [])
-  
-  const close = useCallback(() => {
-    setIsAnimating(false)
-    
-    // Восстанавливаем скролл body
-    document.body.style.overflow = ''
-    
-    // Закрываем после анимации
-    setTimeout(() => {
-      setIsOpen(false)
-    }, 200)
-  }, [])
-  
+// ===== BATCH UPDATES =====
+
+export function useBatchedUpdates<T>(
+  updateFn: (updates: T[]) => void,
+  batchSize: number = 10,
+  delay: number = 100
+) {
+  const [pendingUpdates, setPendingUpdates] = useState<T[]>([])
+  const timeoutRef = useRef<NodeJS.Timeout>()
+
+  const addUpdate = useCallback((update: T) => {
+    setPendingUpdates(prev => [...prev, update])
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setPendingUpdates(current => {
+        if (current.length >= batchSize) {
+          updateFn(current)
+          return []
+        }
+        return current
+      })
+    }, delay)
+  }, [updateFn, batchSize, delay])
+
+  const flushUpdates = useCallback(() => {
+    if (pendingUpdates.length > 0) {
+      updateFn(pendingUpdates)
+      setPendingUpdates([])
+    }
+  }, [pendingUpdates, updateFn])
+
   useEffect(() => {
     return () => {
-      // Восстанавливаем скролл при размонтировании
-      document.body.style.overflow = ''
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
     }
   }, [])
-  
-  return {
-    isOpen,
-    isAnimating,
-    open,
-    close,
-  }
-}
 
-// Оптимизация для бесконечной прокрутки
-export function useInfiniteScroll<T>(
-  fetchMore: () => Promise<T[]>,
-  hasMore: boolean,
-  threshold: number = 100
-) {
-  const [items, setItems] = useState<T[]>([])
-  const [loading, setLoading] = useState(false)
-  const [hasMoreItems, setHasMoreItems] = useState(hasMore)
-  
-  const loadMore = useCallback(async () => {
-    if (loading || !hasMoreItems) return
-    
-    setLoading(true)
-    try {
-      const newItems = await fetchMore()
-      setItems(prev => [...prev, ...newItems])
-      setHasMoreItems(newItems.length > 0)
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchMore, loading, hasMoreItems])
-  
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
-    
-    if (scrollHeight - scrollTop <= clientHeight + threshold) {
-      loadMore()
-    }
-  }, [loadMore, threshold])
-  
-  return {
-    items,
-    loading,
-    hasMoreItems,
-    loadMore,
-    handleScroll,
-  }
-}
-
-// Утилиты для измерения производительности
-export function measurePerformance(name: string, fn: () => void) {
-  const start = performance.now()
-  fn()
-  const end = performance.now()
-  
-  if (process.env.NODE_ENV === 'development') {
-    logger.debug(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`)
-  }
-  
-  return end - start
-}
-
-export function measureAsyncPerformance<T>(
-  name: string,
-  fn: () => Promise<T>
-): Promise<T> {
-  const start = performance.now()
-  
-  return fn().then(result => {
-    const end = performance.now()
-    
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`)
-    }
-    
-    return result
-  })
+  return { addUpdate, flushUpdates, pendingCount: pendingUpdates.length }
 }

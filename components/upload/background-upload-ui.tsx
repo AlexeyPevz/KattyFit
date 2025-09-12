@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { uploadManager } from "@/lib/background-upload"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -93,13 +93,13 @@ function UploadItem({ uploadId }: UploadItemProps) {
 
   if (!task) return null
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     uploadManager.pauseUpload(uploadId)
-  }
+  }, [uploadId])
 
-  const handleResume = () => {
+  const handleResume = useCallback(() => {
     uploadManager.resumeUpload(uploadId)
-  }
+  }, [uploadId])
 
   const getStatusIcon = () => {
     switch (task.status) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,22 +30,22 @@ export function ChatWidget() {
   const [showQuickReplies, setShowQuickReplies] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
-  const quickReplies = [
+  const quickReplies = useMemo(() => [
     "💰 Узнать цены",
     "📅 Записаться на занятие", 
     "🎯 Выбрать программу",
     "❓ Есть вопрос"
-  ]
+  ], [])
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, scrollToBottom])
 
-  const sendMessage = async () => {
+  const sendMessage = useCallback(async () => {
     if (!inputValue.trim()) return
 
     const userMessage: Message = {
@@ -116,14 +116,14 @@ export function ChatWidget() {
       setMessages(prev => [...prev, errorMessage])
       setIsLoading(false)
     }
-  }
+  }, [inputValue])
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
     }
-  }
+  }, [sendMessage])
 
   return (
     <>
