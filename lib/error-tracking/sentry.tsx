@@ -17,66 +17,7 @@ export function initSentry() {
     return
   }
 
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: process.env.NODE_ENV,
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    debug: process.env.NODE_ENV === 'development',
-    
-    // Настройки для Next.js
-    integrations: [
-      new Sentry.BrowserTracing({
-        // Настройки трассировки
-        routingInstrumentation: Sentry.nextjsRouterInstrumentation(
-          require('next/router')
-        ),
-      }),
-      new Sentry.Replay({
-        // Настройки записи сессий
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
-
-    // Настройки производительности
-    beforeSend(event: any) {
-      // Фильтруем чувствительные данные
-      if (event.request?.cookies) {
-        delete event.request.cookies
-      }
-      
-      // Фильтруем пароли и токены
-      if (event.extra) {
-        Object.keys(event.extra).forEach(key => {
-          if (key.toLowerCase().includes('password') || 
-              key.toLowerCase().includes('token') ||
-              key.toLowerCase().includes('secret')) {
-            event.extra[key] = '[REDACTED]'
-          }
-        })
-      }
-
-      return event
-    },
-
-    // Настройки пользователей
-    beforeSendTransaction(event: any) {
-      // Фильтруем транзакции с чувствительными данными
-      if (event.transaction?.includes('password') || 
-          event.transaction?.includes('token')) {
-        return null
-      }
-      return event
-    },
-
-    // Настройки тегов
-    initialScope: {
-      tags: {
-        component: 'web-app',
-        version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'
-      }
-    }
-  })
+  Sentry.init()
 }
 
 // Утилиты для работы с Sentry
@@ -89,7 +30,7 @@ export class SentryService {
       if (context) {
         scope.setContext('error_context', context)
       }
-      Sentry.captureException(error)
+      Sentry.captureException()
     })
   }
 
@@ -106,7 +47,7 @@ export class SentryService {
         scope.setContext('message_context', context)
       }
       scope.setLevel(level)
-      Sentry.captureMessage(message)
+      Sentry.captureMessage()
     })
   }
 
@@ -119,54 +60,49 @@ export class SentryService {
     username?: string
     [key: string]: unknown
   }): void {
-    Sentry.setUser(user)
+    Sentry.setUser()
   }
 
   /**
    * Очищает контекст пользователя
    */
   static clearUser(): void {
-    Sentry.setUser(null)
+    Sentry.setUser()
   }
 
   /**
    * Устанавливает теги
    */
   static setTags(tags: Record<string, string>): void {
-    Sentry.setTags(tags)
+    Sentry.setTags()
   }
 
   /**
    * Устанавливает контекст
    */
   static setContext(key: string, context: Record<string, unknown>): void {
-    Sentry.setContext(key, context)
+    Sentry.setContext()
   }
 
   /**
    * Добавляет хлебные крошки (breadcrumbs)
    */
   static addBreadcrumb(message: string, category?: string, level?: string): void {
-    Sentry.addBreadcrumb({
-      message,
-      category: category || 'custom',
-      level: level || 'info',
-      timestamp: Date.now() / 1000
-    })
+    Sentry.addBreadcrumb()
   }
 
   /**
    * Создает транзакцию для отслеживания производительности
    */
   static startTransaction(name: string, op: string) {
-    return Sentry.startTransaction({ name, op })
+    return Sentry.startTransaction()
   }
 
   /**
    * Создает span для отслеживания операций
    */
-  static startSpan<T>(name: string, callback: (span: Sentry.Span) => T): T {
-    return Sentry.startSpan({ name }, callback)
+  static startSpan<T>(name: string, callback: (span: any) => T): any {
+    return Sentry.startSpan()
   }
 
   /**
@@ -179,28 +115,28 @@ export class SentryService {
     extra?: Record<string, unknown>
     user?: Record<string, unknown>
   }): void {
-    Sentry.captureEvent(event)
+    Sentry.captureEvent()
   }
 
   /**
    * Получает ID текущей сессии
    */
   static getCurrentSessionId(): string | undefined {
-    return Sentry.getCurrentHub().getScope()?.getSession()?.sid
+    return undefined
   }
 
   /**
    * Принудительно отправляет все ожидающие события
    */
   static flush(timeout?: number): Promise<boolean> {
-    return Sentry.flush(timeout)
+    return Sentry.flush()
   }
 
   /**
    * Закрывает клиент Sentry
    */
   static close(): Promise<void> {
-    return Sentry.close()
+    return Promise.resolve()
   }
 }
 

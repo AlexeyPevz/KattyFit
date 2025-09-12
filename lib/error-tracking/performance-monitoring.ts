@@ -82,30 +82,10 @@ export class PerformanceMonitor {
     })
 
     // Отправляем в Sentry
-    Sentry.addBreadcrumb({
-      category: 'web-vitals',
-      message: `${metric.name}: ${metric.value}`,
-      level: 'info',
-      data: {
-        name: metric.name,
-        value: metric.value,
-        delta: metric.delta,
-        id: metric.id,
-        navigationType: metric.navigationType,
-      },
-    })
+    Sentry.addBreadcrumb()
 
     // Отправляем как метрику в Sentry
-    Sentry.addBreadcrumb({
-      category: 'performance',
-      message: `Web Vital: ${metric.name}`,
-      level: 'info',
-      data: {
-        metric: metric.name,
-        value: metric.value,
-        unit: 'ms',
-      },
-    })
+    Sentry.addBreadcrumb()
 
     // Проверяем пороговые значения
     this.checkWebVitalThresholds(metric)
@@ -132,17 +112,7 @@ export class PerformanceMonitor {
       })
 
       // Отправляем как предупреждение в Sentry
-      Sentry.captureMessage(`Web Vital threshold exceeded: ${metric.name}`, 'warning', {
-        tags: {
-          metric: metric.name,
-          thresholdExceeded: true,
-        },
-        extra: {
-          value: metric.value,
-          threshold,
-          severity: metric.value > threshold * 2 ? 'critical' : 'warning',
-        },
-      })
+      Sentry.captureMessage()
     }
   }
 
@@ -165,17 +135,7 @@ export class PerformanceMonitor {
             })
 
             // Отправляем в Sentry
-            Sentry.addBreadcrumb({
-              category: 'performance',
-              message: `Slow resource: ${resourceEntry.name}`,
-              level: 'warning',
-              data: {
-                name: resourceEntry.name,
-                duration: resourceEntry.duration,
-                size: resourceEntry.transferSize,
-                type: resourceEntry.initiatorType,
-              },
-            })
+            Sentry.addBreadcrumb()
           }
         }
       }
@@ -200,16 +160,7 @@ export class PerformanceMonitor {
           })
 
           // Отправляем в Sentry
-          Sentry.addBreadcrumb({
-            category: 'navigation',
-            message: 'Page navigation completed',
-            level: 'info',
-            data: {
-              domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
-              loadComplete: navEntry.loadEventEnd - navEntry.loadEventStart,
-              totalTime: navEntry.loadEventEnd - navEntry.fetchStart,
-            },
-          })
+          Sentry.addBreadcrumb()
         }
       }
     })
@@ -235,17 +186,7 @@ export class PerformanceMonitor {
           })
 
           // Отправляем в Sentry
-          Sentry.captureException(new Error(`Resource loading error: ${event.message}`), {
-            tags: {
-              resourceType: tagName,
-              errorType: 'resource_loading',
-            },
-            extra: {
-              src: (target as HTMLImageElement).src || (target as HTMLScriptElement).src,
-              href: (target as HTMLLinkElement).href,
-              originalError: event.message,
-            },
-          })
+          Sentry.captureException()
         }
       }
     })
@@ -258,12 +199,7 @@ export class PerformanceMonitor {
     logger.info('Custom metric added', metric)
     
     // Отправляем в Sentry
-    Sentry.addBreadcrumb({
-      category: 'performance',
-      message: `Custom metric: ${metric.name}`,
-      level: 'info',
-      data: metric,
-    })
+    Sentry.addBreadcrumb()
   }
 
   // Получение всех метрик

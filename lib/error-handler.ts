@@ -160,7 +160,10 @@ export class ErrorHandler {
       (response.error as any).details = this.sanitizeContext(error.context)
     }
 
-    return { status: statusCode }
+    return new Response(JSON.stringify(response), {
+      status: statusCode,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 
   // Санитизация сообщения об ошибке

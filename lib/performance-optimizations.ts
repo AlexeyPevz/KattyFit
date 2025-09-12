@@ -168,7 +168,7 @@ export function useOptimizedForm<T extends Record<string, unknown>>(
     
     if (validationSchema) {
       const newErrors = validationSchema({ ...values, [field]: value })
-      setErrors(prev => ({ ...prev, [field]: (newErrors as Record<string, string>)[field] || '' }))
+      setErrors(prev => ({ ...prev, [field]: (newErrors as any)[field] || '' }))
     }
   }, [values, validationSchema])
 

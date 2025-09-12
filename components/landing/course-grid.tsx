@@ -145,13 +145,12 @@ export function CourseGrid() {
   const [sortBy, setSortBy] = useState("popular")
 
   // Оптимизированный поиск с дебаунсом
-  const searchHook = useOptimizedSearch(
+  const [searchQuery, setSearchQuery] = useState("")
+  const searchResults = useOptimizedSearch(
     courses,
-    ["title", "description"],
-    300
+    searchQuery,
+    ["title", "description"]
   )
-  
-  const { query: searchQuery, setQuery: setSearchQuery, results: searchResults } = searchHook
 
   // Мемоизированная фильтрация для INP оптимизации
   const filteredCourses = useMemo(() => {

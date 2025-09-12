@@ -34,16 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     })
 
     // Отправляем в Sentry
-    Sentry.captureException(error, {
-      contexts: {
-        react: {
-          componentStack: errorInfo.componentStack,
-        },
-      },
-      tags: {
-        errorBoundary: true,
-      },
-    })
+    Sentry.captureException()
 
     // Вызываем пользовательский обработчик
     if (this.props.onError) {

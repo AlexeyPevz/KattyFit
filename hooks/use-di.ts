@@ -12,7 +12,7 @@ import { ServiceMap } from '@/lib/di/services'
  */
 export function useService<T extends keyof ServiceMap>(serviceName: T): ServiceMap[T] {
   return useMemo(() => {
-    return getService(serviceName as string) as ServiceMap[T]
+    return getService(serviceName) as ServiceMap[T]
   }, [serviceName])
 }
 
@@ -25,13 +25,13 @@ export function useServices<T extends (keyof ServiceMap)[]>(
   serviceNames: T
 ): { [K in T[number]]: ServiceMap[K] } {
   return useMemo(() => {
-    const services = {} as { [K in T[number]]: ServiceMap[K] }
+    const services = {} as any
     
     serviceNames.forEach(name => {
-      services[name] = getService(name as string) as ServiceMap[T[number]]
+      services[name] = getService(name)
     })
     
-    return services
+    return services as { [K in T[number]]: ServiceMap[K] }
   }, serviceNames)
 }
 

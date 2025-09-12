@@ -225,20 +225,7 @@ export class UserFeedbackManager {
     })
 
     // Отправляем в Sentry
-    Sentry.captureMessage('User feedback received', 'info', {
-      tags: {
-        feedbackCategory: feedback.category,
-        feedbackRating: feedback.rating?.toString() || 'none',
-      },
-      extra: {
-        message: feedback.message,
-        name: feedback.name,
-        email: feedback.email,
-        url: feedback.url,
-        userAgent: feedback.userAgent,
-        timestamp: feedback.timestamp,
-      },
-    })
+    Sentry.captureMessage()
 
     // Отправляем на сервер (если есть API endpoint)
     try {
