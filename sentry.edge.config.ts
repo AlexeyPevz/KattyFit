@@ -15,7 +15,7 @@ Sentry.init({
   ],
 
   // Фильтрация чувствительных данных
-  beforeSend(event) {
+  beforeSend(event: any) {
     // Удаляем cookies и headers с чувствительными данными
     if (event.request?.cookies) {
       delete event.request.cookies

@@ -109,7 +109,7 @@ export function OptimizedListComponent({
   }, [setScrollTop])
   
   // Throttled scroll handler для лучшей производительности
-  const throttledScrollHandler = useThrottle(handleScroll, 16) // ~60fps
+  const throttledScrollHandler = useThrottle(handleScroll as (...args: unknown[]) => unknown, 16) // ~60fps
   
   const getStatusColor = (status: ListItem['status']) => {
     switch (status) {

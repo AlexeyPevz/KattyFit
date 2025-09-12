@@ -20,7 +20,8 @@ import {
   Plus, 
   Trash2,
   Save,
-  Clock
+  Clock,
+  Edit as EditIcon
 } from "lucide-react"
 import { CourseLesson, LessonFormData, QuizQuestion } from "./types"
 
@@ -416,7 +417,7 @@ export function LessonEditorComponent({
                             size="sm"
                             onClick={() => handleEditQuestion(question)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <EditIcon className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="outline"
@@ -478,7 +479,7 @@ export function LessonEditorComponent({
                 <Select
                   value={questionForm.type}
                   onValueChange={(value: "single" | "multiple") => 
-                    setQuestionForm(prev => ({ ...prev, type: value }))
+                    setQuestionForm(prev => ({ ...prev, type: value as "single" }))
                   }
                 >
                   <SelectTrigger>

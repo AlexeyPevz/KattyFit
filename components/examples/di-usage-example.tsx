@@ -292,7 +292,7 @@ export function DIUsageExample() {
                   />
                   {passwordInput && (
                     <div className="text-sm">
-                      {validation.validatePassword(passwordInput).errors.map((error, index) => (
+                      {validation.validatePassword(passwordInput).errors.map((error: string, index: number) => (
                         <div key={index} className="text-red-500">• {error}</div>
                       ))}
                     </div>

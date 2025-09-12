@@ -404,7 +404,7 @@ export class ConfigService implements IConfigService {
   private config = new Map<string, unknown>()
 
   get<T>(key: string, defaultValue?: T): T {
-    return (this.config.get(key) as T) ?? defaultValue
+    return (this.config.get(key) as T) ?? (defaultValue as T)
   }
 
   set(key: string, value: unknown): void {

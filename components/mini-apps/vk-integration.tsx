@@ -73,7 +73,7 @@ export function VKMiniApp() {
 
       // Get user info
       const userInfo = await window.vkBridge.send("VKWebAppGetUserInfo")
-      setUser(userInfo)
+      setUser(userInfo as VKUser)
 
       // Set status bar style
       await window.vkBridge.send("VKWebAppSetViewSettings", {
@@ -139,7 +139,7 @@ export function VKMiniApp() {
         },
       })
 
-      if (result.status) {
+      if ((result as { status: boolean }).status) {
         // Payment successful
         await window.vkBridge.send("VKWebAppTapticNotificationOccurred", {
           type: "success",

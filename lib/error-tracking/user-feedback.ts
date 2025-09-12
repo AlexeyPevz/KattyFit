@@ -208,7 +208,7 @@ export class UserFeedbackManager {
       if (modal) modal.remove()
       
     } catch (error) {
-      logger.error('Failed to submit feedback', { error: error.message })
+      logger.error('Failed to submit feedback', { error: (error as Error).message })
       alert('Произошла ошибка при отправке отзыва. Попробуйте еще раз.')
     }
   }
@@ -255,7 +255,7 @@ export class UserFeedbackManager {
       }
     } catch (error) {
       // Если нет API endpoint, просто логируем
-      logger.warn('No feedback API endpoint available', { error: error.message })
+      logger.warn('No feedback API endpoint available', { error: (error as Error).message })
     }
   }
 

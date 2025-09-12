@@ -21,7 +21,7 @@ const platformParsers = {
     const callbackQuery = body.callback_query as Record<string, unknown> | undefined
     return {
       userId: (message?.from as Record<string, unknown>)?.id?.toString() || 
-              (callbackQuery?.from as Record<string, unknown>)?.id?.toString(),
+              (callbackQuery?.from as Record<string, unknown>)?.id?.toString() || "",
       userName: (message?.from as Record<string, unknown>)?.first_name as string || 
                 (callbackQuery?.from as Record<string, unknown>)?.first_name as string,
       text: (message?.text as string) || (callbackQuery?.data as string) || "",
@@ -51,29 +51,43 @@ const platformParsers = {
       userId: (messageData?.sender as Record<string, unknown>)?.id as string,
       text: ((messageData?.message as Record<string, unknown>)?.text as string) || "",
       platform: "instagram",
-      messageId: messaging?.message?.mid,
+      messageId: (messageData?.message as Record<string, unknown>)?.mid as string,
     }
   },
 
   whatsapp: (body: Record<string, unknown>): UnifiedMessage => {
-    const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]
+    const entry = body.entry as Array<Record<string, unknown>> | undefined
+    const changes = entry?.[0]?.changes as Array<Record<string, unknown>> | undefined
+    const value = changes?.[0]?.value as Record<string, unknown> | undefined
+    const messages = value?.messages as Array<Record<string, unknown>> | undefined
+    const message = messages?.[0]
+    const contacts = value?.contacts as Array<Record<string, unknown>> | undefined
+    const contact = contacts?.[0]
+    const profile = contact?.profile as Record<string, unknown> | undefined
+    const text = message?.text as Record<string, unknown> | undefined
+    
     return {
-      userId: message?.from,
-      userName: body.entry?.[0]?.changes?.[0]?.value?.contacts?.[0]?.profile?.name,
-      text: message?.text?.body || "",
+      userId: (message?.from as string) || "",
+      userName: (profile?.name as string) || "",
+      text: (text?.body as string) || "",
       platform: "whatsapp",
-      messageId: message?.id,
+      messageId: (message?.id as string) || "",
     }
   },
 
-  web: (body: Record<string, unknown>): UnifiedMessage => ({
-    userId: body.message?.from?.id?.toString(),
-    userName: body.message?.from?.first_name || "Пользователь сайта",
-    text: body.message?.text || "",
-    platform: "web",
-    chatId: body.message?.chat?.id?.toString(),
-    messageId: body.message?.message_id?.toString(),
-  }),
+  web: (body: Record<string, unknown>): UnifiedMessage => {
+    const message = body.message as Record<string, unknown> | undefined
+    const from = message?.from as Record<string, unknown> | undefined
+    const chat = message?.chat as Record<string, unknown> | undefined
+    return {
+      userId: from?.id?.toString() || "",
+      userName: (from?.first_name as string) || "Пользователь сайта",
+      text: (message?.text as string) || "",
+      platform: "web",
+      chatId: chat?.id?.toString() || "",
+      messageId: (message?.message_id as string)?.toString() || "",
+    }
+  },
 }
 
 // Функция для отправки сообщений

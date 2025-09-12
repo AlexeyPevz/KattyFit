@@ -50,7 +50,7 @@ async function updateRealtimeMetrics(events: Array<Record<string, unknown>>) {
       if (event.event === 'page_view') {
         await incrementMetric('page_views', today)
       } else if (event.event === 'purchase_completed') {
-        await incrementMetric('purchases', today, event.properties?.amount)
+        await incrementMetric('purchases', today, (event.properties as { amount?: number })?.amount)
       } else if (event.event === 'booking_created') {
         await incrementMetric('bookings', today)
       } else if (event.event === 'user_signed_up') {

@@ -271,7 +271,7 @@ class ProxyManager {
       const response = await fetch(request.url, {
         method: request.method,
         headers: request.headers,
-        body: request.body
+        body: request.body as BodyInit | null
       })
 
       const data = await response.json().catch(() => null)
@@ -437,21 +437,21 @@ export async function makeProxiedRequest(url: string, options: RequestInit = {})
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body
+        body: options.body as string | Record<string, unknown> | FormData | undefined
       })
     } else if (proxy.type === 'beget') {
       response = await proxyManager.begetRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body
+        body: options.body as string | Record<string, unknown> | FormData | undefined
       })
     } else {
       response = await proxyManager.customProxyRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body
+        body: options.body as string | Record<string, unknown> | FormData | undefined
       })
     }
 

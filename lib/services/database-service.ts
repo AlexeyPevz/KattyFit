@@ -72,7 +72,7 @@ abstract class BaseDatabaseService implements DatabaseService {
   }
 
   // Абстрактные методы для конкретных реализаций
-  abstract getUserById(id: string): Promise<User | null>
+  abstract getUserById(id: string): Promise<Record<string, unknown> | null>
   abstract createUser(user: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract updateUser(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract deleteUser(id: string): Promise<void>
@@ -151,7 +151,8 @@ abstract class BaseDatabaseService implements DatabaseService {
 
   // Защищенные методы для работы с базой данных
   protected async handleDatabaseError(error: Error | unknown, operation: string): Promise<never> {
-    if (error?.code === '23505') {
+    const dbError = error as { code?: string }
+    if (dbError?.code === '23505') {
       throw new AppError(
         `Duplicate entry in ${operation}`,
         ErrorCode.DUPLICATE_ENTRY,
@@ -161,7 +162,7 @@ abstract class BaseDatabaseService implements DatabaseService {
       )
     }
 
-    if (error?.code === '23503') {
+    if (dbError?.code === '23503') {
       throw new AppError(
         `Foreign key constraint violation in ${operation}`,
         ErrorCode.CONSTRAINT_VIOLATION,
@@ -208,7 +209,7 @@ abstract class BaseDatabaseService implements DatabaseService {
 
 export class SimpleDatabaseService extends BaseDatabaseService {
   // Пользователи
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(id: string): Promise<Record<string, unknown> | null> {
     await logger.debug('Getting user by id', { id })
     return { id, name: 'Test User', email: 'test@example.com' }
   }

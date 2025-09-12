@@ -5,14 +5,14 @@ export * from './performance-monitoring'
 export * from './user-feedback'
 
 // Инициализация всех сервисов
-import { initializeSentry } from './sentry'
+import { SentryService } from './sentry'
 import { performanceMonitor } from './performance-monitoring'
 import { userFeedbackManager } from './user-feedback'
 
 // Функция для инициализации всех сервисов error tracking
 export function initializeErrorTracking() {
   // Инициализируем Sentry
-  initializeSentry()
+  SentryService.initialize()
   
   // Инициализируем мониторинг производительности
   performanceMonitor.initialize()

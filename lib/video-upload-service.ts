@@ -178,12 +178,12 @@ export class VideoUploadService {
   private createFormData(file: File, metadata: Record<string, unknown>): FormData {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('title', metadata.title)
-    formData.append('description', metadata.description || '')
+    formData.append('title', metadata.title as string)
+    formData.append('description', (metadata.description as string) || '')
     formData.append('isPrivate', metadata.isPrivate ? '1' : '0')
     
-    if (metadata.tags) {
-      formData.append('tags', metadata.tags.join(','))
+    if (metadata.tags && Array.isArray(metadata.tags)) {
+      formData.append('tags', (metadata.tags as string[]).join(','))
     }
 
     return formData

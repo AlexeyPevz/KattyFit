@@ -39,7 +39,7 @@ export function initSentry() {
     ],
 
     // Настройки производительности
-    beforeSend(event) {
+    beforeSend(event: any) {
       // Фильтруем чувствительные данные
       if (event.request?.cookies) {
         delete event.request.cookies
@@ -60,7 +60,7 @@ export function initSentry() {
     },
 
     // Настройки пользователей
-    beforeSendTransaction(event) {
+    beforeSendTransaction(event: any) {
       // Фильтруем транзакции с чувствительными данными
       if (event.transaction?.includes('password') || 
           event.transaction?.includes('token')) {
@@ -85,7 +85,7 @@ export class SentryService {
    * Отправляет ошибку в Sentry
    */
   static captureException(error: Error, context?: Record<string, unknown>): void {
-    Sentry.withScope(scope => {
+    Sentry.withScope((scope: any) => {
       if (context) {
         scope.setContext('error_context', context)
       }
@@ -101,7 +101,7 @@ export class SentryService {
     level: SeverityLevel = 'info',
     context?: Record<string, unknown>
   ): void {
-    Sentry.withScope(scope => {
+    Sentry.withScope((scope: any) => {
       if (context) {
         scope.setContext('message_context', context)
       }
@@ -208,7 +208,7 @@ export class SentryService {
 export function SentryErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
     <Sentry.ErrorBoundary
-      fallback={({ error, resetError }) => (
+      fallback={({ error, resetError }: { error: any; resetError: any }) => (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
             <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
@@ -235,7 +235,7 @@ export function SentryErrorBoundary({ children }: { children: React.ReactNode })
           </div>
         </div>
       )}
-      beforeCapture={(scope, error, errorInfo) => {
+      beforeCapture={(scope: any, error: any, errorInfo: any) => {
         scope.setTag('errorBoundary', true)
         scope.setContext('errorInfo', errorInfo)
         scope.setLevel('error')
@@ -267,16 +267,9 @@ export function useSentry() {
 // Утилиты для интеграции с существующим logger
 export function enhanceLoggerWithSentry(logger: { error: (message: string, context?: Record<string, unknown>) => void; warn: (message: string, context?: Record<string, unknown>) => void; info: (message: string, context?: Record<string, unknown>) => void }) {
   const originalError = logger.error
-  const originalCritical = logger.critical
-
   logger.error = (message: string, context?: Record<string, unknown>) => {
     originalError.call(logger, message, context)
     SentryService.captureMessage(message, 'error', context)
-  }
-
-  logger.critical = (message: string, context?: Record<string, unknown>) => {
-    originalCritical.call(logger, message, context)
-    SentryService.captureMessage(message, 'fatal', context)
   }
 
   return logger

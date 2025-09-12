@@ -89,21 +89,22 @@ async function generateSlots(
     const dateStr = d.toISOString().split('T')[0]
     
     // Проверяем, рабочий ли день
-    if (!schedule.workDays.includes(dayOfWeek)) continue
+    if (!(schedule.workDays as number[]).includes(dayOfWeek)) continue
     
     // Проверяем, не в списке ли недоступных дат
-    if (schedule.unavailableDates?.includes(dateStr)) continue
+    if ((schedule.unavailableDates as string[])?.includes(dateStr)) continue
     
     // Генерируем временные слоты
     const daySlots: string[] = []
-    const [startHour, startMin] = schedule.workHours.start.split(':').map(Number)
-    const [endHour, endMin] = schedule.workHours.end.split(':').map(Number)
+    const workHours = schedule.workHours as { start: string; end: string }
+    const [startHour, startMin] = workHours.start.split(':').map(Number)
+    const [endHour, endMin] = workHours.end.split(':').map(Number)
     
     const startMinutes = startHour * 60 + startMin
     const endMinutes = endHour * 60 + endMin
-    const slotDuration = schedule.slotDuration + schedule.breakDuration
+    const slotDuration = (schedule.slotDuration as number) + (schedule.breakDuration as number)
     
-    for (let minutes = startMinutes; minutes + schedule.slotDuration <= endMinutes; minutes += slotDuration) {
+    for (let minutes = startMinutes; minutes + (schedule.slotDuration as number) <= endMinutes; minutes += slotDuration) {
       const hours = Math.floor(minutes / 60)
       const mins = minutes % 60
       const timeStr = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`

@@ -110,7 +110,7 @@ export function optimizeAnimations() {
   
   // Отключаем анимации при низком заряде батареи
   if ('getBattery' in navigator) {
-    (navigator as { getBattery?: () => Promise<BatteryManager> }).getBattery?.().then((battery: BatteryManager) => {
+    (navigator as { getBattery?: () => Promise<{ level: number }> }).getBattery?.().then((battery: { level: number }) => {
       if (battery.level < 0.2) {
         document.documentElement.classList.add('low-battery')
       }

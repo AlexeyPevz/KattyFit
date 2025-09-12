@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
   } catch (error: Error | unknown) {
     logger.error("ContentStudio API error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
-      { error: error.message || "Ошибка ContentStudio API" },
+      { error: (error as Error).message || "Ошибка ContentStudio API" },
       { status: 500 }
     )
   }

@@ -139,7 +139,12 @@ export class BackgroundUploadManager {
     const task: UploadTask = {
       id: uploadId,
       file,
-      metadata,
+      metadata: {
+        title: metadata.title as string,
+        description: metadata.description as string,
+        courseId: metadata.courseId as string,
+        lessonId: metadata.lessonId as string
+      },
       progress: 0,
       status: 'pending',
       chunks,

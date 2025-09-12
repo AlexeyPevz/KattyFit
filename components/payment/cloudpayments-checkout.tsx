@@ -151,7 +151,7 @@ export function CloudPaymentsCheckout({
 
     setIsLoading(true)
 
-    const widget = new window.cp.CloudPayments()
+    const widget = new (window as any).cp.CloudPayments()
     
     const paymentData = {
       publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001", // v0 will use env var

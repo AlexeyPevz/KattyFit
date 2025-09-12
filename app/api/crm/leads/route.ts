@@ -14,16 +14,18 @@ function calculateLeadScore(lead: Record<string, unknown>): number {
     "VK": 8,
     "Telegram": 8,
   }
-  score += sourceScores[lead.source] || 5
+  score += sourceScores[lead.source as keyof typeof sourceScores] || 5
 
   // Интерес к продукту
-  if (lead.tags?.includes("vip")) score += 15
-  if (lead.tags?.includes("пакет")) score += 10
-  if (lead.tags?.includes("курс")) score += 8
-  if (lead.tags?.includes("новичок")) score += 5
+  if (Array.isArray(lead.tags)) {
+    if (lead.tags.includes("vip")) score += 15
+    if (lead.tags.includes("пакет")) score += 10
+    if (lead.tags.includes("курс")) score += 8
+    if (lead.tags.includes("новичок")) score += 5
+  }
 
   // Активность
-  if (lead.lastContact) {
+  if (lead.lastContact && typeof lead.lastContact === 'string') {
     const daysSinceContact = Math.floor(
       (Date.now() - new Date(lead.lastContact).getTime()) / (1000 * 60 * 60 * 24)
     )
@@ -33,9 +35,10 @@ function calculateLeadScore(lead: Record<string, unknown>): number {
   }
 
   // Потенциальная сумма сделки
-  if (lead.value > 20000) score += 15
-  else if (lead.value > 10000) score += 10
-  else if (lead.value > 5000) score += 5
+  const value = typeof lead.value === 'number' ? lead.value : 0
+  if (value > 20000) score += 15
+  else if (value > 10000) score += 10
+  else if (value > 5000) score += 5
 
   return Math.min(100, Math.max(0, score))
 }
@@ -144,7 +147,7 @@ export async function POST(request: NextRequest) {
   } catch (error: Error | unknown) {
     logger.error("Error creating lead", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
-      { error: error.message || "Ошибка создания лида" },
+      { error: (error as Error).message || "Ошибка создания лида" },
       { status: 500 }
     )
   }
@@ -224,7 +227,7 @@ export async function GET(request: NextRequest) {
   } catch (error: Error | unknown) {
     logger.error("Error fetching leads", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
-      { error: error.message || "Ошибка получения лидов" },
+      { error: (error as Error).message || "Ошибка получения лидов" },
       { status: 500 }
     )
   }

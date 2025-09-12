@@ -3,7 +3,7 @@
 
 import { AuthSession, User, LoginCredentials, AdminCredentials } from '@/types/api'
 import { AppError, AuthenticationError } from '@/types/errors'
-import logger from './logger'
+import logger from '../logger'
 
 // ===== ТИПЫ =====
 

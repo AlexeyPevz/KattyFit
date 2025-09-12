@@ -59,12 +59,12 @@ export class PerformanceMonitor {
 
     // Импортируем web-vitals только на клиенте
     import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB, getINP }) => {
-      getCLS((metric) => this.reportWebVital(metric))
-      getFID((metric) => this.reportWebVital(metric))
-      getFCP((metric) => this.reportWebVital(metric))
-      getLCP((metric) => this.reportWebVital(metric))
-      getTTFB((metric) => this.reportWebVital(metric))
-      getINP((metric) => this.reportWebVital(metric))
+      getCLS((metric: any) => this.reportWebVital(metric))
+      getFID((metric: any) => this.reportWebVital(metric))
+      getFCP((metric: any) => this.reportWebVital(metric))
+      getLCP((metric: any) => this.reportWebVital(metric))
+      getTTFB((metric: any) => this.reportWebVital(metric))
+      getINP((metric: any) => this.reportWebVital(metric))
     }).catch((error) => {
       logger.error('Failed to load web-vitals', { error: error.message })
     })

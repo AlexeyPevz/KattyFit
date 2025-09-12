@@ -90,6 +90,11 @@ export async function generateRAGResponse(context: RAGContext): Promise<string> 
     // Обновляем контекст с найденными знаниями
     const enrichedContext: RAGContext = {
       ...context,
+      platform: context.platform || "web",
+      chatHistory: context.chatHistory.map(msg => ({
+        ...msg,
+        platform: msg.platform || context.platform || "web"
+      })),
       userContext: {
         ...context.userContext,
         knowledge,

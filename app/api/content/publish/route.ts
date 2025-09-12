@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
               })
           }
         } catch (error: Error | unknown) {
-          errors.push(`${platform}: ${error.message}`)
+          errors.push(`${platform}: ${(error as Error).message}`)
         }
       }
     }
