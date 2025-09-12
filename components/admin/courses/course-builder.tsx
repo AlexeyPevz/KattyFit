@@ -260,7 +260,7 @@ export function CourseBuilderComponent({
                 <BookOpen className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="text-sm font-medium">Уроки</p>
-                  <p className="text-2xl font-bold">{getTotalLessons()}</p>
+                  <p className="text-2xl font-bold">{getTotalLessons}</p>
                 </div>
               </div>
             </CardContent>
@@ -271,7 +271,7 @@ export function CourseBuilderComponent({
                 <BookOpen className="h-4 w-4 text-purple-600" />
                 <div>
                   <p className="text-sm font-medium">Длительность</p>
-                  <p className="text-2xl font-bold">{calculateTotalDuration()} мин</p>
+                  <p className="text-2xl font-bold">{calculateTotalDuration} мин</p>
                 </div>
               </div>
             </CardContent>

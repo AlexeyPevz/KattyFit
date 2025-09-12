@@ -232,8 +232,8 @@ export function useLazyLoad(
 // ===== ANIMATION FRAME OPTIMIZATION =====
 
 export function useAnimationFrame(callback: () => void, deps: unknown[] = []) {
-  const requestRef = useRef<number>()
-  const previousTimeRef = useRef<number>()
+  const requestRef = useRef<number | undefined>(undefined)
+  const previousTimeRef = useRef<number | undefined>(undefined)
 
   const animate = useCallback((time: number) => {
     if (previousTimeRef.current !== undefined) {
@@ -300,7 +300,7 @@ export function useBatchedUpdates<T>(
   delay: number = 100
 ) {
   const [pendingUpdates, setPendingUpdates] = useState<T[]>([])
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const addUpdate = useCallback((update: T) => {
     setPendingUpdates(prev => [...prev, update])

@@ -75,7 +75,7 @@ export function CRMDashboardComponent({
   useEffect(() => {
     loadLeads()
     loadStats()
-  }, [loadLeads, loadStats])
+  }, [])
 
   const loadLeads = useCallback(async () => {
     try {

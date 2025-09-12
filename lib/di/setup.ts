@@ -77,19 +77,19 @@ export function createTestContainer() {
   
   // Регистрируем моки для тестов
   testContainer.registerValue('logger', {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    critical: jest.fn()
+    debug: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    critical: () => {}
   })
   
   testContainer.registerValue('configService', {
-    get: jest.fn(),
-    set: jest.fn(),
-    has: jest.fn(),
-    getAll: jest.fn(),
-    loadFromEnv: jest.fn()
+    get: () => undefined,
+    set: () => {},
+    has: () => false,
+    getAll: () => ({}),
+    loadFromEnv: () => {}
   })
   
   return testContainer

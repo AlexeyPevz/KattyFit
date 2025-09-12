@@ -160,7 +160,7 @@ export class ErrorHandler {
       (response.error as any).details = this.sanitizeContext(error.context)
     }
 
-    return { response, status: statusCode }
+    return { status: statusCode }
   }
 
   // Санитизация сообщения об ошибке
