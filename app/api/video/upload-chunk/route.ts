@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { storeChunk, getUploadProgress } from "@/lib/upload-chunks"
 import crypto from "crypto"
+import logger from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,8 +37,8 @@ export async function POST(request: NextRequest) {
       message: `Чанк ${chunkIndex + 1}/${totalChunks} загружен`
     })
 
-  } catch (error: any) {
-    console.error("Ошибка загрузки чанка:", error)
+  } catch (error: Error | unknown) {
+    logger.error("Ошибка загрузки чанка", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки чанка" },
       { status: 500 }
@@ -65,8 +66,8 @@ export async function GET(request: NextRequest) {
       status: progress === 100 ? "completed" : "uploading"
     })
 
-  } catch (error: any) {
-    console.error("Ошибка получения прогресса:", error)
+  } catch (error: Error | unknown) {
+    logger.error("Ошибка получения прогресса", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка получения прогресса" },
       { status: 500 }

@@ -20,6 +20,7 @@ import {
   BookOpen
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import logger from "@/lib/logger"
 
 // Моковые данные курса (в реальном приложении загружаются из БД)
 const mockCourse = {
@@ -129,7 +130,7 @@ export default function PlayerPage() {
         // router.push(`/courses/${courseId}`)
       }
     } catch (error) {
-      console.error("Error checking access:", error)
+      logger.error("Error checking access", { error: error instanceof Error ? error.message : String(error) })
       setHasAccess(true) // Для демо
     }
   }
@@ -149,10 +150,10 @@ export default function PlayerPage() {
     setCourse(updatedCourse)
 
     // Сохраняем прогресс (в реальном приложении через API)
-    console.log("Lesson completed:", currentLesson.id)
+    logger.info("Lesson completed", { lessonId: currentLesson.id })
   }
 
-  const handleLessonSelect = (lesson: any) => {
+  const handleLessonSelect = (lesson: Record<string, unknown>) => {
     // Снимаем флаг current со всех уроков
     const updatedCourse = { ...course }
     updatedCourse.modules.forEach(module => {

@@ -2,6 +2,7 @@
 // Handles Web Push API integration for browser notifications
 
 import { env } from './env'
+import logger from './logger'
 
 interface NotificationOptions {
   body?: string
@@ -11,7 +12,7 @@ interface NotificationOptions {
   requireInteraction?: boolean
   silent?: boolean
   timestamp?: number
-  data?: any
+  data?: Record<string, unknown>
   actions?: Array<{action: string, title: string, icon?: string}>
 }
 
@@ -20,7 +21,7 @@ class PushNotificationService {
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null
 
   constructor() {
-    this.vapidPublicKey = env.vapidPublicKey
+    this.vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
   }
 
   // Check if notifications are supported
@@ -53,7 +54,7 @@ class PushNotificationService {
       this.serviceWorkerRegistration = registration
       return registration
     } catch (error) {
-      console.error('Service Worker registration failed:', error)
+      logger.error('Service Worker registration failed', { error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }
@@ -89,7 +90,7 @@ class PushNotificationService {
 
       return subscription
     } catch (error) {
-      console.error('Push subscription failed:', error)
+      logger.error('Push subscription failed', { error: error instanceof Error ? error.message : String(error) })
       return null
     }
   }
@@ -110,7 +111,7 @@ class PushNotificationService {
 
       return success
     } catch (error) {
-      console.error('Push unsubscription failed:', error)
+      logger.error('Push unsubscription failed', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }
@@ -124,7 +125,7 @@ class PushNotificationService {
 
       return await this.serviceWorkerRegistration!.pushManager.getSubscription()
     } catch (error) {
-      console.error('Failed to get push subscription:', error)
+      logger.error('Failed to get push subscription', { error: error instanceof Error ? error.message : String(error) })
       return null
     }
   }
@@ -170,7 +171,7 @@ class PushNotificationService {
         })
       })
     } catch (error) {
-      console.error('Failed to send subscription to server:', error)
+      logger.error('Failed to send subscription to server', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -187,7 +188,7 @@ class PushNotificationService {
         })
       })
     } catch (error) {
-      console.error('Failed to send unsubscription to server:', error)
+      logger.error('Failed to send unsubscription to server', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

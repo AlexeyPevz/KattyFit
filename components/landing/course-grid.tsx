@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDebounce, useOptimizedSearch } from "@/lib/performance-optimizations"
 
 interface Course {
   id: string
@@ -138,37 +139,49 @@ const levels = [
 ]
 
 export function CourseGrid() {
-  const [courses, setCourses] = useState<Course[]>(mockCourses)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [courses] = useState<Course[]>(mockCourses)
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedLevel, setSelectedLevel] = useState("all")
   const [sortBy, setSortBy] = useState("popular")
 
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || course.category === selectedCategory
-    const matchesLevel = selectedLevel === "all" || course.level === selectedLevel
-    
-    return matchesSearch && matchesCategory && matchesLevel
-  })
+  // Оптимизированный поиск с дебаунсом
+  const [searchQuery, setSearchQuery] = useState("")
+  const searchResults = useOptimizedSearch(
+    courses,
+    searchQuery,
+    ["title", "description"]
+  )
 
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price
-      case "price-high":
-        return b.price - a.price
-      case "rating":
-        return b.rating - a.rating
-      case "students":
-        return b.students - a.students
-      default:
-        return 0
-    }
-  })
+  // Мемоизированная фильтрация для INP оптимизации
+  const filteredCourses = useMemo(() => {
+    return searchResults.filter((course: Course) => {
+      const matchesCategory = selectedCategory === "all" || course.category === selectedCategory
+      const matchesLevel = selectedLevel === "all" || course.level === selectedLevel
+      
+      return matchesCategory && matchesLevel
+    })
+  }, [searchResults, selectedCategory, selectedLevel])
 
-  const getLevelBadgeVariant = (level: string) => {
+  // Мемоизированная сортировка для INP оптимизации
+  const sortedCourses = useMemo(() => {
+    return [...filteredCourses].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return a.price - b.price
+        case "price-high":
+          return b.price - a.price
+        case "rating":
+          return b.rating - a.rating
+        case "students":
+          return b.students - a.students
+        default:
+          return 0
+      }
+    })
+  }, [filteredCourses, sortBy])
+
+  // Мемоизированные функции для INP оптимизации
+  const getLevelBadgeVariant = useCallback((level: string) => {
     switch (level) {
       case "beginner":
         return "secondary"
@@ -179,9 +192,9 @@ export function CourseGrid() {
       default:
         return "outline"
     }
-  }
+  }, [])
 
-  const getLevelLabel = (level: string) => {
+  const getLevelLabel = useCallback((level: string) => {
     switch (level) {
       case "beginner":
         return "Начинающий"
@@ -192,7 +205,7 @@ export function CourseGrid() {
       default:
         return level
     }
-  }
+  }, [])
 
   return (
     <section id="courses" className="py-20 bg-muted/30">
@@ -211,17 +224,19 @@ export function CourseGrid() {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Поиск курсов..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
+                aria-label="Поиск курсов"
+                role="searchbox"
               />
             </div>
             
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]" aria-label="Выберите категорию курсов">
                 <SelectValue placeholder="Категория" />
               </SelectTrigger>
               <SelectContent>
@@ -234,7 +249,7 @@ export function CourseGrid() {
             </Select>
 
             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]" aria-label="Выберите уровень сложности">
                 <SelectValue placeholder="Уровень" />
               </SelectTrigger>
               <SelectContent>
@@ -247,7 +262,7 @@ export function CourseGrid() {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]" aria-label="Выберите способ сортировки">
                 <SelectValue placeholder="Сортировка" />
               </SelectTrigger>
               <SelectContent>
@@ -270,12 +285,12 @@ export function CourseGrid() {
                   <div className="absolute inset-0 bg-gradient-to-br from-violet-200 to-pink-200 dark:from-violet-800 dark:to-pink-800" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="h-8 w-8 text-white ml-1" />
+                      <Play className="h-8 w-8 text-white ml-1" aria-hidden="true" />
                     </div>
                   </div>
                   {course.isNew && (
                     <Badge className="absolute top-4 left-4 gap-1" variant="secondary">
-                      <Sparkles className="h-3 w-3" />
+                      <Sparkles className="h-3 w-3" aria-hidden="true" />
                       Новинка
                     </Badge>
                   )}
@@ -293,8 +308,8 @@ export function CourseGrid() {
                     {getLevelLabel(course.level)}
                   </Badge>
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{course.rating}</span>
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" aria-hidden="true" />
+                    <span className="text-sm font-medium" aria-label={`Рейтинг ${course.rating} из 5`}>{course.rating}</span>
                   </div>
                 </div>
                 
@@ -308,11 +323,11 @@ export function CourseGrid() {
                 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-4 w-4" aria-hidden="true" />
                     <span>{course.duration}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
+                    <Users className="h-4 w-4" aria-hidden="true" />
                     <span>{course.students}</span>
                   </div>
                 </div>
@@ -337,8 +352,12 @@ export function CourseGrid() {
                     Подробнее
                   </Link>
                 </Button>
-                <Button variant="outline" size="icon">
-                  <ShoppingCart className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  aria-label={`Добавить курс "${course.title}" в корзину`}
+                >
+                  <ShoppingCart className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </CardFooter>
             </Card>

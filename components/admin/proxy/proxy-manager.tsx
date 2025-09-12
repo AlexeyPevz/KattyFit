@@ -21,6 +21,7 @@ import {
   Zap,
   Settings
 } from "lucide-react"
+import logger from "@/lib/logger"
 import {
   Dialog,
   DialogContent,
@@ -87,7 +88,7 @@ export function ProxyManager() {
         setStats(data.stats)
       }
     } catch (error) {
-      console.error('Ошибка загрузки статистики прокси:', error)
+      logger.error('Ошибка загрузки статистики прокси', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -102,7 +103,7 @@ export function ProxyManager() {
         setStats(data.stats)
       }
     } catch (error) {
-      console.error('Ошибка проверки здоровья прокси:', error)
+      logger.error('Ошибка проверки здоровья прокси', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setHealthChecking(false)
     }
@@ -132,7 +133,7 @@ export function ProxyManager() {
         loadStats()
       }
     } catch (error) {
-      console.error('Ошибка добавления прокси:', error)
+      logger.error('Ошибка добавления прокси', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -148,7 +149,7 @@ export function ProxyManager() {
         loadStats()
       }
     } catch (error) {
-      console.error('Ошибка обновления прокси:', error)
+      logger.error('Ошибка обновления прокси', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -161,7 +162,7 @@ export function ProxyManager() {
         loadStats()
       }
     } catch (error) {
-      console.error('Ошибка удаления прокси:', error)
+      logger.error('Ошибка удаления прокси', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -303,7 +304,7 @@ export function ProxyManager() {
                         <Label>Тип</Label>
                         <Select
                           value={newProxy.type || 'asocks'}
-                          onValueChange={(value: any) => setNewProxy({...newProxy, type: value})}
+                          onValueChange={(value: 'asocks' | 'beget' | 'custom') => setNewProxy({...newProxy, type: value})}
                         >
                           <SelectTrigger>
                             <SelectValue />

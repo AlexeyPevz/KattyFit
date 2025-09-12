@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { generateRAGResponse } from "@/lib/rag-engine"
+import logger from "@/lib/logger"
 
 // Интерфейс для унифицированного сообщения
 interface UnifiedMessage {
@@ -10,64 +11,87 @@ interface UnifiedMessage {
   platform: string
   chatId?: string
   messageId?: string
-  attachments?: any[]
+  attachments?: Array<Record<string, unknown>>
 }
 
 // Парсеры для разных платформ
 const platformParsers = {
-  telegram: (body: any): UnifiedMessage => ({
-    userId: body.message?.from?.id?.toString() || body.callback_query?.from?.id?.toString(),
-    userName: body.message?.from?.first_name || body.callback_query?.from?.first_name,
-    text: body.message?.text || body.callback_query?.data || "",
-    platform: "telegram",
-    chatId: body.message?.chat?.id?.toString(),
-    messageId: body.message?.message_id?.toString(),
-  }),
-
-  vk: (body: any): UnifiedMessage => {
-    const message = body.object?.message || body.object
+  telegram: (body: Record<string, unknown>): UnifiedMessage => {
+    const message = body.message as Record<string, unknown> | undefined
+    const callbackQuery = body.callback_query as Record<string, unknown> | undefined
     return {
-      userId: message.from_id?.toString(),
-      text: message.text || "",
+      userId: (message?.from as Record<string, unknown>)?.id?.toString() || 
+              (callbackQuery?.from as Record<string, unknown>)?.id?.toString() || "",
+      userName: (message?.from as Record<string, unknown>)?.first_name as string || 
+                (callbackQuery?.from as Record<string, unknown>)?.first_name as string,
+      text: (message?.text as string) || (callbackQuery?.data as string) || "",
+      platform: "telegram",
+      chatId: (message?.chat as Record<string, unknown>)?.id?.toString(),
+      messageId: (message?.message_id as string)?.toString(),
+    }
+  },
+
+  vk: (body: Record<string, unknown>): UnifiedMessage => {
+    const object = body.object as Record<string, unknown> | undefined
+    const message = (object?.message as Record<string, unknown>) || object
+    return {
+      userId: (message?.from_id as number)?.toString(),
+      text: (message?.text as string) || "",
       platform: "vk",
-      messageId: message.id?.toString(),
-      attachments: message.attachments,
+      messageId: (message?.id as number)?.toString(),
+      attachments: message?.attachments as Array<Record<string, unknown>>,
     }
   },
 
-  instagram: (body: any): UnifiedMessage => {
-    const messaging = body.entry?.[0]?.messaging?.[0]
+  instagram: (body: Record<string, unknown>): UnifiedMessage => {
+    const entry = body.entry as Array<Record<string, unknown>> | undefined
+    const messaging = entry?.[0]?.messaging as Array<Record<string, unknown>> | undefined
+    const messageData = messaging?.[0]
     return {
-      userId: messaging?.sender?.id,
-      text: messaging?.message?.text || "",
+      userId: (messageData?.sender as Record<string, unknown>)?.id as string,
+      text: ((messageData?.message as Record<string, unknown>)?.text as string) || "",
       platform: "instagram",
-      messageId: messaging?.message?.mid,
+      messageId: (messageData?.message as Record<string, unknown>)?.mid as string,
     }
   },
 
-  whatsapp: (body: any): UnifiedMessage => {
-    const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]
+  whatsapp: (body: Record<string, unknown>): UnifiedMessage => {
+    const entry = body.entry as Array<Record<string, unknown>> | undefined
+    const changes = entry?.[0]?.changes as Array<Record<string, unknown>> | undefined
+    const value = changes?.[0]?.value as Record<string, unknown> | undefined
+    const messages = value?.messages as Array<Record<string, unknown>> | undefined
+    const message = messages?.[0]
+    const contacts = value?.contacts as Array<Record<string, unknown>> | undefined
+    const contact = contacts?.[0]
+    const profile = contact?.profile as Record<string, unknown> | undefined
+    const text = message?.text as Record<string, unknown> | undefined
+    
     return {
-      userId: message?.from,
-      userName: body.entry?.[0]?.changes?.[0]?.value?.contacts?.[0]?.profile?.name,
-      text: message?.text?.body || "",
+      userId: (message?.from as string) || "",
+      userName: (profile?.name as string) || "",
+      text: (text?.body as string) || "",
       platform: "whatsapp",
-      messageId: message?.id,
+      messageId: (message?.id as string) || "",
     }
   },
 
-  web: (body: any): UnifiedMessage => ({
-    userId: body.message?.from?.id?.toString(),
-    userName: body.message?.from?.first_name || "Пользователь сайта",
-    text: body.message?.text || "",
-    platform: "web",
-    chatId: body.message?.chat?.id?.toString(),
-    messageId: body.message?.message_id?.toString(),
-  }),
+  web: (body: Record<string, unknown>): UnifiedMessage => {
+    const message = body.message as Record<string, unknown> | undefined
+    const from = message?.from as Record<string, unknown> | undefined
+    const chat = message?.chat as Record<string, unknown> | undefined
+    return {
+      userId: from?.id?.toString() || "",
+      userName: (from?.first_name as string) || "Пользователь сайта",
+      text: (message?.text as string) || "",
+      platform: "web",
+      chatId: chat?.id?.toString() || "",
+      messageId: (message?.message_id as string)?.toString() || "",
+    }
+  },
 }
 
 // Функция для отправки сообщений
-async function sendMessage(platform: string, userId: string, text: string, extras?: any) {
+async function sendMessage(platform: string, userId: string, text: string, extras?: Record<string, unknown>) {
   const apiKeys = await getApiKeysForPlatform(platform)
   
   switch (platform) {
@@ -130,7 +154,7 @@ async function getApiKeysForPlatform(platform: string) {
 }
 
 // Отправка в Telegram
-async function sendTelegramMessage(token: string, chatId: string, text: string, extras?: any) {
+async function sendTelegramMessage(token: string, chatId: string, text: string, extras?: Record<string, unknown>) {
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -146,7 +170,7 @@ async function sendTelegramMessage(token: string, chatId: string, text: string, 
 }
 
 // Отправка в VK
-async function sendVKMessage(token: string, userId: string, text: string, extras?: any) {
+async function sendVKMessage(token: string, userId: string, text: string, extras?: Record<string, unknown>) {
   const params = new URLSearchParams({
     access_token: token,
     user_id: userId,
@@ -161,14 +185,14 @@ async function sendVKMessage(token: string, userId: string, text: string, extras
 }
 
 // Отправка в Instagram (через ContentStudio или Meta API)
-async function sendInstagramMessage(keys: any, userId: string, text: string, extras?: any) {
+async function sendInstagramMessage(keys: Record<string, unknown>, userId: string, text: string, extras?: Record<string, unknown>) {
   // Здесь будет интеграция с Instagram Messaging API
   // Пока возвращаем заглушку
   return { success: true, platform: "instagram", message: "Not implemented yet" }
 }
 
 // Отправка в WhatsApp
-async function sendWhatsAppMessage(keys: any, to: string, text: string, extras?: any) {
+async function sendWhatsAppMessage(keys: Record<string, unknown>, to: string, text: string, extras?: Record<string, unknown>) {
   const response = await fetch(
     `https://graph.facebook.com/v17.0/${keys.phone_number_id}/messages`,
     {
@@ -207,6 +231,8 @@ async function generateChatResponse(message: UnifiedMessage) {
     chatHistory: history || [],
     platform: message.platform,
     userName: message.userName,
+    userContext: {},
+    conversationId: 'unknown'
   })
 
   return response
@@ -260,7 +286,7 @@ export async function POST(
     // Платформы ожидают быстрый ответ
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Webhook error:", error)
+    logger.error("Webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { uploadManager } from "@/lib/background-upload"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,43 @@ import {
   FileVideo
 } from "lucide-react"
 import { formatBytes, formatTime } from "@/lib/utils"
+
+// ===== ТИПЫ ДЛЯ СОБЫТИЙ =====
+
+interface UploadProgressEvent {
+  uploadId: string
+  progress: number
+  bytesUploaded: number
+  totalBytes: number
+}
+
+interface UploadCompleteEvent {
+  uploadId: string
+  result: {
+    success: boolean
+    url?: string
+    error?: string
+  }
+}
+
+interface UploadErrorEvent {
+  uploadId: string
+  error: string
+  details?: unknown
+}
+
+interface BatteryManager {
+  level: number
+  charging: boolean
+  addEventListener: (event: string, handler: () => void) => void
+  removeEventListener: (event: string, handler: () => void) => void
+}
+
+interface NavigatorWithBattery extends Navigator {
+  getBattery?: () => Promise<BatteryManager>
+}
+
+// ===== КОМПОНЕНТЫ =====
 
 interface UploadItemProps {
   uploadId: string
@@ -56,13 +93,13 @@ function UploadItem({ uploadId }: UploadItemProps) {
 
   if (!task) return null
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     uploadManager.pauseUpload(uploadId)
-  }
+  }, [uploadId])
 
-  const handleResume = () => {
+  const handleResume = useCallback(() => {
     uploadManager.resumeUpload(uploadId)
-  }
+  }, [uploadId])
 
   const getStatusIcon = () => {
     switch (task.status) {
@@ -181,15 +218,15 @@ export function BackgroundUploadUI() {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
 
     // Слушаем события загрузки
-    const handleProgress = (event: any) => {
+    const handleProgress = (event: Event) => {
       setUploads(uploadManager.getAllUploads())
     }
 
-    const handleComplete = (event: any) => {
+    const handleComplete = (event: Event) => {
       setUploads(uploadManager.getAllUploads())
     }
 
-    const handleError = (event: any) => {
+    const handleError = (event: Event) => {
       setUploads(uploadManager.getAllUploads())
     }
 
@@ -205,7 +242,7 @@ export function BackgroundUploadUI() {
     window.addEventListener('offline', handleOffline)
 
     // Проверяем уровень батареи (для мобильных)
-    let batteryManager: any = null
+    let batteryManager: BatteryManager | null = null
     const handleBatteryChange = () => {
       if (batteryManager) {
         setBatteryLevel(batteryManager.level * 100)
@@ -213,11 +250,14 @@ export function BackgroundUploadUI() {
     }
     
     if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
-        batteryManager = battery
-        setBatteryLevel(battery.level * 100)
-        battery.addEventListener('levelchange', handleBatteryChange)
-      })
+      const navigatorWithBattery = navigator as NavigatorWithBattery
+      if (navigatorWithBattery.getBattery) {
+        navigatorWithBattery.getBattery().then((battery: BatteryManager) => {
+          batteryManager = battery
+          setBatteryLevel(battery.level * 100)
+          battery.addEventListener('levelchange', handleBatteryChange)
+        })
+      }
     }
 
     return () => {

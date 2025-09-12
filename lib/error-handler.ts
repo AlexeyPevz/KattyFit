@@ -1,0 +1,325 @@
+// Единообразная обработка ошибок
+// Централизованная система для обработки всех типов ошибок
+
+import { AppError, ErrorCode, ErrorSeverity, isAppError, isOperationalError } from '@/types/errors'
+import logger from './logger'
+
+// ===== КОНФИГУРАЦИЯ =====
+
+const ERROR_CONFIG = {
+  // Коды ошибок, которые не нужно логировать
+  IGNORE_LOGS: [
+    ErrorCode.AUTHENTICATION_ERROR,
+    ErrorCode.AUTHORIZATION_ERROR,
+    ErrorCode.NOT_FOUND,
+  ],
+  
+  // Коды ошибок, которые требуют уведомления
+  NOTIFY_ERRORS: [
+    ErrorCode.EXTERNAL_SERVICE_ERROR,
+    ErrorCode.CONFIGURATION_ERROR,
+  ],
+  
+  // Максимальная длина сообщения об ошибке для клиента
+  MAX_CLIENT_MESSAGE_LENGTH: 200,
+}
+
+// ===== ОБРАБОТЧИК ОШИБОК =====
+
+export class ErrorHandler {
+  private static instance: ErrorHandler
+  private errorLogger: ErrorLogger
+  private errorNotifier: ErrorNotifier
+
+  private constructor() {
+    this.errorLogger = new ErrorLogger()
+    this.errorNotifier = new ErrorNotifier()
+  }
+
+  static getInstance(): ErrorHandler {
+    if (!ErrorHandler.instance) {
+      ErrorHandler.instance = new ErrorHandler()
+    }
+    return ErrorHandler.instance
+  }
+
+  // Обработка ошибок в API routes
+  async handleApiError(error: unknown, request: Request): Promise<Response> {
+    const appError = this.normalizeError(error)
+    const context = this.extractContext(request)
+    
+    // Логируем ошибку
+    await this.errorLogger.logError(appError, context)
+    
+    // Уведомляем о критических ошибках
+    if (this.shouldNotify(appError)) {
+      await this.errorNotifier.notify(appError, context)
+    }
+    
+    // Возвращаем ответ клиенту
+    return this.createErrorResponse(appError, context)
+  }
+
+  // Обработка ошибок в клиентских компонентах
+  async handleClientError(error: unknown, context?: Record<string, any>): Promise<void> {
+    const appError = this.normalizeError(error)
+    
+    // Логируем ошибку
+    await this.errorLogger.logError(appError, context)
+    
+    // Уведомляем о критических ошибках
+    if (this.shouldNotify(appError)) {
+      await this.errorNotifier.notify(appError, context)
+    }
+  }
+
+  // Нормализация ошибки в AppError
+  private normalizeError(error: unknown): AppError {
+    if (isAppError(error)) {
+      return error
+    }
+
+    if (error instanceof Error) {
+      return new AppError(
+        error.message,
+        ErrorCode.UNKNOWN_ERROR,
+        500,
+        ErrorSeverity.MEDIUM,
+        { originalError: error.name, stack: error.stack }
+      )
+    }
+
+    if (typeof error === 'string') {
+      return new AppError(
+        error,
+        ErrorCode.UNKNOWN_ERROR,
+        500,
+        ErrorSeverity.MEDIUM
+      )
+    }
+
+    return new AppError(
+      'An unknown error occurred',
+      ErrorCode.UNKNOWN_ERROR,
+      500,
+      ErrorSeverity.MEDIUM,
+      { originalError: error }
+    )
+  }
+
+  // Извлечение контекста из запроса
+  private extractContext(request: Request): Record<string, unknown> {
+    return {
+      url: request.url,
+      method: request.method,
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      ipAddress: this.getClientIP(request),
+      timestamp: new Date().toISOString(),
+    }
+  }
+
+  // Получение IP адреса клиента
+  private getClientIP(request: Request): string {
+    const forwarded = request.headers.get('x-forwarded-for')
+    const realIP = request.headers.get('x-real-ip')
+    
+    if (forwarded) {
+      return forwarded.split(',')[0].trim()
+    }
+    
+    if (realIP) {
+      return realIP
+    }
+    
+    return 'unknown'
+  }
+
+  // Проверка необходимости уведомления
+  private shouldNotify(error: AppError): boolean {
+    return ERROR_CONFIG.NOTIFY_ERRORS.includes(error.code as any) ||
+           error.severity === ErrorSeverity.CRITICAL
+  }
+
+  // Создание ответа об ошибке
+  private createErrorResponse(error: AppError, context: Record<string, unknown>): Response {
+    const statusCode = error.statusCode
+    const message = this.sanitizeMessage(error.message)
+    
+    const response = {
+      success: false,
+      error: {
+        code: error.code,
+        message,
+        timestamp: error.timestamp,
+        requestId: context.requestId,
+      },
+    }
+
+    // Добавляем детали только для операционных ошибок
+    if (isOperationalError(error) && error.context) {
+      (response.error as any).details = this.sanitizeContext(error.context)
+    }
+
+    return new Response(JSON.stringify(response), {
+      status: statusCode,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+
+  // Санитизация сообщения об ошибке
+  private sanitizeMessage(message: string): string {
+    if (message.length <= ERROR_CONFIG.MAX_CLIENT_MESSAGE_LENGTH) {
+      return message
+    }
+    
+    return message.substring(0, ERROR_CONFIG.MAX_CLIENT_MESSAGE_LENGTH) + '...'
+  }
+
+  // Санитизация контекста ошибки
+  private sanitizeContext(context: Record<string, any>): Record<string, any> {
+    const sanitized: Record<string, any> = {}
+    
+    for (const [key, value] of Object.entries(context)) {
+      // Исключаем чувствительные данные
+      if (['password', 'token', 'secret', 'key'].some(sensitive => 
+        key.toLowerCase().includes(sensitive)
+      )) {
+        sanitized[key] = '[REDACTED]'
+        continue
+      }
+      
+      // Ограничиваем длину строк
+      if (typeof value === 'string' && value.length > 100) {
+        sanitized[key] = value.substring(0, 100) + '...'
+        continue
+      }
+      
+      sanitized[key] = value
+    }
+    
+    return sanitized
+  }
+}
+
+// ===== ЛОГГЕР ОШИБОК =====
+
+class ErrorLogger {
+  async logError(error: AppError, context?: Record<string, any>): Promise<void> {
+    // Пропускаем логирование для определенных типов ошибок
+    if (ERROR_CONFIG.IGNORE_LOGS.includes(error.code as any)) {
+      return
+    }
+
+    const logEntry = {
+      level: this.getLogLevel(error.severity),
+      message: error.message,
+      code: error.code,
+      statusCode: error.statusCode,
+      severity: error.severity,
+      context: context || {},
+      timestamp: error.timestamp,
+      stack: error.stack,
+    }
+
+    // Используем централизованный логгер
+    await logger.error('Error logged', {
+      code: error.code,
+      message: error.message,
+      statusCode: error.statusCode,
+      severity: error.severity,
+      context: context || {},
+      timestamp: error.timestamp,
+      stack: error.stack,
+    })
+  }
+
+  private getLogLevel(severity: ErrorSeverity): string {
+    switch (severity) {
+      case ErrorSeverity.LOW:
+        return 'info'
+      case ErrorSeverity.MEDIUM:
+        return 'warn'
+      case ErrorSeverity.HIGH:
+        return 'error'
+      case ErrorSeverity.CRITICAL:
+        return 'fatal'
+      default:
+        return 'error'
+    }
+  }
+
+  private async sendToExternalLogger(logEntry: Record<string, unknown>): Promise<void> {
+    try {
+      // Здесь можно интегрировать с внешним сервисом логирования
+      // Например, Sentry, LogRocket, или собственный сервис
+      logger.debug('Would send to external logger', { logEntry })
+    } catch (error) {
+      logger.error('Failed to send log to external service', { error: error instanceof Error ? error.message : String(error) })
+    }
+  }
+}
+
+// ===== УВЕДОМЛЕНИЯ ОБ ОШИБКАХ =====
+
+class ErrorNotifier {
+  async notify(error: AppError, context?: Record<string, any>): Promise<void> {
+    try {
+      // Отправляем уведомление администраторам
+      await this.sendAdminNotification(error, context)
+    } catch (notificationError) {
+      logger.error('Failed to send error notification', { error: notificationError instanceof Error ? notificationError.message : String(notificationError) })
+    }
+  }
+
+  private async sendAdminNotification(error: AppError, context?: Record<string, any>): Promise<void> {
+    const notification = {
+      title: `Critical Error: ${error.code}`,
+      message: error.message,
+      severity: error.severity,
+      timestamp: error.timestamp,
+      context: context || {},
+      url: context?.url || 'unknown',
+    }
+
+    // Здесь можно интегрировать с сервисом уведомлений
+    // Например, Slack, Discord, Email, или Telegram
+    logger.info('Would send admin notification', { notification })
+  }
+}
+
+// ===== УТИЛИТЫ =====
+
+export const errorHandler = ErrorHandler.getInstance()
+
+// Wrapper для API routes
+export function withErrorHandler<T extends any[]>(
+  handler: (...args: T) => Promise<any>
+) {
+  return async (...args: T): Promise<any> => {
+    try {
+      return await handler(...args)
+    } catch (error) {
+      const request = args[0]
+      const result = await errorHandler.handleApiError(error, request)
+      return result
+    }
+  }
+}
+
+// Wrapper для клиентских функций
+export function withClientErrorHandler<T extends any[], R>(
+  handler: (...args: T) => Promise<R>
+) {
+  return async (...args: T): Promise<R> => {
+    try {
+      return await handler(...args)
+    } catch (error) {
+      await errorHandler.handleClientError(error)
+      throw error
+    }
+  }
+}
+
+// ===== ЭКСПОРТ =====
+
+export default errorHandler

@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react"
+import logger from "@/lib/logger"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,7 +74,7 @@ export function ContentList() {
         setContent(data.content)
       }
     } catch (error) {
-      console.error("Ошибка загрузки контента:", error)
+      logger.error("Ошибка загрузки контента", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -247,7 +248,7 @@ export function ContentList() {
                       {content.languages.length > 0 && (
                         <div className="flex items-center gap-1">
                           <Languages className="h-3 w-3 text-muted-foreground" />
-                          {content.languages.map((lang: any) => (
+                          {content.languages.map((lang: string) => (
                             <Badge key={lang} variant="secondary" className="px-1.5">
                               {lang.toUpperCase()}
                             </Badge>
@@ -258,7 +259,7 @@ export function ContentList() {
                       {/* Платформы */}
                       {content.platforms.length > 0 && (
                         <div className="flex items-center gap-1 ml-auto">
-                          {content.platforms.map((platform: any) => (
+                          {content.platforms.map((platform: string) => (
                             <Badge 
                               key={platform} 
                               variant="outline"

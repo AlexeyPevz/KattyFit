@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
 import { apiHandler, logEvent } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 export const POST = apiHandler(async (request: NextRequest) => {
     const formData = await request.formData()
@@ -27,7 +28,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const fileBytes = await file.arrayBuffer()
     const { data: storageUpload, error: storageError } = await supabaseAdmin
       .storage
-      .from(env.storageBucket)
+      .from('content')
       .upload(`content/${filename}`, new Uint8Array(fileBytes), {
         cacheControl: '3600',
         upsert: false,
@@ -35,13 +36,13 @@ export const POST = apiHandler(async (request: NextRequest) => {
       })
 
     if (storageError) {
-      console.error("Ошибка загрузки в Storage:", storageError)
+      logger.error("Ошибка загрузки в Storage", { error: storageError instanceof Error ? storageError.message : String(storageError) })
       return NextResponse.json({ error: "Ошибка загрузки файла" }, { status: 500 })
     }
 
     // Публичный URL файла
     const { data: publicUrlData } = supabaseAdmin.storage
-      .from(env.storageBucket)
+      .from('content')
       .getPublicUrl(storageUpload.path)
     const publicUrl = publicUrlData.publicUrl
 
@@ -68,7 +69,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       .single()
 
     if (error) {
-      console.error("Ошибка создания записи:", error)
+      logger.error("Ошибка создания записи", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Ошибка сохранения в базу данных" },
         { status: 500 }
@@ -104,7 +105,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
       .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("Ошибка загрузки контента:", error)
+      logger.error("Ошибка загрузки контента", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Ошибка загрузки контента" },
         { status: 500 }

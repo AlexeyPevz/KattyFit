@@ -5,7 +5,7 @@ import { headers } from "next/headers"
 // Vercel Cron (или любой другой планировщик) дергает этот эндпоинт раз в минуту
 // Он находит публикации со статусом pending и временем <= now и пытается опубликовать
 
-async function publishToPlatform(platform: string, content: any, language: string) {
+async function publishToPlatform(platform: string, content: Record<string, unknown>, language: string) {
   // Мини-роутер: используем те же функции, что и в content/publish
   // Чтобы избежать дублирования, можно вынести общий модуль. Здесь — упрощенно через внутренний вызов API.
   const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/content/publish`, {
@@ -58,16 +58,16 @@ export async function POST(request: NextRequest) {
         const ok = await publishToPlatform(pub.platform, content, pub.language)
         if (!ok) throw new Error('Publish failed')
         // Если ok — статус этой публикации будет обновлён тем маршрутом
-      } catch (e: any) {
+      } catch (e: Error | unknown) {
         await supabaseAdmin
           .from('publications')
-          .update({ status: 'failed', error: e?.message || 'Scheduler failed' })
+          .update({ status: 'failed', error: (e as Error)?.message || 'Scheduler failed' })
           .eq('id', pub.id)
       }
     }
 
     return NextResponse.json({ success: true, processed: pending?.length || 0 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Scheduler error' }, { status: 500 })
+  } catch (e: Error | unknown) {
+    return NextResponse.json({ error: (e as Error)?.message || 'Scheduler error' }, { status: 500 })
   }
 }

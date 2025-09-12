@@ -1,5 +1,7 @@
 // Сервис для умной загрузки видео с учетом доступности API
 
+import logger from './logger'
+
 interface VideoUploadConfig {
   useProxy: boolean
   proxyUrl?: string
@@ -40,7 +42,7 @@ export class VideoUploadService {
     // Загружаем на доступные платформы
     for (const platform of this.config.platforms) {
       if (!availablePlatforms[platform]) {
-        console.log(`Пропускаем ${platform} - недоступна`)
+        logger.info(`Пропускаем ${platform} - недоступна`)
         continue
       }
 
@@ -62,7 +64,7 @@ export class VideoUploadService {
         const vkResult = await this.uploadToPlatform('vk', file, metadata)
         results.push(vkResult)
       } catch (error) {
-        console.error('Fallback to VK failed:', error)
+        logger.error('Fallback to VK failed', { error: error instanceof Error ? error.message : String(error) })
       }
     }
 
@@ -92,7 +94,7 @@ export class VideoUploadService {
   private async uploadToPlatform(
     platform: string,
     file: File,
-    metadata: any
+    metadata: Record<string, unknown>
   ): Promise<UploadResult> {
     switch (platform) {
       case 'vk':
@@ -106,7 +108,7 @@ export class VideoUploadService {
     }
   }
 
-  private async uploadToVK(file: File, metadata: any): Promise<UploadResult> {
+  private async uploadToVK(file: File, metadata: Record<string, unknown>): Promise<UploadResult> {
     // Реализация загрузки на VK
     // Используем прямой API без прокси
     const vkToken = process.env.VK_API_TOKEN
@@ -127,7 +129,7 @@ export class VideoUploadService {
     }
   }
 
-  private async uploadToYouTube(file: File, metadata: any): Promise<UploadResult> {
+  private async uploadToYouTube(file: File, metadata: Record<string, unknown>): Promise<UploadResult> {
     // Если есть прокси, используем его
     if (this.config.useProxy && this.config.proxyUrl) {
       const response = await fetch(`${this.config.proxyUrl}/youtube/upload`, {
@@ -154,7 +156,7 @@ export class VideoUploadService {
     }
   }
 
-  private async uploadToRuTube(file: File, metadata: any): Promise<UploadResult> {
+  private async uploadToRuTube(file: File, metadata: Record<string, unknown>): Promise<UploadResult> {
     // RuTube как альтернатива для России
     const rutubeToken = process.env.RUTUBE_API_TOKEN
 
@@ -173,15 +175,15 @@ export class VideoUploadService {
     }
   }
 
-  private createFormData(file: File, metadata: any): FormData {
+  private createFormData(file: File, metadata: Record<string, unknown>): FormData {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('title', metadata.title)
-    formData.append('description', metadata.description || '')
+    formData.append('title', metadata.title as string)
+    formData.append('description', (metadata.description as string) || '')
     formData.append('isPrivate', metadata.isPrivate ? '1' : '0')
     
-    if (metadata.tags) {
-      formData.append('tags', metadata.tags.join(','))
+    if (metadata.tags && Array.isArray(metadata.tags)) {
+      formData.append('tags', (metadata.tags as string[]).join(','))
     }
 
     return formData

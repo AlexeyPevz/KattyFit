@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { env } from "@/lib/env"
 import { createHmac } from "crypto"
+import logger from "@/lib/logger"
 
 // Проверка подписи CloudPayments
 function verifySignature(body: string, signature: string): boolean {
-  if (!env.cloudPaymentsSecret) {
-    console.error("CloudPayments secret not configured")
+  if (!process.env.CLOUDPAYMENTS_SECRET) {
+    logger.error("CloudPayments secret not configured")
     return false
   }
   
-  const hash = createHmac('sha256', env.cloudPaymentsSecret)
+  const hash = createHmac('sha256', process.env.CLOUDPAYMENTS_SECRET)
     .update(body)
     .digest('base64')
   
@@ -24,14 +25,14 @@ export async function POST(request: NextRequest) {
     
     // Проверяем подпись
     if (!verifySignature(body, signature)) {
-      console.error("Invalid CloudPayments signature")
+      logger.error("Invalid CloudPayments signature")
       return NextResponse.json({ code: 13 }) // Неверная подпись
     }
     
     const data = JSON.parse(body)
     const { Type, Data } = data
     
-    console.log(`CloudPayments webhook: ${Type}`, Data)
+    logger.info(`CloudPayments webhook: ${Type}`, { data: Data })
     
     switch (Type) {
       case 'Pay':
@@ -54,28 +55,28 @@ export async function POST(request: NextRequest) {
         return handleCheck(Data)
         
       default:
-        console.log(`Unknown CloudPayments webhook type: ${Type}`)
+        logger.warn(`Unknown CloudPayments webhook type: ${Type}`)
     }
     
     // Успешный ответ
     return NextResponse.json({ code: 0 })
     
   } catch (error) {
-    console.error("CloudPayments webhook error:", error)
+    logger.error("CloudPayments webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ code: 13 }) // Временная ошибка
   }
 }
 
-async function handleCheck(data: any) {
+async function handleCheck(data: Record<string, unknown>) {
   try {
     const { Amount, Email, Data: customData } = data
     
     // Проверяем, существует ли товар/курс
-    if (customData?.courseId) {
+    if (customData && typeof customData === 'object' && 'courseId' in customData) {
       const { data: course } = await supabaseAdmin
         .from('courses')
         .select('id, price')
-        .eq('id', customData.courseId)
+        .eq('id', customData.courseId as string)
         .single()
         
       if (!course) {
@@ -86,11 +87,14 @@ async function handleCheck(data: any) {
       }
       
       // Проверяем цену (с учетом возможной скидки)
-      const expectedAmount = customData.discountPercent 
-        ? Math.round(course.price * (100 - customData.discountPercent) / 100)
+      const discountPercent = customData && typeof customData === 'object' && 'discountPercent' in customData 
+        ? customData.discountPercent as number 
+        : 0
+      const expectedAmount = discountPercent 
+        ? Math.round(course.price * (100 - discountPercent) / 100)
         : course.price
         
-      if (Math.abs(Amount - expectedAmount) > 0.01) {
+      if (Math.abs((Amount as number) - expectedAmount) > 0.01) {
         return NextResponse.json({ 
           code: 11, 
           message: "Неверная сумма платежа" 
@@ -102,12 +106,12 @@ async function handleCheck(data: any) {
     return NextResponse.json({ code: 0 })
     
   } catch (error) {
-    console.error("Check handler error:", error)
+    logger.error("Check handler error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ code: 13 })
   }
 }
 
-async function handlePayment(data: any) {
+async function handlePayment(data: Record<string, unknown>) {
   try {
     const { 
       TransactionId, 
@@ -141,16 +145,16 @@ async function handlePayment(data: any) {
       })
     
     if (paymentError) {
-      console.error("Error saving payment:", paymentError)
+      logger.error("Error saving payment", { error: paymentError instanceof Error ? paymentError.message : String(paymentError) })
     }
     
     // Предоставляем доступ к курсу
-    if (customData?.courseId && Email) {
+    if (customData && typeof customData === 'object' && 'courseId' in customData && Email) {
       // Находим или создаем пользователя
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('id')
-        .eq('email', Email)
+        .eq('email', Email as string)
         .single()
       
       if (user) {
@@ -168,7 +172,7 @@ async function handlePayment(data: any) {
     }
     
     // Записываем на тренировку
-    if (customData?.bookingId) {
+    if (customData && typeof customData === 'object' && 'bookingId' in customData) {
       await supabaseAdmin
         .from('bookings')
         .update({
@@ -176,24 +180,24 @@ async function handlePayment(data: any) {
           payment_id: TransactionId,
           paid_at: DateTime
         })
-        .eq('id', customData.bookingId)
+        .eq('id', customData.bookingId as string)
     }
     
     // Применяем промокод (увеличиваем счетчик использований)
-    if (customData?.promoCode) {
+    if (customData && typeof customData === 'object' && 'promoCode' in customData) {
       await supabaseAdmin.rpc('increment_promo_usage', {
-        code: customData.promoCode
+        code: customData.promoCode as string
       })
     }
     
     // TODO: Отправить email с подтверждением
     
   } catch (error) {
-    console.error("Payment handler error:", error)
+    logger.error("Payment handler error", { error: error instanceof Error ? error.message : String(error) })
   }
 }
 
-async function handleFailedPayment(data: any) {
+async function handleFailedPayment(data: Record<string, unknown>) {
   try {
     const { TransactionId, Reason, ReasonCode } = data
     
@@ -211,11 +215,11 @@ async function handleFailedPayment(data: any) {
       })
       
   } catch (error) {
-    console.error("Failed payment handler error:", error)
+    logger.error("Failed payment handler error", { error: error instanceof Error ? error.message : String(error) })
   }
 }
 
-async function handleRefund(data: any) {
+async function handleRefund(data: Record<string, unknown>) {
   try {
     const { TransactionId, Amount, OriginalTransactionId } = data
     
@@ -244,6 +248,6 @@ async function handleRefund(data: any) {
     }
     
   } catch (error) {
-    console.error("Refund handler error:", error)
+    logger.error("Refund handler error", { error: error instanceof Error ? error.message : String(error) })
   }
 }

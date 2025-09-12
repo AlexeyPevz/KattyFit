@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Settings, Shield, LogIn, User, BarChart3 } from "lucide-react"
 import { env } from "@/lib/env"
+import logger from "@/lib/logger"
 
 export function AdminAccessButton() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -22,7 +23,7 @@ export function AdminAccessButton() {
         try {
           const sessionData = localStorage.getItem("admin_session")
           if (!sessionData) {
-            console.log("AdminAccessButton: No session data found")
+            logger.debug("AdminAccessButton: No session data found")
             setIsAuthenticated(false)
             return
           }
@@ -32,29 +33,29 @@ export function AdminAccessButton() {
 
           // Check if session is expired
           if (now > session.expiresAt) {
-            console.log("AdminAccessButton: Session expired")
+            logger.debug("AdminAccessButton: Session expired")
             localStorage.removeItem("admin_session")
             setIsAuthenticated(false)
             return
           }
 
           // Check if username matches expected admin username
-          const expectedUser = env.adminUsernamePublic
-          console.log("AdminAccessButton auth check:", {
+          const expectedUser = process.env.ADMIN_USERNAME
+          logger.debug("AdminAccessButton auth check", {
             sessionUsername: session.username,
             expectedUser: expectedUser,
             match: session.username === expectedUser
           })
           
           if (session.username === expectedUser) {
-            console.log("AdminAccessButton: Authentication successful")
+            logger.debug("AdminAccessButton: Authentication successful")
             setIsAuthenticated(true)
           } else {
-            console.log("AdminAccessButton: Username mismatch")
+            logger.debug("AdminAccessButton: Username mismatch")
             setIsAuthenticated(false)
           }
         } catch (error) {
-          console.error("Auth check error:", error)
+          logger.error("Auth check error", { error: error instanceof Error ? error.message : String(error) })
           localStorage.removeItem("admin_session")
           setIsAuthenticated(false)
         }

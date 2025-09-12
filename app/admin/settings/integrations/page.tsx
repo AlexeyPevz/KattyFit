@@ -21,6 +21,7 @@ import {
   Loader2
 } from "lucide-react"
 import Link from "next/link"
+import logger from "@/lib/logger"
 
 interface Integration {
   id: string
@@ -143,7 +144,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
 
 export default function IntegrationsPage() {
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
-  const [credentials, setCredentials] = useState<Record<string, any>>({})
+  const [credentials, setCredentials] = useState<Record<string, Record<string, string>>>({})
   const [integrations, setIntegrations] = useState<Integration[]>(DEFAULT_INTEGRATIONS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
@@ -161,12 +162,12 @@ export default function IntegrationsPage() {
         // Обновляем статус подключения
         const updated = DEFAULT_INTEGRATIONS.map(integration => ({
           ...integration,
-          connected: data.services.find((s: any) => s.service === integration.id)?.connected || false
+          connected: data.services.find((s: Record<string, unknown>) => s.service === integration.id)?.connected || false
         }))
         setIntegrations(updated)
       }
     } catch (error) {
-      console.error("Ошибка загрузки интеграций:", error)
+      logger.error("Ошибка загрузки интеграций", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -198,7 +199,7 @@ export default function IntegrationsPage() {
         setCredentials(prev => ({ ...prev, [integrationId]: {} }))
       }
     } catch (error) {
-      console.error("Ошибка сохранения:", error)
+      logger.error("Ошибка сохранения", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setSaving(null)
     }

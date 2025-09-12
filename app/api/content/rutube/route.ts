@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 // Функция для извлечения ID видео из ссылки RuTube
 function extractRutubeVideoId(url: string): string | null {
@@ -34,7 +35,7 @@ async function fetchRutubeMetadata(videoId: string) {
       embedUrl: `https://rutube.ru/play/embed/${videoId}`,
     }
   } catch (error) {
-    console.error("Ошибка получения метаданных RuTube:", error)
+    logger.error("Ошибка получения метаданных RuTube", { error: error instanceof Error ? error.message : String(error) })
     // Возвращаем дефолтные значения
     return {
       title: "Видео с RuTube",
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error("Ошибка создания записи:", error)
+      logger.error("Ошибка создания записи", { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: "Ошибка сохранения в базу данных" },
         { status: 500 }
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       metadata: metadata,
     })
   } catch (error) {
-    console.error("Ошибка обработки RuTube URL:", error)
+    logger.error("Ошибка обработки RuTube URL", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка при обработке ссылки" },
       { status: 500 }

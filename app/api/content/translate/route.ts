@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 export const POST = apiHandler(async (request: NextRequest) => {
   const { contentId, targetLanguage, autoTranslate } = await request.json()
@@ -92,7 +93,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       })
 
     if (saveError) {
-      console.error("Ошибка сохранения перевода:", saveError)
+      logger.error("Ошибка сохранения перевода", { error: saveError instanceof Error ? saveError.message : String(saveError) })
       // Не возвращаем ошибку, так как перевод все равно создан
     }
 
@@ -102,7 +103,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
       message: "Перевод создан",
     })
   } catch (error) {
-    console.error("Ошибка создания перевода:", error)
+    logger.error("Ошибка создания перевода", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка создания перевода" },
       { status: 500 }
@@ -137,7 +138,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
       translations: translations || [],
     })
   } catch (error) {
-    console.error("Ошибка загрузки переводов:", error)
+    logger.error("Ошибка загрузки переводов", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки переводов" },
       { status: 500 }

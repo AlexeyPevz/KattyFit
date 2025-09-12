@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Download } from "lucide-react"
 import { pushNotifications } from "@/lib/push-notifications"
+import logger from "@/lib/logger"
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -28,15 +29,15 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
-          console.log("SW registered: ", registration)
+          logger.info("SW registered", { registration })
           // Инициализируем push-уведомления
           // Инициализируем push-уведомления
           if (pushNotifications && typeof pushNotifications.registerServiceWorker === 'function') {
-            pushNotifications.registerServiceWorker().catch(console.error)
+            pushNotifications.registerServiceWorker().catch((error) => logger.error('SW registration failed', { error: error instanceof Error ? error.message : String(error) }))
           }
         })
         .catch((registrationError) => {
-          console.log("SW registration failed: ", registrationError)
+          logger.error("SW registration failed", { error: registrationError instanceof Error ? registrationError.message : String(registrationError) })
         })
     }
 
@@ -66,9 +67,9 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     const { outcome } = await deferredPrompt.userChoice
 
     if (outcome === "accepted") {
-      console.log("User accepted the install prompt")
+      logger.info("User accepted the install prompt")
     } else {
-      console.log("User dismissed the install prompt")
+      logger.info("User dismissed the install prompt")
     }
 
     setDeferredPrompt(null)

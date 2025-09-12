@@ -1,0 +1,364 @@
+/* Предотвращение Layout Shift для CLS оптимизации */
+/* Устанавливаем размеры для всех элементов, которые могут вызвать сдвиг */
+
+/* Базовые размеры для предотвращения CLS */
+* {
+  box-sizing: border-box;
+}
+
+/* Контейнеры с фиксированными размерами */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Hero секция - критический элемент */
+.hero-section {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.2;
+  margin: 0 0 1rem 0;
+  /* Резервируем место для текста */
+  min-height: 4rem;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  line-height: 1.5;
+  margin: 0 0 2rem 0;
+  /* Резервируем место для подзаголовка */
+  min-height: 3rem;
+}
+
+/* Кнопки с фиксированными размерами */
+.hero-cta {
+  display: inline-block;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.125rem;
+  /* Фиксированная высота для предотвращения CLS */
+  min-height: 3.5rem;
+  line-height: 1.5;
+  transition: transform 0.2s ease;
+}
+
+/* Навигация */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px; /* Фиксированная высота */
+  z-index: 1000;
+  padding: 1rem 0;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  height: 2rem; /* Фиксированная высота */
+  line-height: 2rem;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 2rem;
+  height: 2rem; /* Фиксированная высота */
+  align-items: center;
+}
+
+.nav-link {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  height: 2rem;
+  line-height: 2rem;
+  transition: color 0.2s ease;
+}
+
+/* Карточки курсов */
+.course-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Фиксированная высота для предотвращения CLS */
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card-image {
+  width: 100%;
+  height: 200px; /* Фиксированная высота изображения */
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.course-card-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  /* Резервируем место для заголовка */
+  min-height: 2.8rem;
+}
+
+.course-card-description {
+  color: #666;
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+  /* Резервируем место для описания */
+  min-height: 3.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course-card-footer {
+  padding: 1.5rem;
+  padding-top: 0;
+  margin-top: auto;
+}
+
+/* Изображения с фиксированными размерами */
+.optimized-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.optimized-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+/* Skeleton loader для предотвращения CLS */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Формы с фиксированными размерами */
+.form-input {
+  width: 100%;
+  height: 3rem; /* Фиксированная высота */
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: border-color 0.2s ease;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 6rem; /* Минимальная высота */
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+/* Кнопки с фиксированными размерами */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  /* Фиксированная высота */
+  min-height: 3rem;
+  line-height: 1.5;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-height: 2.5rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  min-height: 3.5rem;
+}
+
+/* Модальные окна */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  /* Предотвращаем CLS при открытии */
+  transform: scale(1);
+  transition: transform 0.2s ease;
+}
+
+/* Таблицы с фиксированными размерами */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Предотвращает изменение ширины колонок */
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  /* Фиксированная высота строк */
+  height: 3rem;
+  vertical-align: middle;
+}
+
+/* Списки с фиксированными размерами */
+.list-item {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  /* Фиксированная высота элемента списка */
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Адаптивность с сохранением размеров */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+    min-height: 3rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.125rem;
+    min-height: 2.5rem;
+  }
+  
+  .hero-cta {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    min-height: 3rem;
+  }
+  
+  .nav-menu {
+    display: none;
+  }
+  
+  .course-card {
+    min-height: 350px;
+  }
+  
+  .course-card-image {
+    height: 150px;
+  }
+}
+
+/* Утилиты для предотвращения CLS */
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.aspect-ratio-1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+/* Фиксированные размеры для контента */
+.content-width {
+  max-width: 65ch;
+  margin: 0 auto;
+}
+
+.section-padding {
+  padding: 4rem 0;
+}
+
+/* Предотвращение CLS для динамического контента */
+.dynamic-content {
+  min-height: 200px; /* Резервируем место */
+}
+
+.loading-placeholder {
+  background: #f3f4f6;
+  border-radius: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

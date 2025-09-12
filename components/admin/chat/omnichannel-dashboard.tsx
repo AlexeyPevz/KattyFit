@@ -23,6 +23,7 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react"
+import logger from "@/lib/logger"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -196,7 +197,7 @@ export function OmnichannelDashboard() {
         ))
       }
     } catch (error) {
-      console.error('Ошибка при получении AI ответа:', error)
+      logger.error('Ошибка при получении AI ответа', { error: error instanceof Error ? error.message : String(error) })
       
       // Добавляем сообщение об ошибке
       const errorMessage: Message = {

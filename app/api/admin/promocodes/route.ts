@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler, validateRequired } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 // GET - получить список промокодов
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -10,7 +11,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
     .order('created_at', { ascending: false })
   
   if (error) {
-    console.error('Error fetching promocodes:', error)
+    logger.error('Error fetching promocodes', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Не удалось загрузить промокоды' },
       { status: 500 }
@@ -62,7 +63,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     .single()
     
   if (createError) {
-    console.error('Error creating promocode:', createError)
+    logger.error('Error creating promocode', { error: createError instanceof Error ? createError.message : String(createError) })
     return NextResponse.json(
       { error: 'Не удалось создать промокод' },
       { status: 500 }

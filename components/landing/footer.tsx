@@ -54,46 +54,56 @@ export function Footer() {
             {/* Newsletter */}
             <div className="space-y-2">
               <p className="text-sm font-medium">Подпишитесь на рассылку</p>
-              <div className="flex gap-2">
+              <form className="flex gap-2" aria-label="Подписка на рассылку">
                 <Input 
                   type="email" 
                   placeholder="Ваш email" 
                   className="max-w-[250px]"
+                  aria-label="Введите ваш email для подписки"
+                  required
+                  aria-describedby="newsletter-error newsletter-help"
                 />
-                <Button size="icon">
-                  <Send className="h-4 w-4" />
+                <Button 
+                  type="submit" 
+                  size="icon"
+                  aria-label="Подписаться на рассылку"
+                >
+                  <Send className="h-4 w-4" aria-hidden="true" />
                 </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
+              </form>
+              <p id="newsletter-help" className="text-xs text-muted-foreground">
                 Получайте полезные материалы и скидки первыми
               </p>
+              <div id="newsletter-error" className="text-xs text-red-500" role="alert" aria-live="polite">
+                {/* Сообщения об ошибках будут добавлены через JavaScript */}
+              </div>
             </div>
 
             {/* Social */}
-            <div className="flex gap-2">
-              <a href="https://instagram.com/kattyfit" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="icon">
-                  <Instagram className="h-4 w-4" />
+            <div className="flex gap-2" role="list" aria-label="Социальные сети">
+              <a href="https://instagram.com/kattyfit" target="_blank" rel="noopener noreferrer" role="listitem">
+                <Button variant="outline" size="icon" aria-label="Instagram">
+                  <Instagram className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </a>
-              <a href="https://youtube.com/@kattyfit" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="icon">
-                  <Youtube className="h-4 w-4" />
+              <a href="https://youtube.com/@kattyfit" target="_blank" rel="noopener noreferrer" role="listitem">
+                <Button variant="outline" size="icon" aria-label="YouTube">
+                  <Youtube className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </a>
-              <a href="https://t.me/kattyfit" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="icon">
-                  <Send className="h-4 w-4" />
+              <a href="https://t.me/kattyfit" target="_blank" rel="noopener noreferrer" role="listitem">
+                <Button variant="outline" size="icon" aria-label="Telegram">
+                  <Send className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </a>
-              <a href="https://facebook.com/kattyfit" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="icon">
-                  <Facebook className="h-4 w-4" />
+              <a href="https://facebook.com/kattyfit" target="_blank" rel="noopener noreferrer" role="listitem">
+                <Button variant="outline" size="icon" aria-label="Facebook">
+                  <Facebook className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </a>
-              <a href="https://twitter.com/kattyfit" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="icon">
-                  <Twitter className="h-4 w-4" />
+              <a href="https://twitter.com/kattyfit" target="_blank" rel="noopener noreferrer" role="listitem">
+                <Button variant="outline" size="icon" aria-label="Twitter">
+                  <Twitter className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </a>
             </div>
@@ -139,8 +149,9 @@ export function Footer() {
                 <a 
                   href="tel:+79991234567"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Позвонить по телефону"
                 >
-                  <Phone className="h-4 w-4" />
+                  <Phone className="h-4 w-4" aria-hidden="true" />
                   +7 (999) 123-45-67
                 </a>
               </li>
@@ -148,14 +159,15 @@ export function Footer() {
                 <a 
                   href="mailto:info@kattyfit.ru"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Написать на email"
                 >
-                  <Mail className="h-4 w-4" />
+                  <Mail className="h-4 w-4" aria-hidden="true" />
                   info@kattyfit.ru
                 </a>
               </li>
               <li>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
                   Москва, Россия
                 </div>
               </li>
@@ -182,12 +194,12 @@ export function Footer() {
             </div>
             <div className="flex flex-col items-center gap-2">
               <p className="text-sm text-muted-foreground flex items-center gap-1">
-                Сделано с <Heart className="h-3 w-3 fill-current text-red-500" /> для KattyFit
+                Сделано с <Heart className="h-3 w-3 fill-current text-red-500" aria-hidden="true" /> для KattyFit
               </p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>Разработчик:</span>
-                <a href="https://t.me/alex_dmr" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
-                  <Send className="h-3 w-3" />
+                <a href="https://t.me/alex_dmr" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground transition-colors" aria-label="Связаться с разработчиком в Telegram">
+                  <Send className="h-3 w-3" aria-hidden="true" />
                   <span>Связаться</span>
                 </a>
               </div>

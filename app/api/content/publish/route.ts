@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 interface PublishRequest {
   contentId: string
@@ -35,7 +36,7 @@ async function getApiKey(service: string): Promise<string | null> {
 }
 
 // Публикация в VK
-async function publishToVK(content: any, language: string) {
+async function publishToVK(content: Record<string, unknown>, language: string) {
   const vkToken = await getApiKey("vk")
   if (!vkToken) {
     throw new Error("VK API token не настроен")
@@ -58,7 +59,7 @@ async function publishToVK(content: any, language: string) {
 }
 
 // Публикация в Telegram
-async function publishToTelegram(content: any, language: string) {
+async function publishToTelegram(content: Record<string, unknown>, language: string) {
   const telegramToken = await getApiKey("telegram")
   const telegramChatId = await getApiKey("telegram_chat_id")
   
@@ -81,7 +82,7 @@ async function publishToTelegram(content: any, language: string) {
 }
 
 // Публикация в YouTube (требует OAuth)
-async function publishToYouTube(content: any, language: string) {
+async function publishToYouTube(content: Record<string, unknown>, language: string) {
   const { data: integration } = await supabaseAdmin
     .from("integrations")
     .select("config")
@@ -111,7 +112,7 @@ const PLATFORM_CONFIG = {
   },
   rutube: {
     name: "RuTube",
-    publisher: async (content: any) => ({
+    publisher: async (content: Record<string, unknown>) => ({
       success: true,
       url: content.url, // Уже опубликовано на RuTube
     }),
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const publishTasks: any[] = []
+    const publishTasks: Array<{ platform: string; task: Promise<unknown> }> = []
     const errors: string[] = []
 
     // Создаем задачи публикации для каждой платформы и языка
@@ -224,8 +225,8 @@ export async function POST(request: NextRequest) {
                   .eq("id", publication.id)
               })
           }
-        } catch (error: any) {
-          errors.push(`${platform}: ${error.message}`)
+        } catch (error: Error | unknown) {
+          errors.push(`${platform}: ${(error as Error).message}`)
         }
       }
     }
@@ -239,7 +240,7 @@ export async function POST(request: NextRequest) {
         : "Публикация успешно запланирована",
     })
   } catch (error) {
-    console.error("Ошибка планирования публикации:", error)
+    logger.error("Ошибка планирования публикации", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка при планировании публикации" },
       { status: 500 }
@@ -273,7 +274,7 @@ export async function GET(request: NextRequest) {
       publications: publications || [],
     })
   } catch (error) {
-    console.error("Ошибка загрузки публикаций:", error)
+    logger.error("Ошибка загрузки публикаций", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки публикаций" },
       { status: 500 }

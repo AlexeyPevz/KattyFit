@@ -27,6 +27,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Hls from "hls.js"
 
+interface VideoQuality {
+  index: number
+  height: number
+  bitrate: number
+  label: string
+}
+
 interface SecureVideoPlayerProps {
   src: string
   title?: string
@@ -65,10 +72,10 @@ export function SecureVideoPlayer({
   const [error, setError] = useState<string | null>(null)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [quality, setQuality] = useState<number>(-1)
-  const [availableQualities, setAvailableQualities] = useState<any[]>([])
+  const [availableQualities, setAvailableQualities] = useState<VideoQuality[]>([])
   const [proxiedSrc, setProxiedSrc] = useState<string>("")
 
-  let controlsTimeout: any
+  let controlsTimeout: ReturnType<typeof setTimeout> | null = null
 
   useEffect(() => {
     if (!videoRef.current) return
@@ -304,7 +311,7 @@ export function SecureVideoPlayer({
   // Управление видимостью контролов
   const handleMouseMove = () => {
     setShowControls(true)
-    clearTimeout(controlsTimeout)
+    if (controlsTimeout) clearTimeout(controlsTimeout)
     controlsTimeout = setTimeout(() => {
       if (isPlaying) {
         setShowControls(false)

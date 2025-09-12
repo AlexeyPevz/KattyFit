@@ -1,33 +1,26 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { PWAProvider } from "@/components/pwa-provider"
-import { ChatWidget } from "@/components/chat/chat-widget"
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { ErrorBoundary } from '@/lib/error-tracking/error-boundary'
+import { initializeErrorTracking } from '@/lib/error-tracking'
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] })
-
-export const metadata: Metadata = {
-  title: "KattyFit - Растяжка и Аэройога",
-  description: "Персональные тренировки по растяжке и аэройоге с профессиональным тренером",
-  keywords: "растяжка, аэройога, фитнес, тренер, персональные тренировки, онлайн курсы",
-  authors: [{ name: "KattyFit", url: "https://t.me/kattyFit_bgd" }],
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "KattyFit",
-  },
-  generator: 'v0.app'
+// Инициализируем error tracking
+if (typeof window !== 'undefined') {
+  initializeErrorTracking()
 }
 
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  themeColor: '#8b5cf6',
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'AI Content Studio',
+  description: 'AI-powered content creation and management platform',
+  manifest: '/manifest.json',
+  themeColor: '#3B82F6',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
@@ -36,15 +29,21 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3B82F6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="AI Content Studio" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+      </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <PWAProvider>
-            {children}
-            <ChatWidget />
-            <Toaster />
-          </PWAProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
       </body>
     </html>
   )

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { getUploadedChunks, cleanupUpload } from "@/lib/upload-chunks"
+import logger from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Ошибка финализации загрузки:', error)
+    logger.error('Ошибка финализации загрузки', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Ошибка финализации загрузки' },
       { status: 500 }

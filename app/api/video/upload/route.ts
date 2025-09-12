@@ -1,5 +1,38 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import { z } from "zod"
+import { ValidationError } from "@/types/errors"
+import logger from "@/lib/logger"
+
+// ===== ZOD СХЕМЫ ВАЛИДАЦИИ =====
+
+const VideoUploadSchema = z.object({
+  file: z.instanceof(File, { message: 'File is required' }),
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less')
+    .transform(title => title.trim()),
+  description: z.string()
+    .max(1000, 'Description must be 1000 characters or less')
+    .optional()
+    .transform(desc => desc?.trim() || ''),
+  courseId: z.string().uuid('Invalid course ID format').optional(),
+  lessonId: z.string().uuid('Invalid lesson ID format').optional(),
+}).refine((data) => {
+  // Проверка размера файла (макс 5GB)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024
+  return data.file.size <= MAX_FILE_SIZE
+}, {
+  message: 'File size must be 5GB or less',
+  path: ['file']
+}).refine((data) => {
+  // Проверка типа файла
+  const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo']
+  return allowedTypes.includes(data.file.type)
+}, {
+  message: 'Unsupported video format',
+  path: ['file']
+})
 
 // Загрузка видео на VK
 async function uploadToVK(
@@ -13,7 +46,7 @@ async function uploadToVK(
     const vkGroupId = process.env.VK_GROUP_ID
     
     if (!vkToken || !vkGroupId) {
-      console.error("VK API credentials not configured")
+      logger.error("VK API credentials not configured")
       return null
     }
 
@@ -30,13 +63,13 @@ async function uploadToVK(
 
     const uploadData = await uploadUrlResponse.json()
     if (uploadData.error) {
-      console.error("VK upload URL error:", uploadData.error)
+      logger.error("VK upload URL error", { error: uploadData.error })
       return null
     }
 
     // Проверяем наличие upload_url
     if (!uploadData.response?.upload_url) {
-      console.error("VK API не вернул upload_url:", uploadData)
+      logger.error("VK API не вернул upload_url", { uploadData })
       return null
     }
 
@@ -50,7 +83,7 @@ async function uploadToVK(
     })
 
     if (!uploadResponse.ok) {
-      console.error("VK upload HTTP error:", uploadResponse.status)
+      logger.error("VK upload HTTP error", { status: uploadResponse.status })
       return null
     }
 
@@ -58,7 +91,7 @@ async function uploadToVK(
     
     // Проверяем обязательные поля
     if (!uploadResult.video_id || !uploadResult.owner_id) {
-      console.error("VK upload failed - missing required fields:", uploadResult)
+      logger.error("VK upload failed - missing required fields", { uploadResult })
       return null
     }
 
@@ -72,7 +105,7 @@ async function uploadToVK(
       embedUrl: `https://vk.com/video_ext.php?oid=${uploadResult.owner_id}&id=${uploadResult.video_id}${uploadResult.video_hash ? `&hash=${uploadResult.video_hash}` : ""}`
     }
   } catch (error) {
-    console.error("VK upload error:", error)
+    logger.error("VK upload error", { error: error instanceof Error ? error.message : String(error) })
     return null
   }
 }
@@ -89,7 +122,7 @@ async function uploadToYouTube(
     const youtubeToken = await getYouTubeToken() // Нужно реализовать OAuth flow
     
     if (!youtubeToken) {
-      console.error("YouTube OAuth token not available")
+      logger.error("YouTube OAuth token not available")
       return null
     }
 
@@ -125,13 +158,13 @@ async function uploadToYouTube(
     )
 
     if (!initResponse.ok) {
-      console.error("YouTube init upload failed:", await initResponse.text())
+      logger.error("YouTube init upload failed", { response: await initResponse.text() })
       return null
     }
 
     const uploadUrl = initResponse.headers.get("Location")
     if (!uploadUrl) {
-      console.error("No upload URL received from YouTube")
+      logger.error("No upload URL received from YouTube")
       return null
     }
 
@@ -146,7 +179,7 @@ async function uploadToYouTube(
     })
 
     if (!uploadResponse.ok) {
-      console.error("YouTube video upload failed:", await uploadResponse.text())
+      logger.error("YouTube video upload failed", { response: await uploadResponse.text() })
       return null
     }
 
@@ -158,7 +191,7 @@ async function uploadToYouTube(
       embedUrl: `https://www.youtube.com/embed/${videoData.id}`
     }
   } catch (error) {
-    console.error("YouTube upload error:", error)
+    logger.error("YouTube upload error", { error: error instanceof Error ? error.message : String(error) })
     return null
   }
 }
@@ -186,43 +219,58 @@ export async function POST(request: NextRequest) {
     const courseId = formData.get("courseId") as string
     const lessonId = formData.get("lessonId") as string
 
-    if (!file || !title) {
-      return NextResponse.json(
-        { error: "Файл и название обязательны" },
-        { status: 400 }
-      )
+    // Подготавливаем данные для валидации
+    const uploadData = {
+      file,
+      title,
+      description,
+      courseId,
+      lessonId,
     }
 
-    // Проверяем размер файла (макс 5GB)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "Размер файла превышает 5GB" },
-        { status: 413 }
-      )
+    // Валидация с помощью Zod
+    const validationResult = VideoUploadSchema.safeParse(uploadData)
+    
+    if (!validationResult.success) {
+      const fieldErrors = validationResult.error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        code: err.code || 'VALIDATION_ERROR'
+      }))
+      
+      throw new ValidationError('Validation failed', fieldErrors)
     }
 
-    // Проверяем тип файла
-    const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo']
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Неподдерживаемый формат видео" },
-        { status: 415 }
-      )
-    }
+    const { file: validatedFile, title: validatedTitle, description: validatedDescription, courseId: validatedCourseId, lessonId: validatedLessonId } = validationResult.data
 
-    // Загружаем параллельно на обе платформы
+    // Загружаем параллельно на обе платформы с детальной обработкой ошибок
     const [vkResult, youtubeResult] = await Promise.allSettled([
-      uploadToVK(file, title, description, true),
-      uploadToYouTube(file, title, description, true)
+      uploadToVK(validatedFile, validatedTitle, validatedDescription, true),
+      uploadToYouTube(validatedFile, validatedTitle, validatedDescription, true)
     ])
 
     const vkData = vkResult.status === "fulfilled" ? vkResult.value : null
     const youtubeData = youtubeResult.status === "fulfilled" ? youtubeResult.value : null
+    
+    // Логируем ошибки для диагностики
+    if (vkResult.status === "rejected") {
+      logger.error("VK upload failed", { reason: vkResult.reason })
+    }
+    if (youtubeResult.status === "rejected") {
+      logger.error("YouTube upload failed", { reason: youtubeResult.reason })
+    }
 
     if (!vkData && !youtubeData) {
+      const errors = {
+        vk: vkResult.status === "rejected" ? vkResult.reason?.message : "Unknown error",
+        youtube: youtubeResult.status === "rejected" ? youtubeResult.reason?.message : "Unknown error"
+      }
+      
       return NextResponse.json(
-        { error: "Не удалось загрузить видео ни на одну платформу" },
+        { 
+          error: "Не удалось загрузить видео ни на одну платформу",
+          details: errors
+        },
         { status: 500 }
       )
     }
@@ -231,10 +279,10 @@ export async function POST(request: NextRequest) {
     const { data: videoRecord, error: dbError } = await supabaseAdmin
       .from("videos")
       .insert({
-        title,
-        description,
-        course_id: courseId,
-        lesson_id: lessonId,
+        title: validatedTitle,
+        description: validatedDescription,
+        course_id: validatedCourseId,
+        lesson_id: validatedLessonId,
         vk_video_id: vkData?.videoId,
         vk_url: vkData?.url,
         vk_embed_url: vkData?.embedUrl,
@@ -249,7 +297,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (dbError) {
-      console.error("Ошибка сохранения в БД:", dbError)
+      logger.error("Ошибка сохранения в БД", { error: dbError instanceof Error ? dbError.message : String(dbError) })
       return NextResponse.json(
         { error: "Ошибка сохранения информации о видео" },
         { status: 500 }
@@ -265,7 +313,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error("Ошибка загрузки видео:", error)
+    logger.error("Ошибка загрузки видео", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки видео" },
       { status: 500 }

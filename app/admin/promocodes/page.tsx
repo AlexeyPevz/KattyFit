@@ -39,6 +39,7 @@ import {
 import { format } from "date-fns"
 import { ru } from "date-fns/locale"
 import { toast } from "@/components/ui/use-toast"
+import logger from "@/lib/logger"
 
 interface Promocode {
   id: string
@@ -75,7 +76,7 @@ export default function PromocodesPage() {
         setPromocodes(data.promocodes || [])
       }
     } catch (error) {
-      console.error('Error loading promocodes:', error)
+      logger.error('Error loading promocodes', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }

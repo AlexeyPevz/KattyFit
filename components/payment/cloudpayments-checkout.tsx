@@ -16,10 +16,50 @@ import {
 import { Loader2, Lock, CreditCard, Shield, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { trackEvent, ANALYTICS_EVENTS } from "@/lib/analytics"
+import logger from "@/lib/logger"
+
+interface CloudPaymentsWidget {
+  charge: (options: {
+    publicId: string
+    description: string
+    amount: number
+    currency: string
+    invoiceId?: string
+    accountId?: string
+    email?: string
+    skin?: string
+    data?: Record<string, unknown>
+    onSuccess?: (options: CloudPaymentsSuccessOptions) => void
+    onFail?: (reason: string, options: CloudPaymentsFailOptions) => void
+    onComplete?: (paymentResult: CloudPaymentsResult, options: CloudPaymentsCompleteOptions) => void
+  }) => void
+}
+
+interface CloudPaymentsSuccessOptions {
+  transactionId: string
+  amount: number
+  currency: string
+  [key: string]: unknown
+}
+
+interface CloudPaymentsFailOptions {
+  reason: string
+  [key: string]: unknown
+}
+
+interface CloudPaymentsResult {
+  success: boolean
+  transactionId?: string
+  [key: string]: unknown
+}
+
+interface CloudPaymentsCompleteOptions {
+  [key: string]: unknown
+}
 
 declare global {
   interface Window {
-    cp: any
+    cp: CloudPaymentsWidget
   }
 }
 
@@ -29,9 +69,9 @@ interface CloudPaymentsCheckoutProps {
   description: string
   accountId?: string
   email?: string
-  data?: any
-  onSuccess?: (transaction: any) => void
-  onFail?: (reason: any) => void
+  data?: Record<string, unknown>
+  onSuccess?: (transaction: CloudPaymentsSuccessOptions) => void
+  onFail?: (reason: string) => void
   onComplete?: () => void
 }
 
@@ -95,7 +135,7 @@ export function CloudPaymentsCheckout({
 
   const handlePayment = async () => {
     if (!window.cp) {
-      console.error("CloudPayments widget not loaded")
+      logger.error("CloudPayments widget not loaded")
       return
     }
 
@@ -111,7 +151,7 @@ export function CloudPaymentsCheckout({
 
     setIsLoading(true)
 
-    const widget = new window.cp.CloudPayments()
+    const widget = new (window as any).cp.CloudPayments()
     
     const paymentData = {
       publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID || "test_api_00000000000000000000001", // v0 will use env var
@@ -130,9 +170,9 @@ export function CloudPaymentsCheckout({
 
     widget.pay("auth", paymentData,
       {
-        onSuccess: (options: any) => {
+        onSuccess: (options: CloudPaymentsSuccessOptions) => {
           // Платеж прошел успешно
-          console.log("Payment success:", options)
+          logger.info("Payment success", { options })
           setIsLoading(false)
           setShowSuccessDialog(true)
           
@@ -169,9 +209,9 @@ export function CloudPaymentsCheckout({
             }
           }, 3000)
         },
-        onFail: (reason: any, options: any) => {
+        onFail: (reason: string, options: CloudPaymentsFailOptions) => {
           // Платеж не прошел
-          console.error("Payment failed:", reason, options)
+          logger.error("Payment failed", { reason, options })
           setIsLoading(false)
           alert(`Ошибка оплаты: ${reason}`)
           
@@ -179,7 +219,7 @@ export function CloudPaymentsCheckout({
             onFail(reason)
           }
         },
-        onComplete: (paymentResult: any, options: any) => {
+        onComplete: (paymentResult: CloudPaymentsResult, options: CloudPaymentsCompleteOptions) => {
           // Вызывается как при успехе, так и при неудаче
           setIsLoading(false)
           

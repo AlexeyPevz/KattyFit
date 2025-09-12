@@ -18,6 +18,7 @@ import {
   Legend,
   ResponsiveContainer
 } from "recharts"
+import logger from "@/lib/logger"
 import { 
   TrendingUp, 
   Users, 
@@ -121,7 +122,7 @@ export function AnalyticsDashboard() {
       
       setData(mockData)
     } catch (error) {
-      console.error('Error loading analytics:', error)
+      logger.error('Error loading analytics', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -262,7 +263,7 @@ export function AnalyticsDashboard() {
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({name, percent}: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
                   >
                     {data.chartData.courses.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -292,7 +293,7 @@ export function AnalyticsDashboard() {
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({name, percent}: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={(props: any) => `${props.name} ${(props.percent * 100).toFixed(0)}%`}
                   >
                     {data.chartData.sources.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

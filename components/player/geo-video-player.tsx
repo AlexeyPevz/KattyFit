@@ -6,6 +6,7 @@ import { selectVideoSource, getUserGeolocation, isRussianUser } from "@/lib/geol
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Globe, MapPin } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface GeoVideoPlayerProps {
   vkUrl?: string
@@ -110,7 +111,7 @@ export function GeoVideoPlayer({
               setVideoUrl(url)
             }
           } catch (error) {
-            console.error('Invalid YouTube URL:', url)
+            logger.error('Invalid YouTube URL', { url })
             setVideoUrl(url)
           }
         } else {
@@ -121,10 +122,10 @@ export function GeoVideoPlayer({
           setVideoSource(source)
         }
       } else {
-        console.error("Нет доступных источников видео")
+        logger.error("Нет доступных источников видео")
       }
     } catch (error) {
-      console.error("Ошибка выбора источника видео:", error)
+      logger.error("Ошибка выбора источника видео", { error: error instanceof Error ? error.message : String(error) })
       // Fallback на первый доступный источник
       if (!cancelled) {
         if (hlsUrl) {
@@ -240,7 +241,7 @@ function VideoProgressTracker({
   onComplete,
   duration
 }: {
-  onProgress?: (progress: any) => void
+  onProgress?: (progress: { currentTime: number, duration: number, percentage: number }) => void
   onComplete?: () => void
   duration: number
 }) {

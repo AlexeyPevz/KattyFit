@@ -1,76 +1,73 @@
 import { NextRequest, NextResponse } from "next/server"
-import { env } from "@/lib/env"
+import { RAGContext, ChatMessage } from "@/types/api"
+import { AppError, ValidationError } from "@/types/errors"
+import { withErrorHandler } from "@/lib/error-handler"
+import { generateRAGResponse } from "@/lib/rag-engine"
+import { z } from "zod"
 
-export async function POST(request: NextRequest) {
-  try {
-    const { message, conversationId } = await request.json()
+// ===== ZOD СХЕМЫ ВАЛИДАЦИИ =====
 
-    if (!message) {
-      return NextResponse.json(
-        { error: "Сообщение не может быть пустым" },
-        { status: 400 }
-      )
-    }
+const ChatMessageSchema = z.object({
+  id: z.string().optional(),
+  text: z.string().optional(),
+  message: z.string().optional(),
+  timestamp: z.union([z.string(), z.number(), z.date()]).optional(),
+  sender: z.enum(['user', 'assistant', 'system']).optional(),
+  platform: z.enum(['web', 'telegram', 'vk', 'whatsapp']).optional(),
+}).transform((data) => ({
+  id: data.id || `msg_${Date.now()}`,
+  text: data.text || data.message || '',
+  timestamp: new Date(data.timestamp || Date.now()),
+  sender: data.sender || 'user',
+  platform: data.platform || 'web',
+}))
 
-    const apiKey = env.yandexGptApiKey
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "YandexGPT API ключ не настроен" },
-        { status: 500 }
-      )
-    }
+const YandexGPTRequestSchema = z.object({
+  message: z.string()
+    .min(1, 'Message is required')
+    .max(4000, 'Message must be 4000 characters or less')
+    .transform(msg => msg.trim()),
+  conversationId: z.string().optional(),
+  chatHistory: z.array(ChatMessageSchema).default([]),
+})
 
-    // Вызываем YandexGPT API
-    const response = await fetch('https://llm.api.cloud.yandex.net/foundationModels/v1/completion', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Api-Key ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        modelUri: `gpt://${env.yandexGptFolderId}/yandexgpt/latest`,
-        completionOptions: {
-          stream: false,
-          temperature: 0.6,
-          maxTokens: 2000,
-        },
-        messages: [
-          {
-            role: "system",
-            text: "Ты - AI-ассистент фитнес-студии KattyFit. Помогаешь клиентам с вопросами о тренировках, записях, курсах и общем здоровом образе жизни. Отвечай дружелюбно и профессионально на русском языке."
-          },
-          {
-            role: "user",
-            text: message
-          }
-        ]
-      })
-    })
-
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('YandexGPT API error:', errorData)
-      return NextResponse.json(
-        { error: "Ошибка при обращении к YandexGPT API" },
-        { status: 500 }
-      )
-    }
-
-    const data = await response.json()
-    const aiResponse = data.result?.alternatives?.[0]?.message?.text || "Извините, не удалось получить ответ."
-
-    return NextResponse.json({
-      success: true,
-      response: aiResponse,
-      conversationId: conversationId || `conv_${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    })
-
-  } catch (error) {
-    console.error("Ошибка чата:", error)
-    return NextResponse.json(
-      { error: "Внутренняя ошибка сервера" },
-      { status: 500 }
-    )
+async function handleYandexGPTRequest(request: NextRequest): Promise<NextResponse> {
+  const body = await request.json()
+  
+  // Валидация с помощью Zod
+  const validationResult = YandexGPTRequestSchema.safeParse(body)
+  
+  if (!validationResult.success) {
+    const fieldErrors = validationResult.error.errors.map(err => ({
+      field: err.path.join('.'),
+      message: err.message,
+      code: err.code || 'VALIDATION_ERROR'
+    }))
+    
+    throw new ValidationError('Validation failed', fieldErrors)
   }
+
+  const { message, conversationId, chatHistory } = validationResult.data
+
+  // Создаем контекст для RAG
+  const ragContext: RAGContext = {
+    userMessage: message,
+    chatHistory,
+    platform: 'web',
+    userName: 'Guest',
+    userContext: {
+      userId: conversationId,
+    },
+  }
+
+  // Генерируем ответ через RAG движок
+  const response = await generateRAGResponse(ragContext)
+
+  return NextResponse.json({
+    success: true,
+    response,
+    conversationId: conversationId || `chat_${Date.now()}`,
+  })
 }
+
+export const POST = withErrorHandler(handleYandexGPTRequest)

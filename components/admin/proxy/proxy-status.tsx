@@ -14,6 +14,7 @@ import {
   Clock,
   Zap
 } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface ServiceStatus {
   name: string
@@ -24,20 +25,22 @@ interface ServiceStatus {
   error?: string
 }
 
+interface ProxyItem {
+  id: string
+  name: string
+  type: string
+  isActive: boolean
+  isHealthy: boolean
+  responseTime?: number
+  lastChecked?: string
+}
+
 interface StatusData {
   proxy: {
     total: number
     active: number
     healthy: number
-    proxies: Array<{
-      id: string
-      name: string
-      type: string
-      isActive: boolean
-      isHealthy: boolean
-      responseTime?: number
-      lastChecked?: string
-    }>
+    proxies: ProxyItem[]
   }
   services: ServiceStatus[]
   timestamp: string
@@ -58,7 +61,7 @@ export function ProxyStatus() {
         setLastUpdate(new Date())
       }
     } catch (error) {
-      console.error('Ошибка загрузки статуса:', error)
+      logger.error('Ошибка загрузки статуса', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -82,7 +85,7 @@ export function ProxyStatus() {
     return "Недоступен"
   }
 
-  const getProxyIcon = (proxy: any) => {
+  const getProxyIcon = (proxy: ProxyItem) => {
     if (!proxy.isActive) {
       return <XCircle className="h-4 w-4 text-gray-400" />
     }
@@ -95,7 +98,7 @@ export function ProxyStatus() {
     return <XCircle className="h-4 w-4 text-red-500" />
   }
 
-  const getProxyStatus = (proxy: any) => {
+  const getProxyStatus = (proxy: ProxyItem) => {
     if (!proxy.isActive) return "Отключен"
     if (proxy.isHealthy === undefined) return "Не проверен"
     if (proxy.isHealthy) return "Работает"

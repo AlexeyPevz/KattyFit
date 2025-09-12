@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
+import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       progress: progress || []
     })
   } catch (error) {
-    console.error("Error checking course access:", error)
+    logger.error("Error checking course access", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

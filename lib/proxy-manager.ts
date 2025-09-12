@@ -1,6 +1,8 @@
 // Универсальная система управления прокси
 // Поддержка ASOCKS.COM, Beget VPS и других провайдеров
 
+import logger from './logger'
+
 export interface ProxyConfig {
   id: string
   name: string
@@ -22,13 +24,13 @@ export interface ProxyRequest {
   url: string
   method: string
   headers?: Record<string, string>
-  body?: any
+  body?: string | FormData | Record<string, unknown>
   timeout?: number
 }
 
 export interface ProxyResponse {
   success: boolean
-  data?: any
+  data?: unknown
   error?: string
   proxyUsed?: string
   responseTime?: number
@@ -211,15 +213,24 @@ class ProxyManager {
 
     try {
       const startTime = Date.now()
+      const timeout = request.timeout || 30000 // 30 секунд по умолчанию
+      
+      // Создаем AbortController для timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeout)
       
       let response: Response
       
-      if (proxy.type === 'asocks') {
-        response = await this.asocksRequest(proxy, request)
-      } else if (proxy.type === 'beget') {
-        response = await this.begetRequest(proxy, request)
-      } else {
-        response = await this.customProxyRequest(proxy, request)
+      try {
+        if (proxy.type === 'asocks') {
+          response = await this.asocksRequest(proxy, request, controller.signal)
+        } else if (proxy.type === 'beget') {
+          response = await this.begetRequest(proxy, request, controller.signal)
+        } else {
+          response = await this.customProxyRequest(proxy, request, controller.signal)
+        }
+      } finally {
+        clearTimeout(timeoutId)
       }
 
       const responseTime = Date.now() - startTime
@@ -260,7 +271,7 @@ class ProxyManager {
       const response = await fetch(request.url, {
         method: request.method,
         headers: request.headers,
-        body: request.body
+        body: request.body as BodyInit | null
       })
 
       const data = await response.json().catch(() => null)
@@ -278,7 +289,7 @@ class ProxyManager {
   }
 
   // ASOCKS прокси запрос
-  async asocksRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async asocksRequest(proxy: ProxyConfig, request: ProxyRequest, signal?: AbortSignal): Promise<Response> {
     const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
     
     // Используем HttpsProxyAgent для Node.js
@@ -291,13 +302,14 @@ class ProxyManager {
       method: request.method,
       headers: request.headers,
       body: request.body,
+      signal,
       // @ts-ignore - Node.js fetch не поддерживает agent, но это работает в некоторых средах
       agent: proxyAgent
     } as any)
   }
 
   // Beget VPS прокси запрос
-  async begetRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async begetRequest(proxy: ProxyConfig, request: ProxyRequest, signal?: AbortSignal): Promise<Response> {
     const proxyUrl = `http://${proxy.host}:${proxy.port}`
     
     // Beget прокси работает как обычный HTTP прокси
@@ -313,13 +325,14 @@ class ProxyManager {
         'X-Original-URL': request.url
       },
       body: request.body,
+      signal,
       // @ts-ignore
       agent: proxyAgent
     } as any)
   }
 
   // Custom прокси запрос
-  async customProxyRequest(proxy: ProxyConfig, request: ProxyRequest): Promise<Response> {
+  async customProxyRequest(proxy: ProxyConfig, request: ProxyRequest, signal?: AbortSignal): Promise<Response> {
     const proxyUrl = proxy.username && proxy.password 
       ? `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
       : `http://${proxy.host}:${proxy.port}`
@@ -332,6 +345,7 @@ class ProxyManager {
       method: request.method,
       headers: request.headers,
       body: request.body,
+      signal,
       // @ts-ignore
       agent: proxyAgent
     } as any)
@@ -423,28 +437,28 @@ export async function makeProxiedRequest(url: string, options: RequestInit = {})
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body
+        body: options.body as string | Record<string, unknown> | FormData | undefined
       })
     } else if (proxy.type === 'beget') {
       response = await proxyManager.begetRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body
+        body: options.body as string | Record<string, unknown> | FormData | undefined
       })
     } else {
       response = await proxyManager.customProxyRequest(proxy, {
         url,
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body
+        body: options.body as string | Record<string, unknown> | FormData | undefined
       })
     }
 
     return response
   } catch (error) {
     // Fallback на прямой запрос
-    console.warn(`Proxy request failed for ${url}, falling back to direct:`, error)
+    logger.warn(`Proxy request failed for ${url}, falling back to direct`, { error: error instanceof Error ? error.message : String(error) })
     return fetch(url, options)
   }
 }

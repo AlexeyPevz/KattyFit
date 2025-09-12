@@ -14,6 +14,7 @@ import {
   Copy,
   ExternalLink
 } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface EnvStatus {
   supabase: boolean
@@ -73,7 +74,7 @@ export function EnvStatusCard() {
         setStatus(envStatus)
       }
     } catch (error) {
-      console.warn('Не удалось проверить статус окружения:', error)
+      logger.warn('Не удалось проверить статус окружения', { error: error instanceof Error ? error.message : String(error) })
       // Fallback для preview режима
       const envStatus: EnvStatus = {
         supabase: false,

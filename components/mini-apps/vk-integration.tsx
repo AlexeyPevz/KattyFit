@@ -5,14 +5,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { User, Share2, Heart, MessageCircle } from "lucide-react"
+import logger from "@/lib/logger"
 
 // VK Bridge types
+interface VKBridgeEvent {
+  type: string
+  data?: unknown
+}
+
+interface VKBridgeParams {
+  [key: string]: unknown
+}
+
 declare global {
   interface Window {
     vkBridge?: {
-      send: (method: string, params?: any) => Promise<any>
-      subscribe: (callback: (e: any) => void) => void
-      unsubscribe: (callback: (e: any) => void) => void
+      send: (method: string, params?: VKBridgeParams) => Promise<unknown>
+      subscribe: (callback: (e: VKBridgeEvent) => void) => void
+      unsubscribe: (callback: (e: VKBridgeEvent) => void) => void
       isWebView: () => boolean
       isStandalone: () => boolean
       isEmbedded: () => boolean
@@ -63,7 +73,7 @@ export function VKMiniApp() {
 
       // Get user info
       const userInfo = await window.vkBridge.send("VKWebAppGetUserInfo")
-      setUser(userInfo)
+      setUser(userInfo as VKUser)
 
       // Set status bar style
       await window.vkBridge.send("VKWebAppSetViewSettings", {
@@ -73,7 +83,7 @@ export function VKMiniApp() {
 
       setIsReady(true)
     } catch (error) {
-      console.error("VK Bridge initialization error:", error)
+      logger.error("VK Bridge initialization error", { error: error instanceof Error ? error.message : String(error) })
       setIsReady(true)
     }
   }
@@ -88,7 +98,7 @@ export function VKMiniApp() {
         description: "Персональные тренировки с профессиональным тренером",
       })
     } catch (error) {
-      console.error("Share error:", error)
+      logger.error("Share error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -98,7 +108,7 @@ export function VKMiniApp() {
     try {
       await window.vkBridge.send("VKWebAppAddToFavorites")
     } catch (error) {
-      console.error("Add to favorites error:", error)
+      logger.error("Add to favorites error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -108,7 +118,7 @@ export function VKMiniApp() {
     try {
       await window.vkBridge.send("VKWebAppShowInviteBox")
     } catch (error) {
-      console.error("Invite friends error:", error)
+      logger.error("Invite friends error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -129,14 +139,14 @@ export function VKMiniApp() {
         },
       })
 
-      if (result.status) {
+      if ((result as { status: boolean }).status) {
         // Payment successful
         await window.vkBridge.send("VKWebAppTapticNotificationOccurred", {
           type: "success",
         })
       }
     } catch (error) {
-      console.error("Payment error:", error)
+      logger.error("Payment error", { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

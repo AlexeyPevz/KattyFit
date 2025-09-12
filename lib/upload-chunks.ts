@@ -4,7 +4,7 @@ let currentMemoryUsage = 0
 
 const chunkStorage = new Map<string, {
   chunks: Map<number, Buffer>
-  metadata: any
+  metadata: Record<string, unknown>
   totalChunks: number
   uploadedAt: Date
   totalSize: number
@@ -51,7 +51,7 @@ export function cleanupUpload(uploadId: string): void {
   }
 }
 
-export function storeChunk(uploadId: string, chunkIndex: number, chunk: Buffer, metadata: any, totalChunks: number): void {
+export function storeChunk(uploadId: string, chunkIndex: number, chunk: Buffer, metadata: Record<string, unknown>, totalChunks: number): void {
   let uploadData = chunkStorage.get(uploadId)
   
   if (!uploadData) {

@@ -2,6 +2,7 @@
 // Автоматически определяет, нужен ли прокси для запроса
 
 import { proxyManager, makeProxiedRequest } from './proxy-manager'
+import logger from './logger'
 
 // Обертка для fetch с автоматическим проксированием
 export async function smartFetch(url: string, options: RequestInit = {}): Promise<Response> {
@@ -11,7 +12,7 @@ export async function smartFetch(url: string, options: RequestInit = {}): Promis
       // Пытаемся выполнить запрос через прокси
       return await makeProxiedRequest(url, options)
     } catch (error) {
-      console.warn(`Proxy request failed for ${url}, falling back to direct:`, error)
+      logger.warn(`Proxy request failed for ${url}, falling back to direct`, { error: error instanceof Error ? error.message : String(error) })
       // Fallback на прямой запрос
       return fetch(url, options)
     }

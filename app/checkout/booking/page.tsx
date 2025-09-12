@@ -9,6 +9,7 @@ import { CloudPaymentsCheckout } from "@/components/payment/cloudpayments-checko
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Calendar, Clock, MapPin, User } from "lucide-react"
+import logger from "@/lib/logger"
 
 export default function BookingCheckoutPage() {
   const router = useRouter()
@@ -25,16 +26,16 @@ export default function BookingCheckoutPage() {
     }
   }, [router])
 
-  const handlePaymentSuccess = async (transaction: any) => {
-    console.log("Booking payment successful:", transaction)
+  const handlePaymentSuccess = async (transaction: Record<string, unknown>) => {
+    logger.info("Booking payment successful", { transaction })
     // Очищаем данные бронирования
     localStorage.removeItem("bookingData")
     // Перенаправляем на страницу успеха
     router.push("/booking/success")
   }
 
-  const handlePaymentFail = (reason: any) => {
-    console.error("Booking payment failed:", reason)
+  const handlePaymentFail = (reason: string) => {
+    logger.error("Booking payment failed", { reason })
   }
 
   if (!bookingData) {

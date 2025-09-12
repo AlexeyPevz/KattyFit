@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getGeolocationFromHeaders } from "@/lib/geolocation"
+import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
         
         // Проверяем на ошибку в ответе API
         if (data.error || data.reason === 'RateLimited') {
-          console.warn('ipapi.co returned error:', data)
+          logger.warn('ipapi.co returned error', { data })
           throw new Error('Geolocation API error')
         }
         
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
         })
       }
     } catch (error) {
-      console.error('ipapi.co error:', error)
+      logger.error('ipapi.co error', { error: error instanceof Error ? error.message : String(error) })
     }
 
     // Fallback
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Geolocation API error:', error)
+    logger.error('Geolocation API error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to get geolocation' },
       { status: 500 }

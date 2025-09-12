@@ -1,5 +1,7 @@
 // Утилита для определения страны пользователя по IP
 
+import logger from './logger'
+
 interface GeoLocation {
   country: string
   countryCode: string
@@ -26,7 +28,7 @@ export async function getUserGeolocation(): Promise<GeoLocation | null> {
           return data
         }
       } catch (error) {
-        console.error('Ошибка получения геолокации через API:', error)
+        logger.error('Ошибка получения геолокации через API', { error: error instanceof Error ? error.message : String(error) })
       }
     }
 
@@ -56,7 +58,7 @@ export async function getUserGeolocation(): Promise<GeoLocation | null> {
         geoCache = location
         return location
       } catch (err) {
-        console.error(`Ошибка геолокации через ${service}:`, err)
+        logger.error(`Ошибка геолокации через ${service}`, { error: err instanceof Error ? err.message : String(err) })
         continue
       }
     }
@@ -74,7 +76,7 @@ export async function getUserGeolocation(): Promise<GeoLocation | null> {
       ip: 'unknown'
     }
   } catch (error) {
-    console.error('Ошибка определения геолокации:', error)
+    logger.error('Ошибка определения геолокации', { error: error instanceof Error ? error.message : String(error) })
     return null
   }
 }
@@ -142,7 +144,7 @@ export function getGeolocationFromHeaders(headers: Headers): GeoLocation | null 
 
     return null
   } catch (error) {
-    console.error('Ошибка парсинга заголовков:', error)
+    logger.error('Ошибка парсинга заголовков', { error: error instanceof Error ? error.message : String(error) })
     return null
   }
 }

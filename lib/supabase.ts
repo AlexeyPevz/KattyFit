@@ -3,7 +3,10 @@ import { env } from '@/lib/env'
 
 // Безопасная инициализация клиента: в среде билда env может быть пустым.
 // В рантайме на v0 переменные должны присутствовать.
-export const supabase = createClient(env.supabaseUrl || 'http://localhost', env.supabaseAnonKey || 'public-anon-key')
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost', 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'public-anon-key'
+)
 
 // Типы для таблиц Supabase
 export interface ContentRow {

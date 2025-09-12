@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+import logger from "@/lib/logger"
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
 
     return NextResponse.json(data || {})
   } catch (error) {
-    console.error("Ошибка загрузки настроек:", error)
+    logger.error("Ошибка загрузки настроек", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка загрузки настроек" },
       { status: 500 }
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       message: "Настройки сохранены"
     })
   } catch (error) {
-    console.error("Ошибка сохранения настроек:", error)
+    logger.error("Ошибка сохранения настроек", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Ошибка сохранения настроек" },
       { status: 500 }

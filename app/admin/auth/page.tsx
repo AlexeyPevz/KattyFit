@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Lock } from "lucide-react"
+import logger from "@/lib/logger"
 
 export default function AdminAuthPage() {
   const [username, setUsername] = useState("")
@@ -33,7 +34,7 @@ export default function AdminAuthPage() {
     setError("")
 
     try {
-      console.log("Attempting admin login with:", { username, password: password ? "***" : "empty" })
+      logger.debug("Attempting admin login", { username, hasPassword: !!password })
       
       // Call API to authenticate
       const response = await fetch("/api/admin/auth", {
@@ -46,7 +47,7 @@ export default function AdminAuthPage() {
       })
 
       const data = await response.json()
-      console.log("API response:", { status: response.status, data })
+      logger.debug("API response", { status: response.status, success: response.ok })
 
       if (response.ok && data.success) {
         // Save to localStorage for client-side state
@@ -56,7 +57,7 @@ export default function AdminAuthPage() {
         }
         localStorage.setItem("admin_session", JSON.stringify(sessionData))
         
-        console.log("Admin auth successful:", {
+        logger.info("Admin auth successful", {
           username: username,
           sessionData: sessionData,
           redirectUrl: getRedirectUrl()
@@ -67,7 +68,7 @@ export default function AdminAuthPage() {
         
         // Redirect to intended page or admin panel
         const redirectUrl = getRedirectUrl()
-        console.log("Redirecting to:", redirectUrl)
+        logger.info("Redirecting to admin dashboard", { redirectUrl })
         
         // Use window.location for more reliable redirect
         setTimeout(() => {
@@ -83,7 +84,7 @@ export default function AdminAuthPage() {
         setError(data.error || "Неверный логин или пароль")
       }
     } catch (error) {
-      console.error("Login error:", error)
+      logger.error("Login error", { error: error instanceof Error ? error.message : String(error) })
       if (error instanceof Error) {
         setError(`Ошибка: ${error.message}`)
       } else {

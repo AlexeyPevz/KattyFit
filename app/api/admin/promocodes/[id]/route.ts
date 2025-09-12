@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
+import logger from "@/lib/logger"
 
 // PATCH - обновить промокод
 export async function PATCH(
@@ -22,7 +23,7 @@ export async function PATCH(
       .single()
       
     if (error) {
-      console.error('Error updating promocode:', error)
+      logger.error('Error updating promocode', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Не удалось обновить промокод' },
         { status: 500 }
@@ -30,8 +31,8 @@ export async function PATCH(
     }
     
     return NextResponse.json({ promocode })
-  } catch (error: any) {
-    console.error("API Error:", error)
+  } catch (error: Error | unknown) {
+    logger.error("API Error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера" },
       { status: 500 }
@@ -53,7 +54,7 @@ export async function DELETE(
       .eq('id', id)
       
     if (error) {
-      console.error('Error deleting promocode:', error)
+      logger.error('Error deleting promocode', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Не удалось удалить промокод' },
         { status: 500 }
@@ -61,8 +62,8 @@ export async function DELETE(
     }
     
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    console.error("API Error:", error)
+  } catch (error: Error | unknown) {
+    logger.error("API Error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера" },
       { status: 500 }

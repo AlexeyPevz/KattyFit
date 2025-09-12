@@ -18,6 +18,7 @@ import {
   AlertCircle,
   RefreshCw
 } from "lucide-react"
+import logger from "@/lib/logger"
 
 interface ContentThumbnailGeneratorProps {
   contentId: string
@@ -70,7 +71,7 @@ export function ContentThumbnailGenerator({ contentId, onClose }: ContentThumbna
         ])
       }
     } catch (error) {
-      console.error("Ошибка генерации обложек:", error)
+      logger.error("Ошибка генерации обложек", { error: error instanceof Error ? error.message : String(error) })
       // Fallback - демо обложки
       setGeneratedThumbnails([
         "https://picsum.photos/400/225?random=1",
@@ -103,7 +104,7 @@ export function ContentThumbnailGenerator({ contentId, onClose }: ContentThumbna
         onClose()
       }
     } catch (error) {
-      console.error("Ошибка сохранения обложки:", error)
+      logger.error("Ошибка сохранения обложки", { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setSaving(false)
     }

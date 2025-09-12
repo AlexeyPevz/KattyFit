@@ -10,9 +10,18 @@ import { Clock, CalendarDays, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { addDays, format } from "date-fns"
 import { ru } from "date-fns/locale"
+import logger from "@/lib/logger"
+
+interface TrainingType {
+  id: string
+  title: string
+  duration: string
+  price: number
+  description?: string
+}
 
 interface CalendarBookingProps {
-  trainingType: any
+  trainingType: TrainingType
   onSlotSelect: (date: Date, time: string) => void
   selectedDate?: Date
   selectedTime?: string
@@ -53,7 +62,7 @@ export function CalendarBooking({
       setAvailableSlots(data.slots || {})
     } catch (err) {
       setError('Ошибка загрузки расписания. Попробуйте позже.')
-      console.error('Error loading slots:', err)
+      logger.error('Error loading slots', { error: err instanceof Error ? err.message : String(err) })
     } finally {
       setLoading(false)
     }
