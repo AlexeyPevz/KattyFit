@@ -1,7 +1,7 @@
 'use client'
 
 import * as Sentry from '@sentry/nextjs'
-import { logger } from '../logger'
+import logger from '../logger'
 
 // Интерфейс для пользовательского фидбека
 export interface UserFeedback {

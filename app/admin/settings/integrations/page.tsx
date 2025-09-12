@@ -144,7 +144,7 @@ const DEFAULT_INTEGRATIONS: Integration[] = [
 
 export default function IntegrationsPage() {
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
-  const [credentials, setCredentials] = useState<Record<string, any>>({})
+  const [credentials, setCredentials] = useState<Record<string, string>>({})
   const [integrations, setIntegrations] = useState<Integration[]>(DEFAULT_INTEGRATIONS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)

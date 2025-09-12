@@ -2,7 +2,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import * as Sentry from '@sentry/nextjs'
-import { logger } from '../logger'
+import logger from '../logger'
 
 interface Props {
   children: ReactNode

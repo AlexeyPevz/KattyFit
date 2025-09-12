@@ -20,6 +20,14 @@ export interface QueryOptions {
   filters?: Record<string, unknown>
 }
 
+export interface User {
+  id: string
+  name: string
+  email: string
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface DatabaseService {
   // Пользователи
   getUserById(id: string): Promise<Record<string, unknown> | null>
@@ -64,7 +72,7 @@ abstract class BaseDatabaseService implements DatabaseService {
   }
 
   // Абстрактные методы для конкретных реализаций
-  abstract getUserById(id: string): Promise<any>
+  abstract getUserById(id: string): Promise<User | null>
   abstract createUser(user: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract updateUser(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>>
   abstract deleteUser(id: string): Promise<void>
@@ -200,7 +208,7 @@ abstract class BaseDatabaseService implements DatabaseService {
 
 export class SimpleDatabaseService extends BaseDatabaseService {
   // Пользователи
-  async getUserById(id: string): Promise<any> {
+  async getUserById(id: string): Promise<User | null> {
     await logger.debug('Getting user by id', { id })
     return { id, name: 'Test User', email: 'test@example.com' }
   }
@@ -225,7 +233,7 @@ export class SimpleDatabaseService extends BaseDatabaseService {
   }
 
   // Курсы
-  async getCourses(options?: QueryOptions): Promise<any[]> {
+  async getCourses(options?: QueryOptions): Promise<Record<string, unknown>[]> {
     await logger.debug('Getting courses', { 
       options: options ? Object.keys(options) : 'none'
     })

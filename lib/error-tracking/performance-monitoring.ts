@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { logger } from '../logger'
+import logger from '../logger'
 
 // Интерфейс для метрик производительности
 interface PerformanceMetric {
