@@ -1,8 +1,8 @@
 // Sentry интеграция для error tracking
 // Централизованное отслеживание ошибок и производительности
 
-import * as Sentry from '@sentry/nextjs'
-import { SeverityLevel } from '@sentry/types'
+import * as Sentry from './sentry-stub'
+// import { SeverityLevel } from '@sentry/types'
 
 // Конфигурация Sentry
 const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN
@@ -98,7 +98,7 @@ export class SentryService {
    */
   static captureMessage(
     message: string, 
-    level: SeverityLevel = 'info',
+    level: string = 'info',
     context?: Record<string, unknown>
   ): void {
     Sentry.withScope((scope: any) => {
@@ -146,7 +146,7 @@ export class SentryService {
   /**
    * Добавляет хлебные крошки (breadcrumbs)
    */
-  static addBreadcrumb(message: string, category?: string, level?: SeverityLevel): void {
+  static addBreadcrumb(message: string, category?: string, level?: string): void {
     Sentry.addBreadcrumb({
       message,
       category: category || 'custom',
@@ -174,7 +174,7 @@ export class SentryService {
    */
   static captureEvent(event: {
     message?: string
-    level?: SeverityLevel
+    level?: string
     tags?: Record<string, string>
     extra?: Record<string, unknown>
     user?: Record<string, unknown>

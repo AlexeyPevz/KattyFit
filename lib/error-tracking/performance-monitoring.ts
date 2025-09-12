@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/nextjs'
+import * as Sentry from './sentry-stub'
 import logger from '../logger'
 
 // Интерфейс для метрик производительности
@@ -58,7 +58,7 @@ export class PerformanceMonitor {
     if (typeof window === 'undefined') return
 
     // Импортируем web-vitals только на клиенте
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB, getINP }) => {
+    import('./web-vitals-stub').then(({ getCLS, getFID, getFCP, getLCP, getTTFB, getINP }) => {
       getCLS((metric: any) => this.reportWebVital(metric))
       getFID((metric: any) => this.reportWebVital(metric))
       getFCP((metric: any) => this.reportWebVital(metric))

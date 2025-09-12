@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
   } catch (error: Error | unknown) {
     logger.error("Lead capture webhook error", { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
-      { error: error.message || "Ошибка обработки лида" },
+      { error: (error as Error).message || "Ошибка обработки лида" },
       { status: 500 }
     )
   }

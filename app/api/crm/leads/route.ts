@@ -248,6 +248,6 @@ export async function PATCH(request: NextRequest) {
     if (error) throw error
     return NextResponse.json({ success: true, lead: data })
   } catch (error: Error | unknown) {
-    return NextResponse.json({ error: error.message || "Update failed" }, { status: 500 })
+    return NextResponse.json({ error: (error as Error).message || "Update failed" }, { status: 500 })
   }
 }

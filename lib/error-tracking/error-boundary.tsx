@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
-import * as Sentry from '@sentry/nextjs'
+import * as Sentry from './sentry-stub'
 import logger from '../logger'
 
 interface Props {

@@ -72,11 +72,11 @@ async function handleCheck(data: Record<string, unknown>) {
     const { Amount, Email, Data: customData } = data
     
     // Проверяем, существует ли товар/курс
-    if (customData?.courseId) {
+    if (customData && typeof customData === 'object' && 'courseId' in customData) {
       const { data: course } = await supabaseAdmin
         .from('courses')
         .select('id, price')
-        .eq('id', customData.courseId)
+        .eq('id', customData.courseId as string)
         .single()
         
       if (!course) {
@@ -87,11 +87,14 @@ async function handleCheck(data: Record<string, unknown>) {
       }
       
       // Проверяем цену (с учетом возможной скидки)
-      const expectedAmount = customData.discountPercent 
-        ? Math.round(course.price * (100 - customData.discountPercent) / 100)
+      const discountPercent = customData && typeof customData === 'object' && 'discountPercent' in customData 
+        ? customData.discountPercent as number 
+        : 0
+      const expectedAmount = discountPercent 
+        ? Math.round(course.price * (100 - discountPercent) / 100)
         : course.price
         
-      if (Math.abs(Amount - expectedAmount) > 0.01) {
+      if (Math.abs((Amount as number) - expectedAmount) > 0.01) {
         return NextResponse.json({ 
           code: 11, 
           message: "Неверная сумма платежа" 
@@ -146,12 +149,12 @@ async function handlePayment(data: Record<string, unknown>) {
     }
     
     // Предоставляем доступ к курсу
-    if (customData?.courseId && Email) {
+    if (customData && typeof customData === 'object' && 'courseId' in customData && Email) {
       // Находим или создаем пользователя
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('id')
-        .eq('email', Email)
+        .eq('email', Email as string)
         .single()
       
       if (user) {

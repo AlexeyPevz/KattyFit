@@ -1,10 +1,6 @@
-const { withSentryConfig } = require('@sentry/nextjs')
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@sentry/nextjs'],
-  },
+  serverExternalPackages: [],
   images: {
     domains: ['localhost', 'via.placeholder.com'],
     formats: ['image/webp', 'image/avif'],
@@ -49,24 +45,4 @@ const nextConfig = {
   },
 }
 
-// Sentry configuration
-const sentryWebpackPluginOptions = {
-  // Дополнительные настройки для Sentry webpack plugin
-  silent: true, // Отключаем логи Sentry в консоли
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  
-  // Настройки для source maps
-  widenClientFileUpload: true,
-  hideSourceMaps: true,
-  disableServerWebpackPlugin: false,
-  disableClientWebpackPlugin: false,
-  
-  // Настройки для автоматического релиза
-  release: process.env.SENTRY_RELEASE,
-  deploy: {
-    env: process.env.NODE_ENV,
-  },
-}
-
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+module.exports = nextConfig

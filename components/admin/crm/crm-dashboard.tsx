@@ -130,7 +130,12 @@ export function CRMDashboardComponent({
       if (data.success) {
         if (editingLead) {
           setLeads(prev => prev.map(lead => 
-            lead.id === editingLead.id ? { ...lead, ...leadData, source: leadData.source as "vk" | "telegram" | "instagram" | "website" | "referral" } : lead
+            lead.id === editingLead.id ? { 
+              ...lead, 
+              ...leadData, 
+              source: leadData.source as "vk" | "telegram" | "instagram" | "website" | "referral",
+              stage: leadData.stage as "new" | "contacted" | "negotiation" | "customer" | "qualified" | "proposal"
+            } : lead
           ))
         } else {
           setLeads(prev => [...prev, data.data])

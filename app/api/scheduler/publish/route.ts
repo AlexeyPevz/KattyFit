@@ -61,13 +61,13 @@ export async function POST(request: NextRequest) {
       } catch (e: Error | unknown) {
         await supabaseAdmin
           .from('publications')
-          .update({ status: 'failed', error: e?.message || 'Scheduler failed' })
+          .update({ status: 'failed', error: (e as Error)?.message || 'Scheduler failed' })
           .eq('id', pub.id)
       }
     }
 
     return NextResponse.json({ success: true, processed: pending?.length || 0 })
   } catch (e: Error | unknown) {
-    return NextResponse.json({ error: e?.message || 'Scheduler error' }, { status: 500 })
+    return NextResponse.json({ error: (e as Error)?.message || 'Scheduler error' }, { status: 500 })
   }
 }

@@ -173,7 +173,7 @@ export function DIUsageExample() {
               </Badge>
               {isAuthenticated && (
                 <span className="text-sm text-gray-600">
-                  User: {auth.getCurrentUser()?.username}
+                  User: {(auth.getCurrentUser() as { username?: string })?.username}
                 </span>
               )}
             </div>

@@ -147,9 +147,7 @@ export function CourseGrid() {
   // Оптимизированный поиск с дебаунсом
   const searchHook = useOptimizedSearch(
     courses,
-    (course: Course, query: string) => 
-      course.title.toLowerCase().includes(query.toLowerCase()) ||
-      course.description.toLowerCase().includes(query.toLowerCase()),
+    ["title", "description"],
     300
   )
   

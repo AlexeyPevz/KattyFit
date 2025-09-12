@@ -72,8 +72,8 @@ export function LessonEditorComponent({
         duration: lesson.duration,
         content: {
           ...lesson.content,
-          quizQuestions: lesson.content.quizQuestions as QuizQuestion[] || []
-        }
+          quizQuestions: (lesson.content.quizQuestions as unknown as QuizQuestion[]) || []
+        } as Record<string, unknown>
       })
     }
   }, [lesson])
@@ -100,7 +100,12 @@ export function LessonEditorComponent({
       const updatedLesson: CourseLesson = {
         ...lesson,
         ...formData,
-        type: formData.type as "text" | "video" | "quiz" | "assignment"
+        type: formData.type as "text" | "video" | "quiz" | "assignment",
+        content: {
+          ...lesson.content,
+          ...formData.content,
+          quizQuestions: (formData.content.quizQuestions as unknown as QuizQuestion[]) || []
+        } as Record<string, unknown>
       }
       onLessonUpdate(updatedLesson)
     }
@@ -143,7 +148,7 @@ export function LessonEditorComponent({
     setEditingQuestion(question)
     setQuestionForm({
       question: question.question,
-      type: question.type,
+      type: question.type as "single",
       options: question.options,
       correctAnswers: question.correctAnswers,
       explanation: question.explanation || "",
