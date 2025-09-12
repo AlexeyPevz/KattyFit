@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 import { apiHandler } from "@/lib/api-utils"
 
 export const GET = apiHandler(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url)
+  const { searchParams } = request.nextUrl
   const code = (searchParams.get('code') || '').toUpperCase()
   const amount = Number(searchParams.get('amount') || '0')
 
