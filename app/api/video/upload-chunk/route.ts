@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Конвертируем File в Buffer
+    // Конвертируем File в Uint8Array
     const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    const buffer = new Uint8Array(arrayBuffer)
 
     // Сохраняем чанк
     storeChunk(uploadId, chunkIndex, buffer, metadata, totalChunks)
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const uploadId = searchParams.get("uploadId")
 
     if (!uploadId) {

@@ -4,6 +4,17 @@ import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
+    // В preview режиме v0 возвращаем дефолтные значения
+    const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
+    if (isPreview) {
+      return NextResponse.json({
+        country: 'Russia',
+        countryCode: 'RU',
+        city: 'Moscow',
+        ip: '127.0.0.1'
+      })
+    }
+
     // Сначала пробуем получить из заголовков (Cloudflare, Vercel)
     const headers = request.headers
     const headerGeo = getGeolocationFromHeaders(headers)

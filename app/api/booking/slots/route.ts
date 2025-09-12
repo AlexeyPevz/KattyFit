@@ -8,7 +8,7 @@ import logger from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const trainerId = searchParams.get('trainerId') || '1' // По умолчанию Кати

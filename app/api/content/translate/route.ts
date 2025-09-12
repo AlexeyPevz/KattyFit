@@ -112,7 +112,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 })
 
 export const GET = apiHandler(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url)
+  const { searchParams } = request.nextUrl
   const contentId = searchParams.get("contentId")
 
   if (!contentId) {

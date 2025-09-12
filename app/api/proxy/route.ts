@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest) {
 // Удаление прокси
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const id = searchParams.get("id")
     
     if (!id) {

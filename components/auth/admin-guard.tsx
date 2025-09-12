@@ -45,7 +45,8 @@ export function AdminGuard({ children }: AdminGuardProps) {
         }
 
         // Check if username matches expected admin username
-        const expectedUser = process.env.ADMIN_USERNAME
+        // В v0 preview режиме используем fallback значение
+        const expectedUser = process.env.ADMIN_USERNAME || 'admin'
         logger.debug("AdminGuard auth check", {
           sessionUsername: session.username,
           expectedUser: expectedUser,

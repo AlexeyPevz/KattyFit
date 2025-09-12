@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
 
 // Получение статуса публикаций
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
+  const { searchParams } = request.nextUrl
   const contentId = searchParams.get("contentId")
 
   try {
