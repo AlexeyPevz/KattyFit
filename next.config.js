@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: [],
+  experimental: {
+    serverComponentsExternalPackages: []
+  },
   images: {
     domains: ['localhost', 'via.placeholder.com'],
     formats: ['image/webp', 'image/avif'],
