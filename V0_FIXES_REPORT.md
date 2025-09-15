@@ -40,16 +40,16 @@
 ## 🔧 Технические исправления
 
 ### API роуты
-```typescript
+\`\`\`typescript
 // Было
 const { searchParams } = new URL(request.url)
 
 // Стало
 const { searchParams } = request.nextUrl
-```
+\`\`\`
 
 ### Metadata
-```typescript
+\`\`\`typescript
 // Было
 export const metadata: Metadata = {
   themeColor: '#3B82F6',
@@ -67,16 +67,16 @@ export const viewport = {
   maximumScale: 1,
   themeColor: '#3B82F6',
 }
-```
+\`\`\`
 
 ### Preview режим
-```typescript
+\`\`\`typescript
 // Добавлена проверка preview режима
 const isPreview = request.headers.get('x-vercel-preview') || request.headers.get('x-v0-preview')
 if (isPreview) {
   return NextResponse.json(fallbackData)
 }
-```
+\`\`\`
 
 ## 📊 Результаты
 
@@ -122,12 +122,12 @@ if (isPreview) {
 
 ### 2. Настройка переменных окружения
 В Settings → Environment Variables добавьте:
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
-```
+\`\`\`
 
 ### 3. Деплой
 1. Нажмите "Deploy to Vercel" в v0

@@ -112,12 +112,12 @@
 
 ### 2. Настройка переменных окружения
 В Settings → Environment Variables добавьте:
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
-```
+\`\`\`
 
 ### 3. Деплой
 1. Нажмите "Deploy to Vercel" в v0

@@ -10,23 +10,23 @@
 
 ### 2. Установка зависимостей
 В терминале v0 выполните:
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 ### 3. Настройка переменных окружения
 В настройках проекта (Settings → Environment Variables) добавьте:
 
 #### Обязательные переменные:
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
-```
+\`\`\`
 
 #### Опциональные переменные:
-```env
+\`\`\`env
 # AI сервисы
 OPENAI_API_KEY=sk-...
 YANDEXGPT_API_KEY=your-yandex-key
@@ -48,7 +48,7 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-key
 # WhatsApp
 WA_PHONE_NUMBER_ID=your-phone-id
 WA_TOKEN=your-whatsapp-token
-```
+\`\`\`
 
 ## 🔧 Настройка базы данных
 
@@ -123,9 +123,9 @@ WA_TOKEN=your-whatsapp-token
 ## 🛠️ Отладка
 
 ### Проверка переменных окружения
-```bash
+\`\`\`bash
 npm run check-env
-```
+\`\`\`
 
 ### Логи
 Проверьте консоль браузера и серверные логи на наличие ошибок.

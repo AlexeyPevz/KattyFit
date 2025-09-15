@@ -31,23 +31,23 @@
 
 ### 3. Установка зависимостей
 В терминале v0:
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 ### 4. Настройка переменных окружения
 В Settings → Environment Variables добавьте:
 
 #### Обязательные:
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your-secure-password
-```
+\`\`\`
 
 #### Опциональные:
-```env
+\`\`\`env
 OPENAI_API_KEY=sk-...
 YANDEXGPT_API_KEY=your-yandex-key
 ELEVENLABS_API_KEY=your-elevenlabs-key
@@ -60,7 +60,7 @@ CLOUDPAYMENTS_SECRET=your-secret
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-key
 WA_PHONE_NUMBER_ID=your-phone-id
 WA_TOKEN=your-whatsapp-token
-```
+\`\`\`
 
 ## 🗄️ Настройка базы данных
 
@@ -117,13 +117,13 @@ WA_TOKEN=your-whatsapp-token
 ## 🛠️ Отладка проблем
 
 ### Ошибки сборки
-```bash
+\`\`\`bash
 # Проверка TypeScript
 npm run build
 
 # Проверка линтера
 npm run lint
-```
+\`\`\`
 
 ### Ошибки runtime
 1. Проверьте консоль браузера
