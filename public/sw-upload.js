@@ -5,12 +5,10 @@ const UPLOAD_QUEUE = new Map()
 
 // Установка Service Worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Установлен для фоновой загрузки')
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Активирован')
   event.waitUntil(clients.claim())
 })
 
@@ -54,8 +52,6 @@ self.addEventListener('message', async (event) => {
 
 // Фоновая синхронизация
 self.addEventListener('sync', async (event) => {
-  console.log('[SW] Фоновая синхронизация:', event.tag)
-  
   if (event.tag.startsWith('upload-')) {
     const uploadId = event.tag.replace('upload-', '')
     event.waitUntil(processUpload(uploadId))
@@ -84,7 +80,6 @@ async function processUpload(uploadId) {
       
       // Проверяем, не приостановлена ли загрузка
       if (task.paused) {
-        console.log('[SW] Загрузка приостановлена:', uploadId)
         return
       }
     }
@@ -99,8 +94,6 @@ async function processUpload(uploadId) {
     await notifyComplete(uploadId)
 
   } catch (error) {
-    console.error('[SW] Ошибка загрузки:', error)
-    
     // Проверяем что task еще существует
     const currentTask = UPLOAD_QUEUE.get(uploadId)
     if (!currentTask) return

@@ -94,8 +94,71 @@ async function publishToYouTube(content: Record<string, unknown>, language: stri
     throw new Error("YouTube OAuth не настроен")
   }
 
-  // TODO: Реализовать публикацию через YouTube Data API v3
-  throw new Error("YouTube публикация требует OAuth авторизации")
+  // YouTube публикация через API v3 (требует OAuth)
+  // Проверяем наличие OAuth credentials
+  const youtubeClientId = process.env.YOUTUBE_CLIENT_ID
+  const youtubeClientSecret = process.env.YOUTUBE_CLIENT_SECRET
+  const youtubeRefreshToken = process.env.YOUTUBE_REFRESH_TOKEN
+
+  if (!youtubeClientId || !youtubeClientSecret || !youtubeRefreshToken) {
+    throw new Error("YouTube OAuth credentials не настроены. Настройте YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET и YOUTUBE_REFRESH_TOKEN в переменных окружения.")
+  }
+
+  // Получаем access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: youtubeClientId,
+      client_secret: youtubeClientSecret,
+      refresh_token: youtubeRefreshToken,
+      grant_type: 'refresh_token'
+    })
+  })
+
+  if (!tokenResponse.ok) {
+    throw new Error('Не удалось получить YouTube access token')
+  }
+
+  const { access_token } = await tokenResponse.json()
+
+  // Публикуем видео
+  const videoTitle = (content.title as string) || 'Untitled Video'
+  const videoDescription = (content.description as string) || ''
+  
+  const uploadResponse = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,status', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${access_token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      snippet: {
+        title: videoTitle,
+        description: videoDescription,
+        tags: (content.tags as string[]) || [],
+        categoryId: '22', // People & Blogs
+      },
+      status: {
+        privacyStatus: 'public',
+        publishAt: (content.scheduled_at as string) || undefined
+      }
+    })
+  })
+
+  if (!uploadResponse.ok) {
+    const error = await uploadResponse.text()
+    throw new Error(`YouTube upload failed: ${error}`)
+  }
+
+  const youtubeData = await uploadResponse.json()
+  
+  return {
+    platform: 'youtube',
+    videoId: youtubeData.id,
+    url: `https://www.youtube.com/watch?v=${youtubeData.id}`,
+    publishedAt: youtubeData.snippet?.publishedAt
+  }
 }
 
 // Конфигурация платформ

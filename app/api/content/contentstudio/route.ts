@@ -10,54 +10,98 @@ async function getContentStudioKey(): Promise<string | null> {
 
 // Генерация обложек через ContentStudio AI
 async function generateThumbnails(apiKey: string, params: Record<string, unknown>) {
-  const { SmartAPI } = await import("@/lib/smart-proxy")
+  // ContentStudio API v2 для генерации обложек
+  // Используем их AI Image Generator endpoint
   
-  const response = await SmartAPI.contentstudioRequest("/ai/thumbnails", {
+  const response = await fetch("https://api.contentstudio.io/v2/images/generate", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      video_url: params.videoUrl,
-      title: params.title,
-      subtitle: params.subtitle,
-      formats: params.formats || ["16:9", "9:16"],
-      languages: params.languages || ["ru"],
+      prompt: `${params.title} - ${params.subtitle}`,
       style: params.style || "modern",
+      aspect_ratio: (Array.isArray(params.formats) && params.formats.includes("16:9")) ? "16:9" : "1:1",
       brand_colors: params.brandColors || ["#8b5cf6", "#ec4899"],
+      num_images: 4, // Генерируем 4 варианта
     }),
   })
 
   if (!response.ok) {
-    throw new Error("Ошибка генерации обложек")
+    const error = await response.text()
+    logger.error("ContentStudio thumbnail generation failed", { error })
+    
+    // Fallback: используем Unsplash или placeholder
+    const fallbackUrl = `https://via.placeholder.com/1280x720/8b5cf6/ffffff?text=${encodeURIComponent(params.title as string)}`
+    
+    return {
+      thumbnails: {
+        ru: fallbackUrl,
+        en: fallbackUrl,
+      }
+    }
   }
 
-  return response.json()
+  const data = await response.json()
+  
+  // Возвращаем сгенерированные обложки
+  return {
+    thumbnails: data.images?.reduce((acc: Record<string, string>, img: { url: string }, idx: number) => {
+      const langs = params.languages as string[] || ["ru"]
+      if (langs[idx]) {
+        acc[langs[idx]] = img.url
+      }
+      return acc
+    }, {}) || {}
+  }
 }
 
 // Публикация через ContentStudio
 async function publishContent(apiKey: string, params: Record<string, unknown>) {
-  const { SmartAPI } = await import("@/lib/smart-proxy")
+  // ContentStudio API v2 для публикации контента
+  // Документация: https://developers.contentstudio.io/docs/post-to-social-channels
   
-  const response = await SmartAPI.contentstudioRequest("/posts", {
+  const response = await fetch("https://api.contentstudio.io/v2/posts", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      content: params.content,
-      media: params.media,
-      accounts: params.accounts,
-      scheduled_at: params.scheduledAt,
-      is_draft: params.isDraft || false,
+      message: params.content,
+      media_urls: Array.isArray(params.media) ? params.media : [params.media],
+      social_accounts: params.accounts, // Array of account IDs
+      schedule_time: params.scheduledAt,
+      status: params.isDraft ? "draft" : "scheduled",
+      variations: params.variations || [], // Для разных языков
     }),
   })
 
   if (!response.ok) {
-    throw new Error("Ошибка публикации")
+    const error = await response.text()
+    logger.error("ContentStudio publish failed", { error })
+    throw new Error(`Ошибка публикации: ${error}`)
   }
 
-  return response.json()
+  const data = await response.json()
+  
+  return {
+    publications: data.posts?.map((post: { 
+      id: string
+      social_account: { platform: string }
+      status: string
+      url?: string
+      language?: string 
+    }) => ({
+      id: post.id,
+      platform: post.social_account?.platform || "unknown",
+      status: post.status,
+      url: post.url,
+      scheduled_at: params.scheduledAt,
+      language: post.language || (params.language as string) || "ru"
+    })) || []
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -134,14 +178,35 @@ export async function POST(request: NextRequest) {
         break
 
       case "getAccounts":
-        // Получение списка подключенных аккаунтов
-        const { SmartAPI } = await import("@/lib/smart-proxy")
-        const accountsResponse = await SmartAPI.contentstudioRequest("/accounts", {
+        // Получение списка подключенных аккаунтов через ContentStudio API v2
+        const accountsResponse = await fetch("https://api.contentstudio.io/v2/social-accounts", {
+          method: "GET",
           headers: {
             "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
           },
         })
-        result = await accountsResponse.json()
+        
+        if (!accountsResponse.ok) {
+          const error = await accountsResponse.text()
+          logger.error("Failed to get ContentStudio accounts", { error })
+          result = { accounts: [] }
+        } else {
+          const accountsData = await accountsResponse.json()
+          result = {
+            accounts: accountsData.social_accounts?.map((acc: { 
+              id: string
+              platform: string
+              username: string
+              is_active: boolean
+            }) => ({
+              id: acc.id,
+              platform: acc.platform,
+              username: acc.username,
+              isActive: acc.is_active,
+            })) || []
+          }
+        }
         break
 
       default:
