@@ -188,8 +188,25 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // TODO: Отправить уведомление тренеру
-    // TODO: Создать событие в Яндекс.Календаре (после оплаты)
+    // Отправляем уведомление тренеру
+    try {
+      if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_TRAINER_CHAT_ID) {
+        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: process.env.TELEGRAM_TRAINER_CHAT_ID,
+            text: `🆕 Новое бронирование!\n\n🆔 ID: ${booking.id}\n📅 ${bookingDate} в ${bookingTime}\n🎯 Тип: ${serviceType}\n💰 Цена: ${price}₽\n💬 ${notes || 'Без комментариев'}`,
+            parse_mode: 'HTML'
+          })
+        })
+      }
+    } catch (error) {
+      logger.warn('Failed to send trainer notification', { error: error instanceof Error ? error.message : String(error) })
+    }
+    
+    // Создание события в календаре будет после подтверждения оплаты
+    // Смотри /api/payments/success/route.ts
     
     return NextResponse.json({ booking })
     

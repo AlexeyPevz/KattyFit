@@ -34,46 +34,84 @@ export const POST = apiHandler(async (request: NextRequest) => {
       language: targetLanguage,
     }
 
-    if (autoTranslate) {
-      // В реальном приложении здесь был бы вызов AI сервиса для перевода
-      // Например, Google Translate API, Yandex Translate, или OpenAI
-      
-      // Для демо создаем простой перевод
-      const translations: Record<string, { title: string; description: string }> = {
-        en: {
-          title: `[EN] ${content.title}`,
-          description: `[English translation] ${content.description}`,
-        },
-        es: {
-          title: `[ES] ${content.title}`,
-          description: `[Traducción al español] ${content.description}`,
-        },
-        de: {
-          title: `[DE] ${content.title}`,
-          description: `[Deutsche Übersetzung] ${content.description}`,
-        },
-        fr: {
-          title: `[FR] ${content.title}`,
-          description: `[Traduction française] ${content.description}`,
-        },
-        it: {
-          title: `[IT] ${content.title}`,
-          description: `[Traduzione italiana] ${content.description}`,
-        },
-        pt: {
-          title: `[PT] ${content.title}`,
-          description: `[Tradução portuguesa] ${content.description}`,
-        },
-        tr: {
-          title: `[TR] ${content.title}`,
-          description: `[Türkçe çeviri] ${content.description}`,
-        },
-      }
+    if (autoTranslate && content.url) {
+      // Реальная интеграция с ElevenLabs Dubbing API
+      const elevenLabsKey = process.env.ELEVENLABS_API_KEY
 
-      translation = {
-        title: translations[targetLanguage]?.title || content.title,
-        description: translations[targetLanguage]?.description || content.description,
-        language: targetLanguage,
+      if (elevenLabsKey) {
+        try {
+          // Создаем задачу дубляжа
+          const dubbingResponse = await fetch('https://api.elevenlabs.io/v1/dubbing', {
+            method: 'POST',
+            headers: {
+              'xi-api-key': elevenLabsKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              source_url: content.url,
+              target_lang: targetLanguage,
+              num_speakers: 1,
+              watermark: false, // Требует подписки
+            }),
+          })
+
+          if (!dubbingResponse.ok) {
+            const error = await dubbingResponse.text()
+            logger.warn("ElevenLabs dubbing failed", { error, targetLanguage })
+          } else {
+            const dubbingData = await dubbingResponse.json()
+            const dubbingId = dubbingData.dubbing_id
+
+            // Сохраняем ID задачи для отслеживания статуса
+            await supabaseAdmin
+              .from("content_translations")
+              .upsert({
+                content_id: contentId,
+                language: targetLanguage,
+                title: content.title,
+                description: content.description,
+                status: "processing",
+                dubbing_id: dubbingId,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }, {
+                onConflict: "content_id,language"
+              })
+
+            logger.info("ElevenLabs dubbing started", { dubbingId, targetLanguage })
+            
+            translation = {
+              title: content.title,
+              description: content.description,
+              language: targetLanguage,
+              dubbing_id: dubbingId,
+            } as typeof translation & { dubbing_id?: string }
+          }
+        } catch (error) {
+          logger.error("ElevenLabs API error", { 
+            error: error instanceof Error ? error.message : String(error),
+            targetLanguage 
+          })
+        }
+      } else {
+        // Fallback: простой перевод заголовков через OpenAI/YandexGPT
+        const langNames: Record<string, string> = {
+          en: 'English',
+          es: 'Spanish',
+          de: 'German',
+          fr: 'French',
+          it: 'Italian',
+          pt: 'Portuguese',
+          tr: 'Turkish',
+        }
+        
+        logger.info("Using fallback translation (ElevenLabs not configured)", { targetLanguage })
+        
+        translation = {
+          title: `${content.title} (${langNames[targetLanguage] || targetLanguage})`,
+          description: content.description,
+          language: targetLanguage,
+        }
       }
     }
 

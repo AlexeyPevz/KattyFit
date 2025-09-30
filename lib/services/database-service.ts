@@ -98,13 +98,26 @@ abstract class BaseDatabaseService implements DatabaseService {
   // Общие методы
   async executeQuery<T>(query: string, params?: unknown[]): Promise<T[]> {
     try {
-      // Простая реализация без Supabase
-      // В реальном приложении здесь будет вызов Supabase
       await logger.debug('Executing database query', {
         query: query.substring(0, 100),
         paramCount: params?.length || 0
       })
-      return []
+
+      // Используем Supabase RPC для выполнения SQL запросов
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(this.config.url, this.config.serviceRoleKey)
+      
+      // Для безопасности используем параметризованные запросы
+      const { data, error } = await supabase.rpc('execute_sql', {
+        sql_query: query,
+        sql_params: params || []
+      })
+
+      if (error) {
+        throw error
+      }
+
+      return (data || []) as T[]
     } catch (error) {
       if (error instanceof AppError) {
         throw error
@@ -208,17 +221,60 @@ abstract class BaseDatabaseService implements DatabaseService {
 // ===== ПРОСТАЯ РЕАЛИЗАЦИЯ =====
 
 export class SimpleDatabaseService extends BaseDatabaseService {
+  private async getSupabaseClient() {
+    const { createClient } = await import('@supabase/supabase-js')
+    return createClient(this.config.url, this.config.serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  }
+
   // Пользователи
   async getUserById(id: string): Promise<Record<string, unknown> | null> {
     await logger.debug('Getting user by id', { id })
-    return { id, name: 'Test User', email: 'test@example.com' }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') { // Not found
+          return null
+        }
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getUserById')
+    }
   }
 
   async createUser(user: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating user', { 
       userFields: Object.keys(user)
     })
-    return { id: 'new-user-id', ...user }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('users')
+        .insert(user)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'createUser')
+    }
   }
 
   async updateUser(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -226,11 +282,38 @@ export class SimpleDatabaseService extends BaseDatabaseService {
       id, 
       updateFields: Object.keys(updates)
     })
-    return { id, ...updates }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'updateUser')
+    }
   }
 
   async deleteUser(id: string): Promise<void> {
     await logger.debug('Deleting user', { id })
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+    } catch (error) {
+      await this.handleDatabaseError(error as Error, 'deleteUser')
+    }
   }
 
   // Курсы
@@ -238,19 +321,72 @@ export class SimpleDatabaseService extends BaseDatabaseService {
     await logger.debug('Getting courses', { 
       options: options ? Object.keys(options) : 'none'
     })
-    return []
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      let query = supabase.from('courses').select('*')
+
+      if (options?.orderBy) {
+        query = query.order(options.orderBy, { ascending: options.ascending ?? true })
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      return data || []
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getCourses')
+    }
   }
 
-  async getCourseById(id: string): Promise<any> {
+  async getCourseById(id: string): Promise<Record<string, unknown> | null> {
     await logger.debug('Getting course by id', { id })
-    return { id, title: 'Test Course' }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getCourseById')
+    }
   }
 
   async createCourse(course: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating course', { 
       courseFields: Object.keys(course)
     })
-    return { id: 'new-course-id', ...course }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('courses')
+        .insert(course)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'createCourse')
+    }
   }
 
   async updateCourse(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -258,31 +394,111 @@ export class SimpleDatabaseService extends BaseDatabaseService {
       id, 
       updateFields: Object.keys(updates)
     })
-    return { id, ...updates }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('courses')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'updateCourse')
+    }
   }
 
   async deleteCourse(id: string): Promise<void> {
     await logger.debug('Deleting course', { id })
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+    } catch (error) {
+      await this.handleDatabaseError(error as Error, 'deleteCourse')
+    }
   }
 
   // Лиды
-  async getLeads(options?: QueryOptions): Promise<any[]> {
+  async getLeads(options?: QueryOptions): Promise<Record<string, unknown>[]> {
     await logger.debug('Getting leads', { 
       options: options ? Object.keys(options) : 'none'
     })
-    return []
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      let query = supabase.from('leads').select('*')
+
+      if (options?.orderBy) {
+        query = query.order(options.orderBy, { ascending: options.ascending ?? true })
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      return data || []
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getLeads')
+    }
   }
 
-  async getLeadById(id: string): Promise<any> {
+  async getLeadById(id: string): Promise<Record<string, unknown> | null> {
     await logger.debug('Getting lead by id', { id })
-    return { id, name: 'Test Lead' }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getLeadById')
+    }
   }
 
   async createLead(lead: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating lead', { 
       leadFields: Object.keys(lead)
     })
-    return { id: 'new-lead-id', ...lead }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('leads')
+        .insert(lead)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'createLead')
+    }
   }
 
   async updateLead(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -290,31 +506,111 @@ export class SimpleDatabaseService extends BaseDatabaseService {
       id, 
       updateFields: Object.keys(updates)
     })
-    return { id, ...updates }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('leads')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'updateLead')
+    }
   }
 
   async deleteLead(id: string): Promise<void> {
     await logger.debug('Deleting lead', { id })
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+    } catch (error) {
+      await this.handleDatabaseError(error as Error, 'deleteLead')
+    }
   }
 
   // Бронирования
-  async getBookings(options?: QueryOptions): Promise<any[]> {
+  async getBookings(options?: QueryOptions): Promise<Record<string, unknown>[]> {
     await logger.debug('Getting bookings', { 
       options: options ? Object.keys(options) : 'none'
     })
-    return []
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      let query = supabase.from('bookings').select('*')
+
+      if (options?.orderBy) {
+        query = query.order(options.orderBy, { ascending: options.ascending ?? true })
+      }
+      if (options?.limit) {
+        query = query.limit(options.limit)
+      }
+      if (options?.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      return data || []
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getBookings')
+    }
   }
 
-  async getBookingById(id: string): Promise<any> {
+  async getBookingById(id: string): Promise<Record<string, unknown> | null> {
     await logger.debug('Getting booking by id', { id })
-    return { id, date: '2024-01-01' }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'getBookingById')
+    }
   }
 
   async createBooking(booking: Record<string, unknown>): Promise<Record<string, unknown>> {
     await logger.debug('Creating booking', { 
       bookingFields: Object.keys(booking)
     })
-    return { id: 'new-booking-id', ...booking }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert(booking)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'createBooking')
+    }
   }
 
   async updateBooking(id: string, updates: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -322,11 +618,38 @@ export class SimpleDatabaseService extends BaseDatabaseService {
       id, 
       updateFields: Object.keys(updates)
     })
-    return { id, ...updates }
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { data, error } = await supabase
+        .from('bookings')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      return await this.handleDatabaseError(error as Error, 'updateBooking')
+    }
   }
 
   async deleteBooking(id: string): Promise<void> {
     await logger.debug('Deleting booking', { id })
+    
+    try {
+      const supabase = await this.getSupabaseClient()
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+    } catch (error) {
+      await this.handleDatabaseError(error as Error, 'deleteBooking')
+    }
   }
 }
 

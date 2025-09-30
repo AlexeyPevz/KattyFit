@@ -190,7 +190,26 @@ async function handlePayment(data: Record<string, unknown>) {
       })
     }
     
-    // TODO: Отправить email с подтверждением
+    // Отправляем email с подтверждением (если настроен email сервис)
+    try {
+      // В будущем здесь можно добавить SendGrid, Mailgun или другой email сервис
+      // Пока отправляем уведомление через Telegram как альтернатива
+      if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_ADMIN_CHAT_ID) {
+        const paymentType = (customData && typeof customData === 'object' && 'courseId' in customData) ? 'Курс' : 'Бронирование'
+        
+        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: process.env.TELEGRAM_ADMIN_CHAT_ID,
+            text: `✅ Платеж подтвержден!\n\n💰 Сумма: ${Amount}₽\n📧 Email: ${Email}\n🎯 Тип: ${paymentType}\n🆔 ID: ${TransactionId}`,
+            parse_mode: 'HTML'
+          })
+        })
+      }
+    } catch (emailError) {
+      logger.warn('Failed to send confirmation email', { error: emailError instanceof Error ? emailError.message : String(emailError) })
+    }
     
   } catch (error) {
     logger.error("Payment handler error", { error: error instanceof Error ? error.message : String(error) })
